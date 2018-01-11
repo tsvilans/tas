@@ -39,7 +39,7 @@ A bunch of classes and types to assist with toolpath generation and processing. 
 
 ## Fun
 
-This is where some tangent experimentation and learning happens. This module contains implementations of various algorithms that I have come across and have used for certain things. This is a way to document them, keep them around, and try to flesh them out as more generic tools for future use. These include basic pseudo-implementations of Simulated Annealing, K-Means clustering, and Metropolis-Hastings.
+This is where some tangential experimentation and learning happens. This module contains implementations of various algorithms that I have come across and have used for certain things. This is a way to document them, keep them around, and try to flesh them out as more generic tools for future use. These include basic pseudo-implementations of Simulated Annealing, K-Means clustering, and Metropolis-Hastings.
 
 # Acknowledgements
 
