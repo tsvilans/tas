@@ -49,6 +49,10 @@ More information about the project can be found [here](http://innochain.net/esr2
 
 This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Sklodowska-Curie grant agreement No 642877.
 
+This project uses the following libraries:
+- [Clipper](http://www.angusj.com/delphi/clipper.php)
+- [Carve](https://github.com/VTREEM/Carve) through the [Carverino](https://github.com/tsvilans/carverino) wrapper.
+
 # Contact
 
 tsvi@kadk.dk
