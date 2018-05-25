@@ -367,7 +367,8 @@ namespace tas.Lam
 
             Beam b = new Beam(curve, new Plane[] { cp });
 
-            curve = b.CreateOffsetCurve(-x, -y);
+            //curve = b.CreateOffsetCurve(-x, -y);
+            curve = b.CreateOffsetCurve(x, y);
             curve = curve.Extend(CurveEnd.Both, extra, CurveExtensionStyle.Smooth);
 
             cp.Transform(Rhino.Geometry.Transform.Rotation(angle * sign, cp.ZAxis, cp.Origin));
@@ -387,42 +388,39 @@ namespace tas.Lam
             return CreateGlulamFromBeamGeometry2(curve, beam, out w, out h, out l, extra);
         }
 
-        static public Brep GetGlulamBisector(Glulam g1, Glulam g2)
+        static public Brep GetGlulamBisector(Glulam g1, Glulam g2, double extension = 50.0, bool normalized = false)
         {
             Glulam[] g = new Glulam[2] { g1, g2 };
 
-            int shorter = 0;
+            int shorter = g[0].Centreline.GetLength() > g[1].Centreline.GetLength() ? 1 : 0;
+            int longer = 1 - shorter;
 
-            if (g[0].Centreline.GetLength() > g[1].Centreline.GetLength())
-            {
-                shorter = 1;
-            }
-
-            int longer = shorter == 1 ? 0 : 1;
-
+            double length = g[shorter].Centreline.GetLength();
             double[] t = g[shorter].Centreline.DivideByCount(10, true);
             double t2;
 
             List<Point3d>[] edge_pts = new List<Point3d>[2];
             for (int i = 0; i < 2; ++i)
-            {
                 edge_pts[i] = new List<Point3d>();
-            }
 
+            double tl;
             for (int i = 0; i < t.Length; ++i)
             {
-                g[longer].Centreline.ClosestPoint(g[shorter].Centreline.PointAt(t[i]), out t2);
+                tl = g[shorter].Centreline.GetLength(new Interval(g[shorter].Centreline.Domain.Min, t[i]));
+
+                g[longer].Centreline.LengthParameter(tl, out t2);
+                //g[longer].Centreline.ClosestPoint(g[shorter].Centreline.PointAt(t[i]), out t2);
                 Plane p = Util.InterpolatePlanes2(g[shorter].GetPlane(t[i]), g[longer].GetPlane(t2), 0.5);
 
-                edge_pts[0].Add(p.Origin + p.YAxis * 200.0);
-                edge_pts[1].Add(p.Origin - p.YAxis * 200.0);
+                edge_pts[0].Add(p.Origin + p.YAxis * extension);
+                edge_pts[1].Add(p.Origin - p.YAxis * extension);
             }
 
             Curve[] crvs = new Curve[4];
             for (int i = 0; i < 2; ++i)
             {
                 crvs[i] = Curve.CreateControlPointCurve(edge_pts[i], 2);
-                crvs[i] = crvs[i].Extend(CurveEnd.Both, 50.0, CurveExtensionStyle.Smooth);
+                crvs[i] = crvs[i].Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
                 //crvs[i] = crvs[i].Rebuild(10, 3, true);
             }
 

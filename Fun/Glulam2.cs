@@ -501,6 +501,8 @@ namespace tas.Extra
             return brep;
         }
 
+        public abstract Curve OffsetGuide(double x = 0, double y = 0, bool rebuild = false, int rebuild_samples = 100);
+
     }
 
     /// <summary>
@@ -588,6 +590,12 @@ namespace tas.Extra
 
         public override Plane GetFrame(double t) => 
             new Plane(m_guide.PointAt(t), Vector3d.CrossProduct(m_yaxis, m_guide.Direction), m_yaxis);
+
+        public override Curve OffsetGuide(double x = 0, double y = 0, bool rebuild = false, int rebuild_samples = 100)
+        {
+            Vector3d xaxis = Vector3d.CrossProduct(m_yaxis, m_guide.Direction);
+            return new Line(m_guide.From + xaxis * x + m_yaxis * y, m_guide.To + xaxis * x + m_yaxis * y).ToNurbsCurve();
+        }
     }
 
     /// <summary>
@@ -676,6 +684,11 @@ namespace tas.Extra
         {
             return m_guide.GetPlane(t);
         }
+
+        public override Curve OffsetGuide(double x = 0, double y = 0, bool rebuild = false, int rebuild_samples = 100)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -726,6 +739,11 @@ namespace tas.Extra
             Vector3d y_axis = Vector3d.CrossProduct(z_axis, m_normal);
 
             return new Plane(pt, m_normal, y_axis);
+        }
+
+        public override Curve OffsetGuide(double x = 0, double y = 0, bool rebuild = false, int rebuild_samples = 100)
+        {
+            throw new NotImplementedException();
         }
     }
 }

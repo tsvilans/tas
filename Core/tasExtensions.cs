@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace tas.Core
 {
@@ -422,6 +423,82 @@ namespace tas.Core
             Mesh m = M.DuplicateMesh();
             m.Triangulate();
             return m;
+        }
+
+        /// <summary>
+        /// Returns Mesh texture coordinates as a base64-encoded string of space-separated values.
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns>Base64 string</returns>
+        public static string TextureCoordinatesToBase64(this Mesh m)
+        {
+            if (m.TextureCoordinates.Count != m.Vertices.Count) throw new Exception("Mesh does not have texture coordinates!");
+            int N = m.TextureCoordinates.Count;
+            double[] uvs = new double[N * 2];
+
+            System.Text.StringBuilder uv_string = new System.Text.StringBuilder();
+
+            for (int i = 0; i < N; ++i)
+            {
+               // uv_string.Append(string.Format("{0} {1} ", m.TextureCoordinates[i].X, m.TextureCoordinates[i].Y));
+                uv_string.Append(m.TextureCoordinates[i].X.ToString(CultureInfo.InvariantCulture.NumberFormat));
+                uv_string.Append(" ");
+                uv_string.Append(m.TextureCoordinates[i].Y.ToString(CultureInfo.InvariantCulture.NumberFormat));
+                uv_string.Append(" ");
+
+                uvs[i * 2] = m.TextureCoordinates[i].X;
+                uvs[i * 2 + 1] = m.TextureCoordinates[i].Y;
+            }
+
+            return System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(uv_string.ToString()));
+        }
+
+        /// <summary>
+        /// Parses base64-encoded string of space-separated values as texture coordinates.
+        /// </summary>
+        /// <param name="m"></param>
+        /// <param name="coords">Base64 string</param>
+        public static void Base64ToTextureCoordinates(this Mesh m, string coords)
+        {
+            byte[] bytes = System.Convert.FromBase64String(coords);
+            string coord_string = System.Text.Encoding.UTF8.GetString(bytes);
+            string[] chunks = coord_string.Split(null);
+
+            if (chunks.Length * 2 != m.Vertices.Count)
+                throw new Exception("Texture coordinates don't match vertex count!");
+
+            m.TextureCoordinates.Clear();
+
+            for (int i = 0; i < chunks.Length; i+=2)
+            {
+                m.TextureCoordinates.Add(new Point2f(
+                    float.Parse(chunks[i], CultureInfo.InvariantCulture.NumberFormat),
+                    float.Parse(chunks[i + 1], CultureInfo.InvariantCulture.NumberFormat)
+                    ));
+            }
+        }
+
+        /// <summary>
+        /// Returns a submesh defined by a list of faces of an existing mesh.
+        /// </summary>
+        /// <param name="m"></param>
+        /// <param name="face_indices">Faces to include in new mesh.</param>
+        /// <returns></returns>
+        public static Mesh ExtractSubMesh(this Mesh m, List<int> face_indices)
+        {
+            Mesh mesh = m.DuplicateMesh();
+            int N = face_indices.Count;
+            MeshFace[] new_faces = new MeshFace[N];
+
+            for (int i = 0; i < N; ++i)
+                new_faces[i] = m.Faces[face_indices[i]];
+
+            mesh.Faces.Clear();
+            mesh.Faces.AddFaces(new_faces);
+
+            mesh.Compact();
+
+            return mesh;
         }
 
         /// <summary>
@@ -900,7 +977,8 @@ namespace tas.Core
                 Polyline ppoly = new Polyline(convex_hull);
                 Vector3d dir = seg.Direction;
                 dir.Unitize();
-                double temp_angle = Vector3d.VectorAngle(Vector3d.YAxis, dir);
+                //double temp_angle = Vector3d.VectorAngle(Vector3d.YAxis, dir);
+                double temp_angle = Math.Atan2(dir.Y, dir.X);
 
                 ppoly.Transform(Transform.Rotation(temp_angle, Vector3d.ZAxis, ppoly.CenterPoint()));
                 bb = ppoly.BoundingBox;
@@ -924,6 +1002,8 @@ namespace tas.Core
                     angle = temp_angle;
                 }
             }
+
+            angle = -angle;
 
             convex_hull.Transform(Transform.Rotation(angle, Vector3d.ZAxis, convex_hull.CenterPoint()));
             Transform xform = Transform.Rotation(angle, p.ZAxis, p.Origin);

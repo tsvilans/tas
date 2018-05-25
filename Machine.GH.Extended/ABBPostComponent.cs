@@ -165,7 +165,7 @@ namespace tas.Machine.GH.Extended
             {
                 Mesh m = new Mesh();
 
-                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.QualityRenderMesh);
+                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.Smooth);
                 foreach (Mesh cm in converted)
                 {
                     m.Append(cm);

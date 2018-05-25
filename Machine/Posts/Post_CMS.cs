@@ -19,7 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using Rhino.Geometry;
 
 using Path = System.Collections.Generic.List<tas.Machine.Waypoint>;
@@ -63,16 +63,67 @@ namespace tas.Machine.Posts
         //   M99    - End of subroutine
         #endregion
 
+        #region Aarhus variables
+
+        public double MaterialThickness;
+        public bool HighSpeed = true;
+        public double SikkerZ = -50;
+        public double SikkerZPlanskifte = 75.0;
+        #endregion
+
+        #region Machine limits
+        const double m_limit_min_x = 0;
+        const double m_limit_max_x = 2600;
+        const double m_limit_min_y = 0;
+        const double m_limit_max_y = 1500;
+        const double m_limit_min_z = 0;
+        const double m_limit_max_z = 800;
+
+        const double m_limit_min_b = -120;
+        const double m_limit_max_b = 120;
+        const double m_limit_min_c = -270;
+        const double m_limit_max_c = 270;
+
+        public Interval LimitX { get { return new Interval(m_limit_min_x, m_limit_max_x); } }
+        public Interval LimitY { get { return new Interval(m_limit_min_y, m_limit_max_y); } }
+        public Interval LimitZ { get { return new Interval(m_limit_min_z, m_limit_max_z); } }
+        public Interval LimitB { get { return new Interval(m_limit_min_b, m_limit_max_b); } }
+        public Interval LimitC { get { return new Interval(m_limit_min_c, m_limit_max_c); } }
+        #endregion
+
+        private bool InMachineLimits(double x, double y, double z, double b, double c)
+        {
+            //return (LimitX.IncludesParameter(x) && LimitY.IncludesParameter(y) && LimitZ.IncludesParameter(z) &&
+            //    LimitB.IncludesParameter(b) && LimitC.IncludesParameter(c));
+            return
+                x > m_limit_min_x &&
+                x < m_limit_max_x &&
+                y > m_limit_min_y &&
+                y < m_limit_max_y &&
+                z > m_limit_min_z &&
+                z < m_limit_max_z &&
+                b > m_limit_min_b &&
+                b < m_limit_max_b &&
+                c > m_limit_min_c &&
+                c < m_limit_max_c;
+        }
+
         public override object Compute()
         {
-            List<string> Tools = new List<string>();
+            //List<string> Tools = new List<string>();
+            int tool_number = Tools.Count + 1;
             for (int i = 0; i < Paths.Count; ++i)
             {
-                if (!Tools.Contains(Paths[i].ToolName))
-                    Tools.Add(Paths[i].ToolName);
+                if (!Tools.ContainsKey(Paths[i].ToolName))
+                {
+                    Tools.Add(Paths[i].ToolName, new Tool(Paths[i].ToolName, Paths[i].ToolDiameter, tool_number));
+                    tool_number++;
+                }
             }
 
             List<string> Program = new List<string>();
+            Errors = new List<string>();
+
             /*
             // Dummy variables
             string Name = "Test";
@@ -82,11 +133,13 @@ namespace tas.Machine.Posts
             double MaterialWidth = 200, MaterialHeight = 500, MaterialDepth = 25;
             */
 
-            bool HighSpeed = true;
+            //bool HighSpeed = true;
 
             // Create headers
             Program.Add("%");
             Program.Add("O0001");
+            Program.Add($"(Revision      : 1 )");
+            Program.Add("");
             Program.Add($"(File name      : {Name} )");
             Program.Add($"(Programmed by  : {Author} )");
             Program.Add($"(Date           : {Date} )");
@@ -98,13 +151,25 @@ namespace tas.Machine.Posts
             // Comment on tools
             Program.Add("( * * * * * TOOLS * * * * * )");
             Program.Add($"( Number ; Diameter ; Length ; Name )");
-            for (int i = 0; i < Tools.Count; ++i)
+            foreach (Tool t in Tools.Values)
             {
-                double ToolDiameter = 12.0;
-                double ToolLength = 55.0;
-
-                Program.Add($"( {i} ; {ToolDiameter} ; {ToolLength} ; {Tools[i]} )");
+                Program.Add($"( {t.Number} ; {t.Diameter} ; {t.Length} ; {t.Name} )");
             }
+
+            Program.Add("");
+            Program.Add("");
+
+            Program.Add("( * * * * * VARIABLES * * * * * )");
+            Program.Add($"#560 = {55}    (ZERO POINT)");
+            Program.Add($"#561 = {WorkOffset.X}    (OFFSET PROGRAM I X)");
+            Program.Add($"#562 = {WorkOffset.Y}    (OFFSET PROGRAM I Y)");
+            Program.Add($"#563 = {WorkOffset.Z}    (OFFSET PROGRAM I Z)");
+
+            Program.Add($"#564 = {MaterialThickness}    (EMNE TYKKELSE)");
+            Program.Add($"#565 = {SikkerZ}    (SIKKER Z)");
+            Program.Add($"#566 = {SikkerZPlanskifte}    (SIKKER Z VED PLANSKIFTE)");
+            Program.Add($"#563 = #563 + #564");
+            Program.Add($"#569 = {60}");
 
             Program.Add("");
             Program.Add("");
@@ -126,6 +191,9 @@ namespace tas.Machine.Posts
             // Go home. G0 = rapid, G53 = move in absolute coords
             Program.Add("G0 G53 Z0");
             Program.Add("G0 B0 C0");
+            Program.Add("G#560");
+            Program.Add("G52 X#561 Y#562 Z#563");
+
 
             // TODO: Check out the G codes in here...
 
@@ -140,26 +208,30 @@ namespace tas.Machine.Posts
                 Program.Add($"( * * * * * PATH {i:D2} * * * * * )");
 
                 Program.Add($"( Operation : {TP.Name} )");
-                Program.Add($"( Tool no.  : {Tools.IndexOf(TP.ToolName)} )");
-                Program.Add($"( Tool des. : {TP.ToolName} )");
-                Program.Add($"( Tool dia. : {TP.ToolDiameter} )");
+                Program.Add($"( Tool no.  : {Tools[TP.ToolName].Number} )");
+                Program.Add($"( Tool des. : {Tools[TP.ToolName].Name} )");
+                Program.Add($"( Tool dia. : {Tools[TP.ToolName].Diameter} )");
 
                 // Tool change
-                Program.Add($"M6 T{Tools.IndexOf(TP.ToolName)}");
+                Program.Add($"M6 T{Tools[TP.ToolName].Number}");
+
+                // Start spindle
+                Program.Add($"M3 S{TP.SpindleSpeed}");
+                Program.Add("#567 = #2255+135.0");
+                Program.Add("#568 = 0 + SQRT[#567*#567+625]+#566-135");
+                Program.Add("G#560");
+
+                Program.Add("");
 
                 if (HighSpeed)
                     Program.Add("G5.1 Q1");
 
-                Program.Add($"G43.4 H{Tools.IndexOf(TP.ToolName)}");
+                Program.Add($"G43.4 H{Tools[TP.ToolName].Number}");
 
 
                 // If toolpath is planar, lock B and C axes
                 if (TP.IsPlanar)
                     Program.Add($"M32 M34");
-
-                // Start spindle
-                Program.Add($"M3 S{TP.SpindleSpeed}");
-                Program.Add("");
 
                 // Move to first waypoint
                 Waypoint prev = TP.Paths[0][0];
@@ -172,11 +244,14 @@ namespace tas.Machine.Posts
                 axisFirst.Unitize();
 
                 prevB = Rhino.RhinoMath.ToDegrees(Math.Acos(axisFirst * -Vector3d.ZAxis));
-                prevC = Rhino.RhinoMath.ToDegrees(Math.Atan2(axisFirst.X, axisFirst.Y));
+                prevC = Rhino.RhinoMath.ToDegrees(Math.Atan2(axisFirst.Y, axisFirst.X));
 
-                Program.Add($"G{(int)prev.Type} X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}  Z{prev.Plane.Origin.Z:F3} B{prevB:F3} C{prevC:F3}");
+                //Program.Add($"G{(int)prev.Type} X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}  Z{prev.Plane.Origin.Z:F3} B{prevB:F3} C{prevC:F3}");
+                //Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} B{prevB:F3} C{prevC:F3} Z#568");
+                Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} B{prevB:F3} C{prevC:F3}");
 
-
+                bool write_feedrate = false;
+                double diff;
                 // Go through waypoints
 
                 for (int j = 0; j < TP.Paths.Count; ++j)
@@ -185,6 +260,8 @@ namespace tas.Machine.Posts
                     Path Subpath = TP.Paths[j];
                     for (int k = 0; k < Subpath.Count; ++k)
                     {
+                        write_feedrate = false;
+
                         Waypoint wp = Subpath[k];
 
                         // Calculate B and C values
@@ -192,7 +269,16 @@ namespace tas.Machine.Posts
                         axis.Unitize();
 
                         B = Rhino.RhinoMath.ToDegrees(Math.Acos(axis * -Vector3d.ZAxis));
-                        C = Rhino.RhinoMath.ToDegrees(Math.Atan2(axis.X, axis.Y));
+                        C = Rhino.RhinoMath.ToDegrees(Math.Atan2(axis.Y, axis.X));
+
+                        // Deal with abrupt 180 to -180 switches
+                        diff = C - prevC;
+                        if (diff > 270) C -= 360.0;
+                        if (diff < -270) C += 360.0;
+
+                        // Check limits
+                        if (!InMachineLimits(wp.Plane.Origin.X, wp.Plane.Origin.Y, wp.Plane.Origin.Z, B, C))
+                            Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k}");
 
                         // Compose line
                         List<string> Line = new List<string>();
@@ -207,7 +293,10 @@ namespace tas.Machine.Posts
                                 else
                                     Line.Add($"G2");
                             else
+                            {
                                 Line.Add($"G1");
+                                write_feedrate = true;
+                            }
 
                             /*
                             switch ((WaypointType)wp.Type)
@@ -231,9 +320,9 @@ namespace tas.Machine.Posts
                                     throw new NotImplementedException();
                             }
                             */
-                        }
+            }
 
-                        if (Math.Abs(wp.Plane.Origin.X - prev.Plane.Origin.X) > 0.00001)
+            if (Math.Abs(wp.Plane.Origin.X - prev.Plane.Origin.X) > 0.00001)
                             Line.Add($"X{wp.Plane.Origin.X:F3}");
 
                         if (Math.Abs(wp.Plane.Origin.Y - prev.Plane.Origin.Y) > 0.00001)
@@ -251,11 +340,17 @@ namespace tas.Machine.Posts
                         if ((wp.Type & 4) == 1)
                             Line.Add($"R0.0");
 
-                        if ((wp.Type & 3) != (prev.Type & 3))
+                        if (write_feedrate)
                             if ((wp.Type & 2) != 0)
                                 Line.Add($"F{TP.PlungeRate}");
-                            else if ((wp.Type & 2) == 0)
+                            else
                                 Line.Add($"F{TP.FeedRate}");
+
+                        //if ((wp.Type & 3) != (prev.Type & 3))
+                        //    if ((wp.Type & 2) != 0)
+                        //        Line.Add($"F{TP.PlungeRate}");
+                            //else if ((wp.Type & 2) == 0)
+                            //    Line.Add($"F{TP.FeedRate}");
 
                         // Add line to program
                         Program.Add(string.Join(" ", Line));
@@ -270,9 +365,10 @@ namespace tas.Machine.Posts
                 // Stop spindle
                 Program.Add("M5");
 
-
                 // TODO: Find out what these G codes do
-                Program.Add("G49 G53 G69");
+                //Program.Add("G49 G53 G69");
+                Program.Add("G49");
+                Program.Add("G69");
 
                 if (HighSpeed)
                     Program.Add("G5.1 Q0");
@@ -291,13 +387,14 @@ namespace tas.Machine.Posts
             // Return home
             // TODO: Look at example, find out if G53 is global coords
             // and add if necessary
+            Program.Add("G53");
             Program.Add("G0 Z0");
-            Program.Add("G0 X-2600 Y0");
+            Program.Add("G0 X0 Y0");
 
             Program.Add("( * * * * *  END  * * * * * )");
 
-            Program.Add("M7"); // This should be to return the tool, but check
-            Program.Add("");
+            //Program.Add("M7"); // This should be to return the tool, but check
+            //Program.Add("");
             Program.Add("M99");
             Program.Add("%");
 

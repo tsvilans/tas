@@ -20,8 +20,29 @@
 using System;
 using System.Collections.Generic;
 
+using Rhino.Geometry;
+
 namespace tas.Machine
 {
+    /// <summary>
+    /// Simple class for holing tool information.
+    /// </summary>
+    public class Tool
+    {
+        public string Name;
+        public double Diameter;
+        public double Length;
+        public int Number;
+
+        public Tool(string name, double diameter, int tool_number, double length = 0.0)
+        {
+            Name = name;
+            Diameter = diameter;
+            Length = length;
+            Number = tool_number;
+        }
+    }
+
     /// <summary>
     /// Base class for toolpath post-processor. Inherit from this
     /// to create machine-specific posts.
@@ -31,15 +52,24 @@ namespace tas.Machine
         // Dummy variables
         public string Name = "MachinePost";
         public string Author = "Author";
-        public string Date = System.DateTime.Now.ToShortDateString();
+        //public string Date = System.DateTime.Now.ToShortDateString();
+        public string Date = System.DateTime.Now.ToShortDateString() + System.DateTime.Now.ToShortTimeString();
         public string ProgramTime = "X";
         public double MaterialWidth = 0, MaterialHeight = 0, MaterialDepth = 0;
+        public Point3d WorkOffset = Point3d.Origin;
 
         public List<Toolpath> Paths = new List<Toolpath>();
 
         public abstract object Compute();
         public void AddPath(Toolpath p) => Paths.Add(p);
         public void AddPaths(ICollection<Toolpath> p) => Paths.AddRange(p);
+        public Dictionary<string, Tool> Tools = new Dictionary<string, Tool>();
+        public List<string> Errors = new List<string>();
+
+        public void AddTool(Tool t)
+        {
+            Tools.Add(t.Name, t);
+        }
 
     }
 
@@ -53,6 +83,7 @@ namespace tas.Machine
             throw new NotImplementedException();
         }
     }
+
     
 
 }

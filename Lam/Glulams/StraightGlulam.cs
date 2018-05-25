@@ -38,7 +38,7 @@ namespace tas.Lam
             else
                 plane = planes[0];
 
-            if (!centreline.IsLinear()) throw new Exception("StraightGlulam only works with a linear centreline!");
+            if (!centreline.IsLinear(Tolerance)) throw new Exception("StraightGlulam only works with a linear centreline!");
             //Line l = new Line(centreline.PointAtStart, centreline.PointAtEnd);
 
             plane.Origin = centreline.PointAtStart;
@@ -375,7 +375,7 @@ namespace tas.Lam
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
         {
             Plane p = Frames.First().Item2;
-            p.Origin = Centreline.PointAtStart;
+            //p.Origin = Centreline.PointAtStart;
             Curve copy = Centreline.DuplicateCurve();
             copy.Transform(Rhino.Geometry.Transform.Translation(p.XAxis * x + p.YAxis * y));
             return copy;
