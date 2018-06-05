@@ -70,7 +70,7 @@
     <Compile Include="Components\Cmpt_FlowlineFinish.cs" />
     <Compile Include="Components\Cmpt_LinearFingerJoint.cs" />
     <Compile Include="Components\Cmpt_OffsetClip.cs" />
-    <Compile Include="Components\Cmpt_OrientTargetsTowardsPoint.cs" />
+    <Compile Include="Components\Cmpt_OrientPlanesToPoint.cs" />
     <Compile Include="Components\Cmpt_Pocket.cs" />
     <Compile Include="Components\Cmpt_Processor2Settings_Form.cs">
       <SubType>Form</SubType>

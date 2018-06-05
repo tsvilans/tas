@@ -130,18 +130,18 @@ namespace tas.Machine.GH
 
             // polyline conversion to targets
 
-            List<OrientedPolyline> polys = new List<OrientedPolyline>();
+            List<PPolyline> polys = new List<PPolyline>();
             foreach (object obj in paths)
             {
-                if (obj is GH.GH_OrientedPolyline)
-                    polys.Add((obj as GH.GH_OrientedPolyline).Value);
+                if (obj is tas.Core.GH.GH_PPolyline)
+                    polys.Add((obj as tas.Core.GH.GH_PPolyline).Value);
                 else if (obj is GH_Curve)
                 {
                     GH_Curve crv_ref = obj as GH_Curve;
                     if (crv_ref.Value.IsPolyline())
                     {
                         Polyline pl;
-                        if (crv_ref.Value.TryGetPolyline(out pl)) polys.Add((OrientedPolyline)pl);
+                        if (crv_ref.Value.TryGetPolyline(out pl)) polys.Add((PPolyline)pl);
                     }
                 }
             }
@@ -181,7 +181,7 @@ namespace tas.Machine.GH
             Plane LastTarget = new Plane();
             bool last = false;
             
-            foreach(OrientedPolyline poly in polys)
+            foreach(PPolyline poly in polys)
             {
 
                 if (poly.Count < 1) continue;
@@ -248,7 +248,7 @@ namespace tas.Machine.GH
             
             DA.SetData("debug", debug);
             DA.SetDataList("Targets", targets);
-            DA.SetData("Path", new GH.GH_OrientedPolyline(new OrientedPolyline(path_planes)));
+            DA.SetData("Path", new tas.Core.GH.GH_PPolyline(new PPolyline(path_planes)));
         }
 
         private Plane RetractToSafety(Plane current)
@@ -315,7 +315,7 @@ namespace tas.Machine.GH
                     double t = 1.0 / (N - i - 1.0);
                     //double t = (double)i / (N - i - 1);
                     debug += string.Format("Link {0}: {1:0.00}\n", i, t);
-                    Plane p = Util.InterpolatePlanes2(Last, B, t);
+                    Plane p = tas.Core.Util.InterpolatePlanes2(Last, B, t);
 
                     nO = m.ClosestPoint(p.Origin);
 
@@ -368,7 +368,7 @@ namespace tas.Machine.GH
                     counter++;
                     Vector3d toEnd = new Vector3d(B.Origin - mp.Point);
                     Vector3d n = m.NormalAt(mp);
-                    Vector3d v = Util.ProjectToPlane(toEnd, new Plane(mp.Point, n));
+                    Vector3d v = tas.Core.Util.ProjectToPlane(toEnd, new Plane(mp.Point, n));
                     v.Unitize();
                     point = mp.Point + v * step;
                     mp = m.ClosestMeshPoint(point, step / 2);
@@ -382,13 +382,13 @@ namespace tas.Machine.GH
 
                 for (int i = 0; i < poly.Count - 1; ++i)
                 {
-                    Plane p = Util.InterpolatePlanes2(A, B, length / total_length);
+                    Plane p = tas.Core.Util.InterpolatePlanes2(A, B, length / total_length);
                     Plane pnorm = new Plane(p);
                     pnorm.Transform(Transform.Rotation(p.ZAxis, normals[i], p.Origin));
 
                     double t = Math.Sin(length / total_length * Math.PI);
 
-                    p = Util.InterpolatePlanes2(p, pnorm, t);
+                    p = tas.Core.Util.InterpolatePlanes2(p, pnorm, t);
 
 
                     p.Origin = poly[i];
