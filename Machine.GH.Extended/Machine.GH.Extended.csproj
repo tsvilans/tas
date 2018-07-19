@@ -15,38 +15,46 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ABB.Robotics.Controllers.PC">
-      <HintPath>..\..\..\..\..\Program Files (x86)\ABB Industrial IT\Robotics IT\SDK\PCSDK 6.02\ABB.Robotics.Controllers.PC.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GH_IO">
-      <HintPath>..\..\..\..\..\Program Files\Common Files\McNeel\Rhinoceros\5.0\Plug-ins\Grasshopper (b45a29b1-4343-4035-989e-044e8580d9cf)\0.9.76.0\GH_IO.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Grasshopper">
-      <HintPath>..\..\..\..\..\Program Files\Common Files\McNeel\Rhinoceros\5.0\Plug-ins\Grasshopper (b45a29b1-4343-4035-989e-044e8580d9cf)\0.9.76.0\Grasshopper.dll</HintPath>
+      <HintPath>..\include_extended\ABB.Robotics.Controllers.PC.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RhinoCommon">
-      <HintPath>..\..\..\..\..\Program Files\Rhinoceros 5.0 (64-bit)\System\RhinoCommon.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Rhinoceros 5.0 (64-bit)\System\RhinoCommon.dll</HintPath>
+      <HintPath>C:\Program Files\Rhino 6\System\RhinoCommon.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Grasshopper">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\McNeel\Rhinoceros\5.0\Plug-ins\Grasshopper (b45a29b1-4343-4035-989e-044e8580d9cf)\0.9.76.0\Grasshopper.dll</HintPath>
+      <HintPath>C:\Program Files\Rhino 6\Plug-ins\Grasshopper\Grasshopper.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GH_IO">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Common Files\McNeel\Rhinoceros\5.0\Plug-ins\Grasshopper (b45a29b1-4343-4035-989e-044e8580d9cf)\0.9.76.0\GH_IO.dll</HintPath>
+      <HintPath>C:\Program Files\Rhino 6\Plug-ins\Grasshopper\GH_IO.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Robots">
@@ -107,11 +115,5 @@ Erase "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartProgram>C:\Program Files\Rhino WIP\System\Rhino.exe</StartProgram>
-    <StartArguments>
-    </StartArguments>
-    <StartAction>Program</StartAction>
   </PropertyGroup>
 </Project>
