@@ -78,7 +78,7 @@ namespace tas.Lam.GH
 
             int N = -1;
 
-            DA.GetData("Number", ref N);
+            DA.GetData("Samples", ref N);
 
             if (N < 2) N = g.Data.Samples;
 

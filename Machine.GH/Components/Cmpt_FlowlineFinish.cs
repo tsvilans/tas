@@ -28,6 +28,7 @@ namespace tas.Machine.GH
         ToolSettings Tool = new ToolSettings();
         tasTP_ToolSettings_Form form;
         Plane Workplane;
+        bool ZigZag = true;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -35,8 +36,9 @@ namespace tas.Machine.GH
             pManager.AddGeometryParameter("Surfaces", "Srf", "Drive surfaces as Breps.", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Boundary", "Bnd", "Boundary to constrain toolpath to.", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Direction", "D", "Bitmask to control direction and starting point. Switches between u and v directions (bit 1) and start ends (bit 2).", GH_ParamAccess.item, 0);
-
+            pManager.AddBooleanParameter("ZigZag", "Z", "Alternate start points of path.", GH_ParamAccess.item, true);
             pManager[2].Optional = true;
+            pManager[4].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -70,6 +72,7 @@ namespace tas.Machine.GH
             DA.GetData("Workplane", ref Workplane);
             DA.GetDataList("Surfaces", Surfaces);
             DA.GetData("Boundary", ref boundary);
+            DA.GetData("ZigZag", ref ZigZag);
 
             int Switch = 0;
             DA.GetData("Direction", ref Switch);
@@ -92,7 +95,21 @@ namespace tas.Machine.GH
                 //fl.MaxDepth = 30.0;
 
                 fl.Calculate();
-                Paths.AddRange(fl.GetPaths());
+
+                List<PPolyline> paths = fl.GetPaths();
+                if (ZigZag)
+                {
+                    PPolyline zz_path = new PPolyline();
+                    for (int j = 0; j < paths.Count; ++j)
+                    {
+                        if (tas.Core.Util.Modulus(j, 2) > 0)
+                            paths[j].Reverse();
+                        zz_path.AddRange(paths[j]);                        
+                    }
+                    Paths.Add(zz_path);
+                }
+                else
+                    Paths.AddRange(paths);
             }
 
             if (Paths != null)

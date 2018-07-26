@@ -63,6 +63,8 @@
     <Compile Include="Components\Cmpt_CreateBlankNormalToSurface.cs" />
     <Compile Include="Components\Cmpt_CreateBlankWithGuides.cs" />
     <Compile Include="Components\Cmpt_CreateWorkpiece.cs" />
+    <Compile Include="Components\Cmpt_GetPlane.cs" />
+    <Compile Include="Components\Cmpt_GlulamBisector.cs" />
     <Compile Include="Components\Cmpt_SplitGlulam.cs" />
     <Compile Include="Components\Cmpt_MapMeshToGlulamSpace.cs" />
     <Compile Include="Components\Cmpt_MapPlanesToGlulamSpace.cs" />

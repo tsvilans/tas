@@ -67,8 +67,12 @@ namespace tas.Machine.Posts
 
         public double MaterialThickness;
         public bool HighSpeed = true;
-        public double SikkerZ = -50;
-        public double SikkerZPlanskifte = 75.0;
+        public double SikkerZ = 0; // original was -50
+        public double SikkerZPlanskifte = 0; // original was 75.0
+        #endregion
+
+        #region Machine values
+        public int GWorkOffset = 54;
         #endregion
 
         #region Machine limits
@@ -81,8 +85,8 @@ namespace tas.Machine.Posts
 
         const double m_limit_min_b = -120;
         const double m_limit_max_b = 120;
-        const double m_limit_min_c = -270;
-        const double m_limit_max_c = 270;
+        const double m_limit_min_c = -330;
+        const double m_limit_max_c = 330;
 
         public Interval LimitX { get { return new Interval(m_limit_min_x, m_limit_max_x); } }
         public Interval LimitY { get { return new Interval(m_limit_min_y, m_limit_max_y); } }
@@ -110,19 +114,29 @@ namespace tas.Machine.Posts
 
         public override object Compute()
         {
+            if (Paths.Count < 1)
+            {
+                this.Errors.Add("No paths to process...");
+                return null;
+            }
+
             //List<string> Tools = new List<string>();
-            int tool_number = Tools.Count + 1;
             for (int i = 0; i < Paths.Count; ++i)
             {
-                if (!Tools.ContainsKey(Paths[i].ToolName))
+                if (!Tools.ContainsKey(Paths[i].Tool.Name))
                 {
-                    Tools.Add(Paths[i].ToolName, new Tool(Paths[i].ToolName, Paths[i].ToolDiameter, tool_number));
-                    tool_number++;
+                    this.Errors.Add($"Tool '{Paths[i].Tool.Name}' not found in post-processor tool library.");
+                    continue;
                 }
             }
 
             List<string> Program = new List<string>();
             Errors = new List<string>();
+
+            BoundingBox bbox = BoundingBox.Unset;
+
+            if (StockModel != null)
+                bbox = StockModel.GetBoundingBox(true);
 
             /*
             // Dummy variables
@@ -144,23 +158,24 @@ namespace tas.Machine.Posts
             Program.Add($"(Programmed by  : {Author} )");
             Program.Add($"(Date           : {Date} )");
             Program.Add($"(Program length : {ProgramTime} )");
-            Program.Add($"(Material       : W{MaterialWidth} H{MaterialHeight} D{MaterialDepth} )");
+            Program.Add($"(Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} )");
+            Program.Add($"(Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} )");
             Program.Add("");
             Program.Add("");
 
             // Comment on tools
             Program.Add("( * * * * * TOOLS * * * * * )");
-            Program.Add($"( Number ; Diameter ; Length ; Name )");
-            foreach (Tool t in Tools.Values)
+            Program.Add($"( Number ; Offset; Diameter ; Length ; Name )");
+            foreach (MachineTool t in Tools.Values)
             {
-                Program.Add($"( {t.Number} ; {t.Diameter} ; {t.Length} ; {t.Name} )");
+                Program.Add($"( {t.Number} ; {t.OffsetNumber} ; {t.Diameter} ; {t.Length} ; {t.Name} )");
             }
 
             Program.Add("");
             Program.Add("");
 
             Program.Add("( * * * * * VARIABLES * * * * * )");
-            Program.Add($"#560 = {55}    (ZERO POINT)");
+            Program.Add($"#560 = {GWorkOffset}    (ZERO POINT)");
             Program.Add($"#561 = {WorkOffset.X}    (OFFSET PROGRAM I X)");
             Program.Add($"#562 = {WorkOffset.Y}    (OFFSET PROGRAM I Y)");
             Program.Add($"#563 = {WorkOffset.Z}    (OFFSET PROGRAM I Z)");
@@ -208,15 +223,15 @@ namespace tas.Machine.Posts
                 Program.Add($"( * * * * * PATH {i:D2} * * * * * )");
 
                 Program.Add($"( Operation : {TP.Name} )");
-                Program.Add($"( Tool no.  : {Tools[TP.ToolName].Number} )");
-                Program.Add($"( Tool des. : {Tools[TP.ToolName].Name} )");
-                Program.Add($"( Tool dia. : {Tools[TP.ToolName].Diameter} )");
+                Program.Add($"( Tool no.  : {Tools[TP.Tool.Name].Number} )");
+                Program.Add($"( Tool des. : {Tools[TP.Tool.Name].Name} )");
+                Program.Add($"( Tool dia. : {Tools[TP.Tool.Name].Diameter} )");
 
                 // Tool change
-                Program.Add($"M6 T{Tools[TP.ToolName].Number}");
+                Program.Add($"M6 T{Tools[TP.Tool.Name].Number}");
 
                 // Start spindle
-                Program.Add($"M3 S{TP.SpindleSpeed}");
+                Program.Add($"M3 S{Tools[TP.Tool.Name].SpindleSpeed}");
                 Program.Add("#567 = #2255+135.0");
                 Program.Add("#568 = 0 + SQRT[#567*#567+625]+#566-135");
                 Program.Add("G#560");
@@ -226,7 +241,7 @@ namespace tas.Machine.Posts
                 if (HighSpeed)
                     Program.Add("G5.1 Q1");
 
-                Program.Add($"G43.4 H{Tools[TP.ToolName].Number}");
+                Program.Add($"G43.4 H{Tools[TP.Tool.Name].OffsetNumber}");
 
 
                 // If toolpath is planar, lock B and C axes
@@ -240,10 +255,10 @@ namespace tas.Machine.Posts
 
                 // Calculate B and C values
                 double B, C, prevB, prevC;
-                Vector3d axisFirst = -prev.Plane.ZAxis;
+                Vector3d axisFirst = prev.Plane.ZAxis;
                 axisFirst.Unitize();
 
-                prevB = Rhino.RhinoMath.ToDegrees(Math.Acos(axisFirst * -Vector3d.ZAxis));
+                prevB = Rhino.RhinoMath.ToDegrees(Math.Acos(axisFirst * Vector3d.ZAxis));
                 prevC = Rhino.RhinoMath.ToDegrees(Math.Atan2(axisFirst.Y, axisFirst.X));
 
                 //Program.Add($"G{(int)prev.Type} X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}  Z{prev.Plane.Origin.Z:F3} B{prevB:F3} C{prevC:F3}");
@@ -265,10 +280,10 @@ namespace tas.Machine.Posts
                         Waypoint wp = Subpath[k];
 
                         // Calculate B and C values
-                        Vector3d axis = -wp.Plane.ZAxis;
-                        axis.Unitize();
+                        Vector3d axis = wp.Plane.ZAxis;
+                        //axis.Unitize();
 
-                        B = Rhino.RhinoMath.ToDegrees(Math.Acos(axis * -Vector3d.ZAxis));
+                        B = Rhino.RhinoMath.ToDegrees(Math.Acos(axis * Vector3d.ZAxis));
                         C = Rhino.RhinoMath.ToDegrees(Math.Atan2(axis.Y, axis.X));
 
                         // Deal with abrupt 180 to -180 switches
@@ -278,7 +293,7 @@ namespace tas.Machine.Posts
 
                         // Check limits
                         if (!InMachineLimits(wp.Plane.Origin.X, wp.Plane.Origin.Y, wp.Plane.Origin.Z, B, C))
-                            Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k}");
+                            Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}, {B}, {C}");
 
                         // Compose line
                         List<string> Line = new List<string>();
@@ -342,9 +357,9 @@ namespace tas.Machine.Posts
 
                         if (write_feedrate)
                             if ((wp.Type & 2) != 0)
-                                Line.Add($"F{TP.PlungeRate}");
+                                Line.Add($"F{Tools[TP.Tool.Name].PlungeRate}");
                             else
-                                Line.Add($"F{TP.FeedRate}");
+                                Line.Add($"F{Tools[TP.Tool.Name].FeedRate}");
 
                         //if ((wp.Type & 3) != (prev.Type & 3))
                         //    if ((wp.Type & 2) != 0)
@@ -387,9 +402,9 @@ namespace tas.Machine.Posts
             // Return home
             // TODO: Look at example, find out if G53 is global coords
             // and add if necessary
-            Program.Add("G53");
-            Program.Add("G0 Z0");
-            Program.Add("G0 X0 Y0");
+            //Program.Add("G53");
+            Program.Add("G0 G53 Z0");
+            Program.Add("G0 G53 X-2600 Y0");
 
             Program.Add("( * * * * *  END  * * * * * )");
 

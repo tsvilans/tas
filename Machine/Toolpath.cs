@@ -31,25 +31,42 @@ namespace tas.Machine
     {
         public Guid Id { get; private set; }
         public List<Path> Paths;
-        public string ToolName;
+        public MachineTool Tool = null;
+        //public string ToolName;
         public string Name;
 
-        public double ToolDiameter;
-        public int SpindleSpeed;
-
         public object Safety;
-        public double FeedRate { get; set; }
-        public double PlungeRate { get; set; }
-        public double RapidRate { get; set; }
-
         public double SafeZ { get; set; }
         public double RapidZ { get; set; }
-
         public bool IsPlanar { get; set; }
 
         public Toolpath()
         {
+            Id = Guid.NewGuid();
             Paths = new List<Path>();
+        }
+
+        public Toolpath(Toolpath tp)
+        {
+            Id = Guid.NewGuid();
+            Paths = new List<Path>();
+
+            Name = tp.Name;
+            PlaneRetractVertical = tp.PlaneRetractVertical;
+            RapidZ = tp.RapidZ;
+            SafeZ = tp.SafeZ;
+            Tool = tp.Tool;
+            Safety = tp.Safety;
+            IsPlanar = tp.IsPlanar;
+
+            for (int i = 0; i < tp.Paths.Count; ++i)
+            {
+                Path p = new Path();
+                for (int j = 0; j < tp.Paths[i].Count; ++j)
+                    p.Add(new Waypoint(tp.Paths[i][j]));
+
+                Paths.Add(p);
+            }
         }
 
         /// <summary>
@@ -72,8 +89,11 @@ namespace tas.Machine
                 Plane p;
                 if (Paths[i].Count < 1) continue;
 
+                p = Paths[i][0].Plane;
+                p.Origin = p.Origin + p.ZAxis * SafeZ;
+
                 // first target retracted
-                Waypoint temp = RetractToSafety(Paths[i][0]);
+                Waypoint temp = RetractToSafety(p);
 
                 
                 // add link if necessary
@@ -82,9 +102,6 @@ namespace tas.Machine
                         new_path.AddRange(LinkOnSafety(LastTarget, temp));
                 
                 new_path.Add(temp);
-
-                p = Paths[i][0].Plane;
-                p.Origin = p.Origin + p.ZAxis * SafeZ;
                 new_path.Add(new Waypoint(p, (int)WaypointType.RAPID));
 
                 p = Paths[i][0].Plane;
@@ -95,7 +112,7 @@ namespace tas.Machine
                     new_path.Add(new Waypoint(Paths[i][j], Paths[i][j].Type));
                 }
 
-                p = Paths[i][Paths[i].Count - 1].Plane;
+                p = Paths[i].Last().Plane;
                 p.Origin = p.Origin + p.ZAxis * SafeZ;
                 new_path.Add(new Waypoint(p, (int)WaypointType.FEED));
 
@@ -440,7 +457,7 @@ namespace tas.Machine
             }
         }
 
-
+        public Toolpath Duplicate() => new Toolpath(this);
     }
 
 }

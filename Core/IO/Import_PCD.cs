@@ -183,7 +183,7 @@ namespace tas.Core.IO
 
             index = line_titles.IndexOf("FIELDS");
             if (index < 0) return false;
- 
+
             lsize = header_data[index].Count;
             if (lsize != prev)
                 return false;
@@ -192,7 +192,7 @@ namespace tas.Core.IO
             {
                 this.fields.Add(CreateField(field_type[i - 1], field_size[i - 1]));
                 int findex = Array.IndexOf(this.field_names, header_data[index][i]);
-                if (header_data[index][i] == "i")
+                if (header_data[index][i] == "i" || header_data[index][i] == "Intensity")
                     findex = Array.IndexOf(this.field_names, "intensity");
                 this.fields[i-1].id = findex;
             }

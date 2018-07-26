@@ -27,19 +27,57 @@ namespace tas.Machine
     /// <summary>
     /// Simple class for holing tool information.
     /// </summary>
-    public class Tool
+    public class MachineTool
     {
         public string Name;
         public double Diameter;
         public double Length;
         public int Number;
+        public int OffsetNumber;
+        public int FeedRate;
+        public int PlungeRate;
+        public int SpindleSpeed;
 
-        public Tool(string name, double diameter, int tool_number, double length = 0.0)
+        public MachineTool()
+        {
+            Name = "MachineTool";
+        }
+
+        public MachineTool(string name, double diameter, int tool_number, int offset_number, 
+            double length = 0.0, int feed = 2000, int speed = 15000, int plunge = 600)
         {
             Name = name;
             Diameter = diameter;
             Length = length;
             Number = tool_number;
+            FeedRate = feed;
+            PlungeRate = plunge;
+            SpindleSpeed = speed;
+            OffsetNumber = offset_number;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj as MachineTool != null)
+            {
+                MachineTool mt = obj as MachineTool;
+                if (mt.Name == this.Name &&
+                    mt.Number == this.Number &&
+                    mt.OffsetNumber == this.OffsetNumber &&
+                    mt.Length == this.Length)
+                    return true;
+            }
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return $"MachineTool ({Name}, {Number}, {Length})";
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 
@@ -53,9 +91,10 @@ namespace tas.Machine
         public string Name = "MachinePost";
         public string Author = "Author";
         //public string Date = System.DateTime.Now.ToShortDateString();
-        public string Date = System.DateTime.Now.ToShortDateString() + System.DateTime.Now.ToShortTimeString();
+        public string Date = System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
         public string ProgramTime = "X";
-        public double MaterialWidth = 0, MaterialHeight = 0, MaterialDepth = 0;
+        public Mesh StockModel = null;
+
         public Point3d WorkOffset = Point3d.Origin;
 
         public List<Toolpath> Paths = new List<Toolpath>();
@@ -63,12 +102,15 @@ namespace tas.Machine
         public abstract object Compute();
         public void AddPath(Toolpath p) => Paths.Add(p);
         public void AddPaths(ICollection<Toolpath> p) => Paths.AddRange(p);
-        public Dictionary<string, Tool> Tools = new Dictionary<string, Tool>();
+        public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
         public List<string> Errors = new List<string>();
 
-        public void AddTool(Tool t)
+        public void AddTool(MachineTool t)
         {
-            Tools.Add(t.Name, t);
+            if (Tools.ContainsKey(t.Name))
+                Tools[t.Name] = t;
+            else
+                Tools.Add(t.Name, t);
         }
 
     }

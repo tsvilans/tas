@@ -53,17 +53,127 @@ namespace tas.Lam
         {
             if (data == null) data = GlulamData.FromCurveLimits(curve);
 
+
             Glulam glulam;
-            if (curve.IsLinear(Tolerance) && planes.Length == 1)
+            if (planes == null || planes.Length < 1)
+            // if there are no planes defined, create defaults
             {
-                glulam = new StraightGlulam(curve, planes);
+                Plane p;
+                if (curve.IsLinear(Tolerance))
+                {
+                    curve.PerpendicularFrameAt(curve.Domain.Min, out p);
+                    glulam = new StraightGlulam(curve, new Plane[] { p });
+                }
+                else if (curve.IsPlanar(Tolerance))
+                {
+                    curve.TryGetPlane(out p);
+                    glulam = new SingleCurvedGlulam(curve, new Plane[]
+                    {
+                        new Plane(
+                            curve.PointAtStart,
+                            p.ZAxis,
+                            Vector3d.CrossProduct(
+                                p.ZAxis, curve.TangentAtStart
+                                )
+                            ),
+                        new Plane(
+                            curve.PointAtEnd,
+                            p.ZAxis,
+                            Vector3d.CrossProduct(
+                                p.ZAxis, curve.TangentAtEnd
+                                )
+                            )
+
+                    });
+                }
+                else
+                {
+                    Plane start, end;
+                    curve.PerpendicularFrameAt(curve.Domain.Min, out start);
+                    curve.PerpendicularFrameAt(curve.Domain.Max, out end);
+                    glulam = new DoubleCurvedGlulam(curve, new Plane[] { start, end });
+                }
             }
-            else if (curve.IsPlanar(Tolerance))
+            else // if there are planes defined
             {
-                glulam = new SingleCurvedGlulam(curve, planes);
+                if (curve.IsLinear(Tolerance) && planes.Length == 1)
+                {
+                    if (planes.Length == 1)
+                        glulam = new StraightGlulam(curve, planes);
+                    else
+                    {
+                        glulam = new StraightGlulam(curve, planes);
+                        // glulam = new StraightGlulamWithTwist(curve, planes);
+                        Console.WriteLine("Not implemented...");
+                    }
+                }
+                else if (curve.IsPlanar(Tolerance))
+                {
+                    Plane crv_plane;
+                    curve.TryGetPlane(out crv_plane);
+
+                    /*
+                     * Are all the planes perpendicular to the curve normal?
+                     *    Yes: basic SC Glulam
+                     * Are all the planes consistently aligned from the curve normal?
+                     *    Yes: SC Glulam with rotated cross-section
+                     * SC Glulam with twisting
+                     */
+
+                    bool HasTwist = false;
+
+                    foreach (Plane p in planes)
+                    {
+                        if (Math.Abs(p.YAxis * crv_plane.ZAxis) > Tolerance)
+                        {
+                            HasTwist = true;
+                        }
+                    }
+                    if (HasTwist)
+                        glulam = new DoubleCurvedGlulam(curve, planes);
+                    else
+                    {
+
+                        Plane first = new Plane(curve.PointAtStart, crv_plane.ZAxis, Vector3d.CrossProduct(crv_plane.ZAxis, curve.TangentAtStart));
+                        glulam = new SingleCurvedGlulam(curve, new Plane[] { first });
+                    }
+                }
+                else
+                {
+                    Plane temp;
+                    double t;
+                    bool Twisted = false;
+                    curve.PerpendicularFrameAt(curve.Domain.Min, out temp);
+
+                    double Angle = Vector3d.VectorAngle(planes[0].YAxis, temp.YAxis);
+
+                    for (int i = 0; i < planes.Length; ++i)
+                    {
+                        curve.ClosestPoint(planes[i].Origin, out t);
+                        curve.PerpendicularFrameAt(t, out temp);
+
+                        if (Math.Abs(Vector3d.VectorAngle(planes[0].YAxis, temp.YAxis) - Angle) > AngleTolerance)
+                        {
+                            // Twisting Glulam
+                            Twisted = true;
+                            break;
+                        }
+                    }
+                    /*
+                     * Are all the planes consistently aligned from some plane?
+                     *    Yes: DC Glulam with constant cross-section
+                     * Are all the planes at a consistent angle from the perpendicular frame of the curve?
+                     *    Yes: DC Glulam with minimal twisting
+                     * DC Glulam with twisting
+                     */
+
+                    if (Twisted)
+                        // TODO: differentiate between DC Glulam with minimal twist, and DC Glulam with twist
+                        glulam = new DoubleCurvedGlulam(curve, planes);
+                    else
+                        glulam = new DoubleCurvedGlulam(curve, planes);
+                }
             }
-            else
-                glulam = new DoubleCurvedGlulam(curve, planes);
 
             glulam.Data = data;
 

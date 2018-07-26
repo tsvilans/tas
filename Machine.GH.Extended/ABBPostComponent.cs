@@ -46,7 +46,7 @@ namespace tas.Machine.GH.Extended
         private object Safety = null;
 
         public Cmpt_ABBProcessor()
-          : base("tasToolpath: Robot Targets", "tasTP: RobTar",
+          : base("tasPost: Robots", "Post: Robots",
               "Connect multiple toolpaths together, link, and output robot targets.",
               "tasTools", "Machining")
         {

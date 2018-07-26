@@ -9,6 +9,8 @@ using System.Linq;
 using tas.Core;
 using tas.Core.Types;
 using tas.Core.GH;
+using Grasshopper;
+using Grasshopper.Kernel.Data;
 
 namespace tas.Machine.GH
 {
@@ -22,15 +24,19 @@ namespace tas.Machine.GH
         {
         }
 
+        bool JoinBrokenPaths = true;
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Toolpaths", "TP", "Toolpaths as OrientedPolylines", GH_ParamAccess.list);
             pManager.AddIntegerParameter("NumLayers", "N", "Number of times to offset.", GH_ParamAccess.item, 4);
             pManager.AddNumberParameter("Distance", "D", "Offset distance between layers.", GH_ParamAccess.item, 6.0);
             pManager.AddMeshParameter("Mesh", "M", "Bounding mesh to clip toolpaths to.", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Join", "J", "Don't retract between paths on the same layer.", GH_ParamAccess.item, true);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;
+            pManager[4].Optional = true;
 
         }
 
@@ -49,6 +55,8 @@ namespace tas.Machine.GH
             DA.GetDataList("Toolpaths", OP);
             DA.GetData("NumLayers", ref N);
             DA.GetData("Distance", ref D);
+            DA.GetData("Join", ref JoinBrokenPaths);
+
             if (!DA.GetData("Mesh", ref M))
             {
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Mesh not found.");
@@ -72,10 +80,15 @@ namespace tas.Machine.GH
             if (paths.Count < 1)
                 return;
 
-            List<PPolyline> layers = new List<PPolyline>();
-
+            DataTree<PPolyline> layers = new DataTree<PPolyline>();
+            //List<PPolyline> layers = new List<PPolyline>();
+            GH_Path path;
+            int path_counter = 0;
             for (int i = N; i > 0; --i)
             {
+                path = new GH_Path(path_counter);
+                path_counter++;
+
                 foreach (PPolyline op in paths)
                 {
                     List<Plane> new_planes = new List<Plane>();
@@ -88,13 +101,44 @@ namespace tas.Machine.GH
 
                     PPolyline layer = new PPolyline(new_planes);
                     var clipped = ClipPathWithMesh(new_planes, M);
-                    layers.AddRange(clipped.Select(x => new PPolyline(x)));
+
+                    if (JoinBrokenPaths)
+                    {
+                        PPolyline joined = new PPolyline();
+                        for (int j = 0; j < clipped.Count; ++j)
+                        {
+                            List<Plane> temp = clipped[j];
+                            //if (Util.Modulus(j, 2) > 0)
+                            //    temp.Reverse();
+
+                            //joined.AddRange(temp);
+                            joined.AddRange(clipped[j]);
+                        }
+                        layers.Add(joined, path);
+                    }
+                    else
+                    {
+                        for (int j = 0; j < clipped.Count; ++j)
+                        {
+                            layers.Add(new PPolyline(clipped[j]), path);
+                        }
+                        //layers.AddRange(clipped.Select(x => new PPolyline(x)), path);
+                    }
                 }
             }
 
-            layers.AddRange(paths);
-
-            DA.SetDataList("Toolpaths", layers.Select(x => new GH_PPolyline(x)).ToList());
+            layers.AddRange(paths, new GH_Path(path_counter));
+            DataTree<GH_PPolyline> gh_layers = new DataTree<GH_PPolyline>();
+            for (int i = 0; i < layers.BranchCount; ++i)
+            {
+                path = new GH_Path(i);
+                for (int j = 0; j < layers.Branches[i].Count; ++j)
+                {
+                    gh_layers.Add(new GH_PPolyline(layers.Branches[i][j]), path);
+                }
+            }
+            DA.SetDataTree(0, gh_layers);
+            //DA.SetDataList("Toolpaths", layers.Select(x => new GH_PPolyline(x)).ToList());
         }
 
         List<List<Plane>> ClipPathWithMesh(List<Plane> path, Mesh m)

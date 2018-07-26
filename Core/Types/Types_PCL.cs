@@ -36,6 +36,7 @@ namespace tas.Core.IO
                 data[i] = 0.0;
             }
         }
+
         public object[] data = new object[10];
         public Point3d Point()
         {

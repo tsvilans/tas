@@ -53,6 +53,7 @@
     <Compile Include="Assemblies\tasAssembly.cs" />
     <Compile Include="Beam.cs" />
     <Compile Include="Features\FeatureLoader.cs" />
+    <Compile Include="Features\Feature_EndLapJoint.cs" />
     <Compile Include="Features\Feature_CrossJoint.cs" />
     <Compile Include="Glulams\DoubleCurvedGlulam.cs" />
     <Compile Include="Glulams\FreeformGlulam.cs" />

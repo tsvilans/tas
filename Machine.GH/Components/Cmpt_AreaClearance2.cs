@@ -35,7 +35,7 @@ namespace tas.Machine.GH
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("tasTP", "tasTP", "Toolpath as list of OrientedPolyline objects.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Paths", "P", "Toolpath as list of PPolyline objects.", GH_ParamAccess.list);
             pManager.AddGenericParameter("debug", "d", "Debugging output.", GH_ParamAccess.list);
         }
 
