@@ -165,7 +165,7 @@ namespace tasTools.Components
                             for (int k = 0; k < div; ++k)
                             {
                                 double t = k / (double)(div - 1);
-                                vlist.Add(Util.Lerp(ppaths[i][j], ppaths[i][j + 1], t));
+                                vlist.Add(Util.Interpolation.Lerp(ppaths[i][j], ppaths[i][j + 1], t));
                             }
                         }
 

@@ -318,14 +318,14 @@ namespace tas.Core
             public Point3d GetPointAlong(double t)
             {
                 if (Start is SNode && End is SNode)
-                    return Util.InterpolatePoints((Start as SNode).Frame.Origin, (End as SNode).Frame.Origin, t);
+                    return Util.Interpolation.Lerp((Start as SNode).Frame.Origin, (End as SNode).Frame.Origin, t);
                 return Point3d.Unset;
             }
 
             public Plane GetPlaneAlong(double t)
             {
                 if (Start is SNode && End is SNode)
-                    return Util.InterpolatePlanes2((Start as SNode).Frame, (End as SNode).Frame, t);
+                    return Util.Interpolation.InterpolatePlanes2((Start as SNode).Frame, (End as SNode).Frame, t);
                 return Plane.Unset;
             }
 

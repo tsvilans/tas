@@ -123,7 +123,7 @@ namespace tas.Lam.GH
             List<object> output = new List<object>();
 
             if ((flags & 1) > 0)
-                output.Add(blank.GetBoundingMesh());
+                output.Add(blank.GetBoundingMesh(0, blank.Data.InterpolationType));
             if ((flags & (1 << 1)) > 0)
                 output.Add(blank.GetBoundingBrep());
             if ((flags & (1 << 2)) > 0)

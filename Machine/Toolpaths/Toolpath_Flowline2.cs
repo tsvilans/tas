@@ -213,7 +213,7 @@ namespace tas.Machine.Toolpaths
 
             for (int i = 0; i < ci.Count; ++i)
             {
-                planes.Add(Util.InterpolatePlanes2(p1, p2, ci[i].ParameterB));
+                planes.Add(Util.Interpolation.InterpolatePlanes2(p1, p2, ci[i].ParameterB));
             }
 
             return planes;

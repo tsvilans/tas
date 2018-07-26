@@ -190,47 +190,8 @@ namespace tas.Lam
         /// <returns>New Glulam oriented to the brep.</returns>
         static public Glulam CreateGlulamNormalToSurface(Curve curve, Brep brep, int num_samples = 20, GlulamData data = null)
         {
-            double[] t = curve.DivideByCount(num_samples, true);
-            List<Plane> planes = new List<Plane>();
-            double u, v;
-            Vector3d xaxis, yaxis, zaxis;
-            Point3d pt;
-            ComponentIndex ci;
-
-            for (int i = 0; i < t.Length; ++i)
-            {
-                brep.ClosestPoint(curve.PointAt(t[i]), out pt, out ci, out u, out v, 0, out yaxis);
-
-                // ripped from: https://discourse.mcneel.com/t/brep-closestpoint-normal-is-not-normal/15147/8
-                // if the closest point is found on an edge, average the face normals
-                if (ci.ComponentIndexType == ComponentIndexType.BrepEdge)
-                {
-                    BrepEdge edge = brep.Edges[ci.Index];
-                    int[] faces = edge.AdjacentFaces();
-                    yaxis = Vector3d.Zero;
-                    for (int j = 0; j < faces.Length; ++j)
-                    {
-                        BrepFace bf = edge.Brep.Faces[j];
-                        if (bf.ClosestPoint(pt, out u, out v))
-                        {
-                            Vector3d faceNormal = bf.NormalAt(u, v);
-                            yaxis += faceNormal;
-                        }
-                    }
-                    yaxis.Unitize();
-                }
-
-                //srf.ClosestPoint(curve.PointAt(t[i]), out u, out v);
-                //yaxis = srf.NormalAt(u, v);
-                zaxis = curve.TangentAt(t[i]);
-
-                xaxis = Vector3d.CrossProduct(zaxis, yaxis);
-
-                //planes.Add(new Plane(curve.PointAt(t[i]), xaxis, yaxis));
-                planes.Add(new Plane(pt, xaxis, yaxis));
-            }
-
-            return Glulam.CreateGlulam(curve, planes.ToArray(), data);
+            Plane[] frames = FramesNormalToSurface(curve, brep, num_samples);
+            return Glulam.CreateGlulam(curve, frames, data);
         }
 
         /// <summary>
@@ -498,6 +459,60 @@ namespace tas.Lam
             return CreateGlulamFromBeamGeometry2(curve, beam, out w, out h, out l, extra);
         }
 
+        /// <summary>
+        /// Create frames that are aligned with a Brep. The input curve does not
+        /// necessarily have to lie on the Brep.
+        /// </summary>
+        /// <param name="curve">Input centreline of the glulam.</param>
+        /// <param name="brep">Brep to align the glulam orientation to.</param>
+        /// <param name="num_samples">Number of orientation frames to use for alignment.</param>
+        /// <returns>New Glulam oriented to the brep.</returns>
+        static public Plane[] FramesNormalToSurface(Curve curve, Brep brep, int num_samples = 20)
+        {
+            num_samples = Math.Max(num_samples, 2);
+            double[] t = curve.DivideByCount(num_samples-1, true);
+            Plane[] planes = new Plane[num_samples];
+            double u, v;
+            Vector3d xaxis, yaxis, zaxis;
+            Point3d pt;
+            ComponentIndex ci;
+
+            for (int i = 0; i < t.Length; ++i)
+            {
+                brep.ClosestPoint(curve.PointAt(t[i]), out pt, out ci, out u, out v, 0, out yaxis);
+
+                // ripped from: https://discourse.mcneel.com/t/brep-closestpoint-normal-is-not-normal/15147/8
+                // if the closest point is found on an edge, average the face normals
+                if (ci.ComponentIndexType == ComponentIndexType.BrepEdge)
+                {
+                    BrepEdge edge = brep.Edges[ci.Index];
+                    int[] faces = edge.AdjacentFaces();
+                    yaxis = Vector3d.Zero;
+                    for (int j = 0; j < faces.Length; ++j)
+                    {
+                        BrepFace bf = edge.Brep.Faces[j];
+                        if (bf.ClosestPoint(pt, out u, out v))
+                        {
+                            Vector3d faceNormal = bf.NormalAt(u, v);
+                            yaxis += faceNormal;
+                        }
+                    }
+                    yaxis.Unitize();
+                }
+
+                //srf.ClosestPoint(curve.PointAt(t[i]), out u, out v);
+                //yaxis = srf.NormalAt(u, v);
+                zaxis = curve.TangentAt(t[i]);
+
+                xaxis = Vector3d.CrossProduct(zaxis, yaxis);
+
+                //planes.Add(new Plane(curve.PointAt(t[i]), xaxis, yaxis));
+                planes[i] = new Plane(pt, xaxis, yaxis);
+            }
+
+            return planes;
+        }
+
         static public Brep GetGlulamBisector(Glulam g1, Glulam g2, double extension = 50.0, bool normalized = false)
         {
             Glulam[] g = new Glulam[2] { g1, g2 };
@@ -520,7 +535,7 @@ namespace tas.Lam
 
                 g[longer].Centreline.LengthParameter(tl, out t2);
                 //g[longer].Centreline.ClosestPoint(g[shorter].Centreline.PointAt(t[i]), out t2);
-                Plane p = Util.InterpolatePlanes2(g[shorter].GetPlane(t[i]), g[longer].GetPlane(t2), 0.5);
+                Plane p = Util.Interpolation.InterpolatePlanes2(g[shorter].GetPlane(t[i]), g[longer].GetPlane(t2), 0.5);
 
                 edge_pts[0].Add(p.Origin + p.YAxis * extension);
                 edge_pts[1].Add(p.Origin - p.YAxis * extension);
@@ -548,6 +563,7 @@ namespace tas.Lam
 
         protected Guid ID;
         /*protected*/public List<Tuple<double, Plane>> Frames;
+
         public Curve Centreline { get; protected set;}
         public GlulamData Data;
 
@@ -556,7 +572,7 @@ namespace tas.Lam
             ID = Guid.NewGuid();
         }
 
-        public virtual Mesh GetBoundingMesh(double offset = 0.0)
+        public virtual Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             return new Mesh();
         }
@@ -612,6 +628,8 @@ namespace tas.Lam
             
             return props;
         }
+
+        public abstract void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
 
         public ArchivableDictionary GetArchivableDictionary()
         {
@@ -1288,6 +1306,12 @@ namespace tas.Lam
 
     public class GlulamData
     {
+        public enum Interpolation
+        {
+            LINEAR = 0,
+            HERMITE = 1,
+            CUBIC = 2
+        }
 
         public static double DefaultWidth = 80.0;
         public static double DefaultHeight = 80.0;
@@ -1297,6 +1321,7 @@ namespace tas.Lam
         public int NumWidth, NumHeight;
         public double LamWidth, LamHeight;
         public int Samples;
+        public Interpolation InterpolationType = Interpolation.CUBIC;
 
         public static GlulamData Default
         { get { return new GlulamData(); } }

@@ -75,134 +75,250 @@ namespace tas.Core
             }
         }
 
+        public static class Interpolation
+        {
+            /// <summary>
+            /// from http://paulbourke.net/miscellaneous/interpolation/
+            /// Tension: 1 is high, 0 normal, -1 is low
+            /// Bias: 0 is even,
+            /// positive is towards first segment,
+            /// negative towards the other
+            /// </summary>
+            /// <param name="y0"></param>
+            /// <param name="y1"></param>
+            /// <param name="y2"></param>
+            /// <param name="y3"></param>
+            /// <param name="mu"></param>
+            /// <param name="tension"></param>
+            /// <param name="bias"></param>
+            /// <returns></returns>
+            public static double HermiteInterpolate(double y0, double y1, double y2, double y3, double mu, double tension, double bias)
+            {
+                double m0, m1, mu2, mu3;
+                double a0, a1, a2, a3;
+
+                mu2 = mu * mu;
+                mu3 = mu2 * mu;
+                m0 = (y1 - y0) * (1 + bias) * (1 - tension) / 2;
+                m0 += (y2 - y1) * (1 - bias) * (1 - tension) / 2;
+                m1 = (y2 - y1) * (1 + bias) * (1 - tension) / 2;
+                m1 += (y3 - y2) * (1 - bias) * (1 - tension) / 2;
+                a0 = 2 * mu3 - 3 * mu2 + 1;
+                a1 = mu3 - 2 * mu2 + mu;
+                a2 = mu3 - mu2;
+                a3 = -2 * mu3 + 3 * mu2;
+
+                return (a0 * y1 + a1 * m0 + a2 * m1 + a3 * y2);
+            }
+
+            /// <summary>
+            /// from http://paulbourke.net/miscellaneous/interpolation/
+            /// </summary>
+            /// <param name="y0"></param>
+            /// <param name="y1"></param>
+            /// <param name="y2"></param>
+            /// <param name="y3"></param>
+            /// <param name="mu"></param>
+            /// <returns></returns>
+            public static double CubicInterpolate(double y0, double y1, double y2, double y3, double mu)
+            {
+                double a0, a1, a2, a3, mu2;
+
+                mu2 = mu * mu;
+                a0 = y3 - y2 - y0 + y1;
+                a1 = y0 - y1 - a0;
+                a2 = y2 - y0;
+                a3 = y1;
+
+                return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
+            }
+
+            /// <summary>
+            /// from http://paulbourke.net/miscellaneous/interpolation/
+            /// </summary>
+            /// <param name="y1"></param>
+            /// <param name="y2"></param>
+            /// <param name="mu"></param>
+            /// <returns></returns>
+            public static double LinearInterpolate(double y1, double y2, double mu)
+            {
+                return (y1 * (1 - mu) + y2 * mu);
+            }
+
+            /// <summary>
+            /// from http://paulbourke.net/miscellaneous/interpolation/
+            /// </summary>
+            /// <param name="y1"></param>
+            /// <param name="y2"></param>
+            /// <param name="mu"></param>
+            /// <returns></returns>
+            public static double CosineInterpolate(double y1, double y2, double mu)
+            {
+                double mu2;
+                mu2 = (1 - Math.Cos(mu * Math.PI)) / 2;
+                return (y1 * (1 - mu2) + y2 * mu2);
+            }
+
+            /// <summary>
+            /// Spherical interpolation using quaternions.
+            /// </summary>
+            /// <param name="qA">Quaternion A.</param>
+            /// <param name="qB">Quaternion B.</param>
+            /// <param name="t">t-value.</param>
+            /// <returns></returns>
+            public static Quaternion Slerp(Quaternion qA, Quaternion qB, double t)
+            {
+                if (t == 0) return qA;
+                if (t == 1.0) return qB;
+
+                Quaternion qC = new Quaternion();
+                double cosHT = qA.A * qB.A + qA.B * qB.B + qA.C * qB.C + qA.D * qB.D;
+
+                if (cosHT < 0.0)
+                {
+                    qC.A = -qB.A;
+                    qC.B = -qB.B;
+                    qC.C = -qB.C;
+                    qC.D = -qB.D;
+                    cosHT = -cosHT;
+                }
+                else
+                    qC = qB;
+
+                if (cosHT >= 1.0)
+                {
+                    qC.A = qA.A;
+                    qC.B = qA.B;
+                    qC.C = qA.C;
+                    qC.D = qA.D;
+                    return qC;
+                }
+                double HT = Math.Acos(cosHT);
+                double sinHT = Math.Sqrt(1.0 - cosHT * cosHT);
+
+                if (Math.Abs(sinHT) < 0.001)
+                {
+                    qC.A = 0.5 * (qA.A + qC.A);
+                    qC.B = 0.5 * (qA.B + qC.B);
+                    qC.C = 0.5 * (qA.C + qC.C);
+                    qC.D = 0.5 * (qA.D + qC.D);
+                    return qC;
+                }
+
+                double ratioA = Math.Sin((1 - t) * HT) / sinHT;
+                double ratioB = Math.Sin(t * HT) / sinHT;
+
+                qC.A = qA.A * ratioA + qC.A * ratioB;
+                qC.B = qA.B * ratioA + qC.B * ratioB;
+                qC.C = qA.C * ratioA + qC.C * ratioB;
+                qC.D = qA.D * ratioA + qC.D * ratioB;
+                return qC;
+            }
+
+            public static Vector3d Slerp(Vector3d v1, Vector3d v2, double t)
+            {
+                double dot = v1 * v2;
+                double theta = Math.Acos(dot) * t;
+                Vector3d rel = v2 - v1 * dot;
+                rel.Unitize();
+
+                return ((v1 * Math.Cos(theta)) + rel * Math.Sin(theta));
+            }
+
+            /// <summary>
+            /// Simple plane interpolation using interpolated vectors. Not ideal. 
+            /// Fails spectacularly in extreme cases.
+            /// </summary>
+            /// <param name="A">Plane A.</param>
+            /// <param name="B">Plane B.</param>
+            /// <param name="t">t-value.</param>
+            /// <returns></returns>
+            public static Plane InterpolatePlanes(Plane A, Plane B, double t)
+            {
+                return new Plane(Lerp(A.Origin, B.Origin, t),
+                                         Lerp(A.XAxis, B.XAxis, t),
+                                         Lerp(A.YAxis, B.YAxis, t));
+            }
+
+            /// <summary>
+            /// Better plane interpolation using quaternions.
+            /// </summary>
+            /// <param name="A">Plane A.</param>
+            /// <param name="B">Plane B.</param>
+            /// <param name="t">t-value.</param>
+            /// <returns></returns>
+            public static Plane InterpolatePlanes2(Plane A, Plane B, double t)
+            {
+                Quaternion qA = Quaternion.Rotation(Plane.WorldXY, A);
+                Quaternion qB = Quaternion.Rotation(Plane.WorldXY, B);
+
+                Quaternion qC = Slerp(qA, qB, t);
+                Point3d p = Lerp(A.Origin, B.Origin, t);
+
+                Plane plane;
+                qC.GetRotation(out plane);
+                plane.Origin = p;
+
+                return plane;
+            }
+
+            /// <summary>
+            /// Simple lerp between two colors.
+            /// </summary>
+            /// <param name="colorA">Color A.</param>
+            /// <param name="colorB">Color B.</param>
+            /// <param name="t">t-value.</param>
+            /// <returns>Interpolated color.</returns>
+            public static Color Lerp(Color colorA, Color colorB, double t)
+            {
+                int r = (int)(colorB.R * t + (colorA.R * (1.0 - t)));
+                int g = (int)(colorB.G * t + (colorA.G * (1.0 - t)));
+                int b = (int)(colorB.B * t + (colorA.B * (1.0 - t)));
+
+                return Color.FromArgb(r, g, b);
+            }
+
+            /// <summary>
+            /// Simple linear interpolation between two points.
+            /// </summary>
+            /// <param name="a"></param>
+            /// <param name="b"></param>
+            /// <param name="t"></param>
+            /// <returns></returns>
+            public static Point3d Lerp(Point3d a, Point3d b, double t)
+            {
+                return a + t * (b - a);
+                //return new Point3d(Lerp(a.X, b.X, t), Lerp(a.Y, b.Y, t), Lerp(a.Z, b.Z, t));
+            }
+
+            /// <summary>
+            /// Simple linear interpolation between two vectors.
+            /// </summary>
+            /// <param name="a"></param>
+            /// <param name="b"></param>
+            /// <param name="t"></param>
+            /// <returns></returns>
+            public static Vector3d Lerp(Vector3d a, Vector3d b, double t)
+            {
+                return a + t * (b - a);
+            }
+
+            public static double Lerp(double a, double b, double t)
+            {
+                return a + (b - a) * t;
+            }
+
+            public static double Unlerp(double a, double b, double c)
+            {
+                if (a > b)
+                    return 1.0 - (c - b) / (a - b);
+                return (c - a) / (b - a);
+            }
+        }
+
         static Random random = new Random();
 
-        /// <summary>
-        /// Simple plane interpolation using interpolated vectors. Not ideal. 
-        /// Fails spectacularly in extreme cases.
-        /// </summary>
-        /// <param name="A">Plane A.</param>
-        /// <param name="B">Plane B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        public static Plane InterpolatePlanes(Plane A, Plane B, double t)
-        {
-            return new Plane(InterpolatePoints(A.Origin, B.Origin, t),
-                                     InterpolateVectors(A.XAxis, B.XAxis, t),
-                                     InterpolateVectors(A.YAxis, B.YAxis, t));
-        }
 
-        /// <summary>
-        /// Better plane interpolation using quaternions.
-        /// </summary>
-        /// <param name="A">Plane A.</param>
-        /// <param name="B">Plane B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        public static Plane InterpolatePlanes2(Plane A, Plane B, double t)
-        {
-            Quaternion qA = Quaternion.Rotation(Plane.WorldXY, A);
-            Quaternion qB = Quaternion.Rotation(Plane.WorldXY, B);
-
-            Quaternion qC = Slerp(qA, qB, t);
-            Point3d p = InterpolatePoints(A.Origin, B.Origin, t);
-
-            Plane plane;
-            qC.GetRotation(out plane);
-            plane.Origin = p;
-
-            return plane;           
-        }
-
-        /// <summary>
-        /// Spherical interpolation using quaternions.
-        /// </summary>
-        /// <param name="qA">Quaternion A.</param>
-        /// <param name="qB">Quaternion B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        public static Quaternion Slerp(Quaternion qA, Quaternion qB, double t)
-        {
-            if (t == 0) return qA;
-            if (t == 1.0) return qB;
-
-            Quaternion qC = new Quaternion();
-            double cosHT = qA.A * qB.A + qA.B * qB.B + qA.C * qB.C + qA.D * qB.D;
-
-            if (cosHT < 0.0)
-            {
-                qC.A = -qB.A;
-                qC.B = -qB.B;
-                qC.C = -qB.C;
-                qC.D = -qB.D;
-                cosHT = -cosHT;
-            }
-            else
-                qC = qB;
-
-            if (cosHT >= 1.0)
-            {
-                qC.A = qA.A;
-                qC.B = qA.B;
-                qC.C = qA.C;
-                qC.D = qA.D;
-                return qC;
-            }
-            double HT = Math.Acos(cosHT);
-            double sinHT = Math.Sqrt(1.0 - cosHT * cosHT);
-
-            if (Math.Abs(sinHT) < 0.001)
-            {
-                qC.A = 0.5 * (qA.A + qC.A);
-                qC.B = 0.5 * (qA.B + qC.B);
-                qC.C = 0.5 * (qA.C + qC.C);
-                qC.D = 0.5 * (qA.D + qC.D);
-                return qC;
-            }
-
-            double ratioA = Math.Sin((1 - t) * HT) / sinHT;
-            double ratioB = Math.Sin(t * HT) / sinHT;
-
-            qC.A = qA.A * ratioA + qC.A * ratioB;
-            qC.B = qA.B * ratioA + qC.B * ratioB;
-            qC.C = qA.C * ratioA + qC.C * ratioB;
-            qC.D = qA.D * ratioA + qC.D * ratioB;
-            return qC;
-        }
-
-        public static Vector3d Slerp(Vector3d v1, Vector3d v2, double t)
-        {
-            double dot = v1 * v2;
-            double theta = Math.Acos(dot) * t;
-            Vector3d rel = v2 - v1 * dot;
-            rel.Unitize();
-
-            return ((v1 * Math.Cos(theta)) + rel * Math.Sin(theta));
-        }
-
-        /// <summary>
-        /// Simple linear interpolation between two points.
-        /// </summary>
-        /// <param name="A">Point A.</param>
-        /// <param name="B">Point B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        public static Point3d InterpolatePoints(Point3d A, Point3d B, double t)
-        {
-            return A + t * (B - A);
-        }
-
-        /// <summary>
-        /// Simple linear interpolation between two vectors.
-        /// </summary>
-        /// <param name="A">Vector A.</param>
-        /// <param name="B">Vector B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        public static Vector3d InterpolateVectors(Vector3d A, Vector3d B, double t)
-        {
-            return A + t * (B - A);
-        }
 
         /// <summary>
         /// Project point onto plane.
@@ -380,17 +496,7 @@ namespace tas.Core
             //return Clusters;
         }
 
-        public static double Lerp(double a, double b, double t)
-        {
-            return a + (b - a) * t;
-        }
 
-        public static double Unlerp(double a, double b, double c)
-        {
-            if (a > b)
-                return 1.0 - (c - b) / (a - b);
-            return (c - a) / (b - a);
-        }
 
         public static bool IsCollinear(Point3d p0, Point3d p1, Point3d p2, double tol = 1e-12)
         {
@@ -404,10 +510,6 @@ namespace tas.Core
             return false;
         }
 
-        public static Point3d Lerp(Point3d a, Point3d b, double t)
-        {
-            return new Point3d(Lerp(a.X, b.X, t), Lerp(a.Y, b.Y, t), Lerp(a.Z, b.Z, t));
-        }
 
         public static double Distance(Point3d a, Point3d b)
         {
@@ -586,7 +688,7 @@ namespace tas.Core
                 {
                     double t = ((th + td) - length) / td; // get t value for lerp
                     rpts.Add(poly[i]);
-                    rpts.Add(InterpolatePlanes(poly[i], poly[next], 1.0 - t));
+                    rpts.Add(Interpolation.InterpolatePlanes(poly[i], poly[next], 1.0 - t));
 
                     break;
                 }
@@ -643,7 +745,7 @@ namespace tas.Core
                 {
                     double t = ((th + td) - length) / td; // get t value for lerp
                     rpts.Add(poly[i]);
-                    rpts.Add(Lerp(poly[i], poly[next], 1.0 - t));
+                    rpts.Add(Interpolation.Lerp(poly[i], poly[next], 1.0 - t));
 
                     break;
                 }
@@ -771,22 +873,6 @@ namespace tas.Core
                 default:
                     return 1.0;
             }
-        }
-
-        /// <summary>
-        /// Simple lerp between two colors.
-        /// </summary>
-        /// <param name="colorA">Color A.</param>
-        /// <param name="colorB">Color B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns>Interpolated color.</returns>
-        public static Color InterpolateColor(Color colorA, Color colorB, double t)
-        {
-            int r = (int)(colorB.R * t + (colorA.R * (1.0 - t)));
-            int g = (int)(colorB.G * t + (colorA.G * (1.0 - t)));
-            int b = (int)(colorB.B * t + (colorA.B * (1.0 - t)));
-
-            return Color.FromArgb(r, g, b);
         }
 
         /// <summary>
@@ -1228,7 +1314,7 @@ namespace tas.Core
             index = ~index;
 
             double tt = (t - Stops[index - 1]) / (Stops[index] - Stops[index - 1]);
-            return Util.InterpolateColor(Colors[index - 1], Colors[index], tt);
+            return Util.Interpolation.Lerp(Colors[index - 1], Colors[index], tt);
         }
     }
 

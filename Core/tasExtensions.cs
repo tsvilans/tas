@@ -145,7 +145,7 @@ namespace tas.Core
                 {
                     double t = ((th + td) - length) / td; // get t value for lerp
                     rpts.Add(poly[i]);
-                    rpts.Add(Util.Lerp(poly[i], poly[next], 1.0 - t));
+                    rpts.Add(Util.Interpolation.Lerp(poly[i], poly[next], 1.0 - t));
 
                     break;
                 }
