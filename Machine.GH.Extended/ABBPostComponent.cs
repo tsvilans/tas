@@ -321,7 +321,7 @@ namespace tas.Machine.GH.Extended
                     double t = 1.0 / (N - i - 1.0);
                     //double t = (double)i / (N - i - 1);
                     debug += string.Format("Link {0}: {1:0.00}\n", i, t);
-                    Plane p = Util.InterpolatePlanes2(Last, B, t);
+                    Plane p = Util.Interpolation.InterpolatePlanes2(Last, B, t);
 
                     nO = m.ClosestPoint(p.Origin);
 
@@ -388,13 +388,13 @@ namespace tas.Machine.GH.Extended
 
                 for (int i = 0; i < poly.Count - 1; ++i)
                 {
-                    Plane p = Util.InterpolatePlanes2(A, B, length / total_length);
+                    Plane p = Util.Interpolation.InterpolatePlanes2(A, B, length / total_length);
                     Plane pnorm = new Plane(p);
                     pnorm.Transform(Transform.Rotation(p.ZAxis, normals[i], p.Origin));
 
                     double t = Math.Sin(length / total_length * Math.PI);
 
-                    p = Util.InterpolatePlanes2(p, pnorm, t);
+                    p = Util.Interpolation.InterpolatePlanes2(p, pnorm, t);
 
 
                     p.Origin = poly[i];

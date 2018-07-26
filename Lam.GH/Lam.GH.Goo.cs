@@ -59,7 +59,7 @@ namespace tas.Lam.GH
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_Mesh)))
             {
-                object mesh = new GH_Mesh(Value.GetBoundingMesh());
+                object mesh = new GH_Mesh(Value.GetBoundingMesh(0, Value.Data.InterpolationType));
 
                 target = (Q)mesh;
                 return true;
@@ -87,7 +87,7 @@ namespace tas.Lam.GH
             return base.CastTo<Q>(ref target);
         }
 
-        public BoundingBox ClippingBox => Value.GetBoundingMesh().GetBoundingBox(true);
+        public BoundingBox ClippingBox => Value.GetBoundingMesh(0, Value.Data.InterpolationType).GetBoundingBox(true);
 
         public void DrawViewportMeshes(GH_PreviewMeshArgs args)
         {

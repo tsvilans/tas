@@ -89,7 +89,7 @@ namespace tas.Lam
             Tuple<Plane, Plane, double> faround = FramesAround(t);
             Plane plane;
 
-            plane = Util.InterpolatePlanes(faround.Item1, faround.Item2, faround.Item3);
+            plane = Util.Interpolation.InterpolatePlanes(faround.Item1, faround.Item2, faround.Item3);
             plane.Origin = Centreline.PointAt(t);
             plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
 
@@ -186,7 +186,7 @@ namespace tas.Lam
             for (int i = 0; i < t.Length; ++i)
             {
                 Plane p = GetPlane(t[i]);
-                double l = Util.Ease.QuadOut(Util.Unlerp(tmin, tmax, t[i]));
+                double l = Util.Ease.QuadOut(Util.Interpolation.Unlerp(tmin, tmax, t[i]));
                 pts.Add(p.Origin + p.XAxis * l * x + p.YAxis * l * y);
             }
 

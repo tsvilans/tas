@@ -89,21 +89,26 @@ namespace tas.Lam.GH
             DA.GetData("Width", ref w);
             DA.GetData("Height", ref h);
             DA.GetData("Samples", ref samples);
+            samples = Math.Max(samples, 2);
+
+            Plane[] frames = Glulam.FramesNormalToSurface(crv, brep);
 
 
             Lam.GlulamData data = null;
             if (calculate_data)
-                data = Lam.GlulamData.FromCurveLimits(crv, w, h);
+                data = Lam.GlulamData.FromCurveLimits(crv, w, h, frames);
             else
                 data = new Lam.GlulamData(1, 1, w, h);
             //data.LamHeight = lh > 0.001 ? lh : 20.0;
             //data.LamWidth = lw > 0.001 ? lw : 20.0;
             //data.NumHeight = h > 0 ? (int)Math.Ceiling(h / lh) : 4;
             //data.NumWidth = w > 0 ? (int)Math.Ceiling(w / lw) : 4;
-            data.Samples = samples > 1 ? samples : 2;
 
-            Lam.Glulam blank = Lam.Glulam.CreateGlulamNormalToSurface(crv, brep, 20, data);
-            DA.SetData("Glulam", new GH.GH_Glulam(blank));
+            data.InterpolationType = GlulamData.Interpolation.HERMITE;
+            Glulam blank = Glulam.CreateGlulam(crv, frames, data);
+
+            //Lam.Glulam blank = Lam.Glulam.CreateGlulamNormalToSurface(crv, brep, 20, null);
+            DA.SetData("Glulam", new GH_Glulam(blank));
         }
 
         protected override System.Drawing.Bitmap Icon

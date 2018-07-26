@@ -62,11 +62,21 @@ namespace tas.Lam
             Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, p) };
         }
 
-        public override Mesh GetBoundingMesh(double offset = 0.0)
+        public override void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Line);
+            t = new double[] { CL.Domain.Min, CL.Domain.Max };
+            planes = new Plane[] { GetPlane(t[0]), GetPlane(t[1]) };
+        }
+
+        public override Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        {
+            //Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Line);
+
             Mesh m = new Mesh();
-            double[] DivParams = new double[] { CL.Domain.Min, CL.Domain.Max };
+            double[] DivParams;
+            Plane[] xPlanes;
+            GenerateCrossSectionPlanes(0, offset, out xPlanes, out DivParams, interpolation);
 
             //double Step = (Centreline.Domain.Max - Centreline.Domain.Min) / Samples;
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
@@ -78,17 +88,18 @@ namespace tas.Lam
             int i4;
             int ii4;
 
-            double Length = CL.GetLength();
-            double MaxT = CL.Domain.Length;
+            double Length = Centreline.GetLength() + offset * 2;
+            double MaxT = DivParams.Last() - DivParams.First();
             double Width = Data.NumWidth * Data.LamWidth / 1000;
             double Height = Data.NumHeight * Data.LamHeight / 1000;
+
 
             for (int i = 0; i < DivParams.Length; ++i)
             {
                 i4 = i * 8;
                 ii4 = i4 - 8;
 
-                pplane = GetPlane(DivParams[i]);
+                pplane = xPlanes[i];
 
                 for (int j = -1; j <= 1; j += 2)
                 {
@@ -138,7 +149,7 @@ namespace tas.Lam
             }
 
             // Start cap
-            pplane = GetPlane(CL.Domain.Min);
+            pplane = GetPlane(DivParams.First());
             Point3d vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
             m.Vertices.Add(vc);
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;
@@ -159,7 +170,7 @@ namespace tas.Lam
               m.Vertices.Count - 2);
 
             // End cap
-            pplane = GetPlane(CL.Domain.Max);
+            pplane = GetPlane(DivParams.Last());
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
             m.Vertices.Add(vc);
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;

@@ -131,7 +131,7 @@ namespace tas.Extra
                     if (t <= Frames[i].T)
                     {
                         tt = (t - Frames[i - 1].T) / (Frames[i].T - Frames[i - 1].T);
-                        v = tas.Core.Util.Slerp(Frames[i - 1].Direction, Frames[i].Direction,
+                        v = tas.Core.Util.Interpolation.Slerp(Frames[i - 1].Direction, Frames[i].Direction,
                             tt);
                         return GetPlane(new GuidePoint(v, t));
                     }

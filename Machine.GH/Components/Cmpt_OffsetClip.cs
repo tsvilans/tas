@@ -168,7 +168,7 @@ namespace tas.Machine.GH
                 d2 = pi[i].DistanceTo(p2.Origin);
                 t = d1 / (d1 + d2);
 
-                planes.Add(Util.InterpolatePlanes2(p1, p2, t));
+                planes.Add(Util.Interpolation.InterpolatePlanes2(p1, p2, t));
             }
 
             return planes;

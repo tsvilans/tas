@@ -30,41 +30,185 @@ namespace tas.Lam
 {
     public abstract class FreeformGlulam : Glulam
     {
-        public override Mesh GetBoundingMesh(double offset = 0.0)
+        public override void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        {
+            planes = new Plane[N];
+            Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
+
+            t = CL.DivideByCount(N - 1, true);
+
+            double[] ft = new double[Frames.Count];
+            double[] fa = new double[Frames.Count];
+
+            Plane temp;
+            for (int i = 0; i < Frames.Count; ++i)
+            {
+                CL.PerpendicularFrameAt(Frames[i].Item1, out temp);
+                ft[i] = Frames[i].Item1;
+                fa[i] = Vector3d.VectorAngle(temp.YAxis, Frames[i].Item2.YAxis, Frames[i].Item2);
+            }
+
+            for (int i = 1; i < fa.Length; ++i)
+            {
+                if (fa[i] - fa[i - 1] > Math.PI)
+                    fa[i] -= Constants.Tau;
+                else if (fa[i] - fa[i - 1] < -Math.PI)
+                    fa[i] += Constants.Tau;
+            }
+
+            int res;
+            int max = ft.Length - 1;
+            double mu;
+
+            double[] angles = new double[N];
+
+            switch (interpolation)
+            {
+                case (GlulamData.Interpolation.HERMITE): // Hermite Interpolation
+                    for (int i = 0; i < N; ++i)
+                    {
+                        if (t[i] < ft[0])
+                        {
+                            angles[i] = fa[0];
+                            continue;
+                        }
+                        else if (t[i] > ft.Last())
+                        {
+                            angles[i] = ft.Last();
+                            continue;
+                        }
+
+                        res = Array.BinarySearch(ft, t[i]);
+                        if (res < 0)
+                        {
+                            res = ~res;
+                            res--;
+                        }
+
+                        if (res > 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
+                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu, 0, 0);
+
+                        }
+                        else if (res > 0 && res < max)
+                        {
+                            mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
+                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu, 0, 0);
+                        }
+                        else if (res > 0 && res == max)
+                        {
+                            angles[i] = fa[res];
+                        }
+                        else if (res == 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
+                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[0], fa[0], fa[1], fa[2], mu, 0, 0);
+                        }
+                        else
+                            continue;
+                    }
+                    break;
+
+                case (GlulamData.Interpolation.CUBIC): // Cubic Interpolation
+                    for (int i = 0; i < N; ++i)
+                    {
+                        res = Array.BinarySearch(ft, t[i]);
+                        if (res < 0)
+                        {
+                            res = ~res;
+                            res--;
+                        }
+
+                        if (res > 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
+                            angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu);
+
+                        }
+                        else if (res > 0 && res < max)
+                        {
+                            mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
+                            angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu);
+                        }
+                        else if (res > 0 && res == max)
+                        {
+                            angles[i] = fa[res];
+                        }
+                        else if (res == 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
+                            angles[i] = Util.Interpolation.CubicInterpolate(fa[0], fa[0], fa[1], fa[2], mu);
+                        }
+                        else
+                            continue;
+                    }
+                    break;
+
+                default: // Default linear interpolation
+                    for (int i = 0; i < N; ++i)
+                    {
+                        res = Array.BinarySearch(ft, t[i]);
+                        if (res < 0)
+                        {
+                            res = ~res;
+                            res--;
+                        }
+                        if (res >= 0 && res < max)
+                        {
+                            mu = Math.Min(1.0, Math.Max(0, (t[i] - ft[res]) / (ft[res + 1] - ft[res])));
+                            angles[i] = Util.Interpolation.Lerp(fa[res], fa[res + 1], mu);
+                        }
+                        else if (res < 0)
+                            angles[i] = fa[0];
+                        else if (res >= max)
+                            angles[i] = fa[max];
+                    }
+                    break;
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                CL.PerpendicularFrameAt(t[i], out temp);
+                temp.Transform(Rhino.Geometry.Transform.Rotation(angles[i], temp.ZAxis, temp.Origin));
+                planes[i] = temp;
+            }
+        }
+
+        public override Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             Mesh m = new Mesh();
 
-            Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
+            //Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
             
-            double[] DivParams = CL.DivideByCount(Data.Samples, true);
+            double[] DivParams;
+            Plane[] xPlanes;
+            GenerateCrossSectionPlanes(Data.Samples, offset, out xPlanes, out DivParams, interpolation);
 
             //double Step = (Centreline.Domain.Max - Centreline.Domain.Min) / Samples;
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
 
-            Plane pplane;
-
             // vertex index and next frame vertex index
             int i4;
             int ii4;
 
-            double Length = CL.GetLength();
-            double MaxT = CL.Domain.Length;
+            double Length = Centreline.GetLength() + offset * 2;
+            double MaxT = DivParams.Last() - DivParams.First();
             double Width = Data.NumWidth * Data.LamWidth / 1000;
             double Height = Data.NumHeight * Data.LamHeight / 1000;
 
-            for (int i = 0; i < DivParams.Length; ++i)
+            for (int i = 0; i < xPlanes.Length; ++i)
             {
                 i4 = i * 8;
                 ii4 = i4 - 8;
 
-                pplane = GetPlane(DivParams[i]);
 
                 for (int j = -1; j <= 1; j += 2)
                 {
                     for (int k = -1; k <= 1; k += 2)
                     {
-                        Point3d v = pplane.Origin + hW * j * pplane.XAxis + hH * k * pplane.YAxis;
+                        Point3d v = xPlanes[i].Origin + hW * j * xPlanes[i].XAxis + hH * k * xPlanes[i].YAxis;
                         m.Vertices.Add(v);
                         m.Vertices.Add(v);
                     }
@@ -107,8 +251,10 @@ namespace tas.Lam
                 }
             }
 
+            Plane pplane;
+
             // Start cap
-            pplane = GetPlane(CL.Domain.Min);
+            pplane = xPlanes.First();
             Point3d vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
             m.Vertices.Add(vc);
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;
@@ -129,7 +275,7 @@ namespace tas.Lam
               m.Vertices.Count - 2);
 
             // End cap
-            pplane = GetPlane(CL.Domain.Max);
+            pplane = xPlanes.Last();
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
             m.Vertices.Add(vc);
             vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;
@@ -335,7 +481,7 @@ namespace tas.Lam
             {
                 t = DivParams[i];
                 faround = FramesAround(t);
-                plane = Util.InterpolatePlanes(faround.Item1, faround.Item2, faround.Item3);
+                plane = Util.Interpolation.InterpolatePlanes(faround.Item1, faround.Item2, faround.Item3);
                 plane.Origin = Centreline.PointAt(t);
                 plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
 
@@ -378,7 +524,10 @@ namespace tas.Lam
             Tuple<Plane, Plane, double> faround = FramesAround(t);
             Plane plane;
 
-            plane = Util.InterpolatePlanes2(faround.Item1, faround.Item2, faround.Item3);
+            //double tt = Util.CosineInterpolate(0, 1.0, faround.Item3);
+            double tt = faround.Item3;
+
+            plane = Util.Interpolation.InterpolatePlanes2(faround.Item1, faround.Item2, tt);
             plane.Origin = Centreline.PointAt(t);
             plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
 
@@ -530,7 +679,7 @@ namespace tas.Lam
             for (int i = 0; i < t.Length; ++i)
             {
                 Plane p = GetPlane(t[i]);
-                double l = Util.Ease.QuadOut(Util.Unlerp(tmin, tmax, t[i]));
+                double l = Util.Ease.QuadOut(Util.Interpolation.Unlerp(tmin, tmax, t[i]));
                 pts.Add(p.Origin + p.XAxis * l * x + p.YAxis * l * y);
             }
 

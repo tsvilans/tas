@@ -21,8 +21,8 @@ namespace tas.Lam.GH.Components
         double m_radius_factor = 0.005;
 
         public Cmpt_AnalyzeRibbonEdges()
-          : base("Analyze Ribbon", "Ribbon",
-              "Tests if a Glulam can be made out of ",
+          : base("Analyze Ribbon Edges", "Ribbon",
+              "Tests if a Glulam can be made out of a ribbon-like lamella, instead of sticks.",
               "tasTools", "Analysis")
         {
 
@@ -102,7 +102,10 @@ namespace tas.Lam.GH.Components
 
         void GetRibbonEdges(Glulam g, double Offset, List<Line> lines, List<double> lengths, bool FlipXY = false)
         {
-            double[] DivParams = g.Centreline.DivideByCount(g.Data.Samples, true);
+            double[] DivParams;
+            Plane[] xPlanes;
+
+            g.GenerateCrossSectionPlanes(g.Data.Samples, 0, out xPlanes, out DivParams, g.Data.InterpolationType);
             Plane pplane, prevplane;
 
             double w;
@@ -119,7 +122,7 @@ namespace tas.Lam.GH.Components
             Point3d p2, p3;
 
             // First section
-            pplane = g.GetPlane(DivParams[0]);
+            pplane = xPlanes.First();
 
             if (FlipXY)
             {
@@ -136,9 +139,9 @@ namespace tas.Lam.GH.Components
             p3 = p1;
             prevplane = pplane;
 
-            for (int i = 1; i <= g.Data.Samples; ++i)
+            for (int i = 1; i < g.Data.Samples; ++i)
             {
-                pplane = g.GetPlane(DivParams[i]);
+                pplane = xPlanes[i];
 
                 if (FlipXY)
                 {
