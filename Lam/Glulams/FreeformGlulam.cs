@@ -74,7 +74,7 @@ namespace tas.Lam
                         }
                         else if (t[i] > ft.Last())
                         {
-                            angles[i] = ft.Last();
+                            angles[i] = fa.Last();
                             continue;
                         }
 
@@ -113,6 +113,17 @@ namespace tas.Lam
                 case (GlulamData.Interpolation.CUBIC): // Cubic Interpolation
                     for (int i = 0; i < N; ++i)
                     {
+                        if (t[i] <= ft[0])
+                        {
+                            angles[i] = fa[0];
+                            continue;
+                        }
+                        else if (t[i] >= ft.Last())
+                        {
+                            angles[i] = fa.Last();
+                            continue;
+                        }
+
                         res = Array.BinarySearch(ft, t[i]);
                         if (res < 0)
                         {
