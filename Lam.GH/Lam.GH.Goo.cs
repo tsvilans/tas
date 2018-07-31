@@ -48,6 +48,11 @@ namespace tas.Lam.GH
                 Value = source as Glulam;
                 return true;
             }
+            else if (source is GH_Glulam)
+            {
+                Value = (source as GH_Glulam).Value;
+                return true;
+            }
 
             return false;
         }
