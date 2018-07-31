@@ -78,7 +78,6 @@ namespace tas.Lam
             Plane[] xPlanes;
             GenerateCrossSectionPlanes(0, offset, out xPlanes, out DivParams, interpolation);
 
-            //double Step = (Centreline.Domain.Max - Centreline.Domain.Min) / Samples;
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
 
@@ -189,6 +188,9 @@ namespace tas.Lam
               m.Vertices.Count - 1,
               m.Vertices.Count - 3,
               m.Vertices.Count - 4);
+
+            m.Vertices.CullUnused();
+            m.Compact();
 
             m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
             return m;

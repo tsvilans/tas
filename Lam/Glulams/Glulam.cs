@@ -96,7 +96,7 @@ namespace tas.Lam
             }
             else // if there are planes defined
             {
-                if (curve.IsLinear(Tolerance) && planes.Length == 1)
+                if (curve.IsLinear(Tolerance))
                 {
                     if (planes.Length == 1)
                         glulam = new StraightGlulam(curve, planes);

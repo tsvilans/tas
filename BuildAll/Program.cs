@@ -20,19 +20,23 @@
 using System;
 using System.Reflection;
 
-
 namespace BuildAll
 {
     class Program
     {
         static void Main(string[] args)
         {
+            Assembly assem = Assembly.GetEntryAssembly();
+            AssemblyName assemName = assem.GetName();
+            Version ver = assemName.Version;
+
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine("\n\n   ---\n");
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("   tasTools .NET");
             Console.WriteLine("\n   ---\n\n");
             Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("   build " + ver.ToString(4));
             Console.WriteLine("   A personal PhD research toolkit.");
             Console.WriteLine("   by Tom Svilans, 2016-2018");
             Console.WriteLine("   tsvi@kadk.dk");
@@ -40,7 +44,6 @@ namespace BuildAll
             Console.WriteLine();
 
             Console.WriteLine("   tomsvilans.com");
-
             Console.ReadLine();
         }
     }

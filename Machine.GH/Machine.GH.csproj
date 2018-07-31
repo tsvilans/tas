@@ -112,7 +112,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="ToolSeetingsForm.cs" />
+    <Compile Include="ToolSettingsForm.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Components\Cmpt_Processor2Settings_Form.resx">
