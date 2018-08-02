@@ -192,7 +192,8 @@ namespace tas.Lam
             m.Vertices.CullUnused();
             m.Compact();
 
-            m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
+            //m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
+            m.UserDictionary.Set("glulam", GetArchivableDictionary());
             return m;
         }
 
@@ -243,7 +244,9 @@ namespace tas.Lam
 
             brep.JoinNakedEdges(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
             brep = brep.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            brep.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
+            //brep.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
+            brep.UserDictionary.Set("glulam", GetArchivableDictionary());
+
             return brep;
 
         }
