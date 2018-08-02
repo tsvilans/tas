@@ -66,12 +66,6 @@
     <None Include="Resources\Icons\icon_bitmask3_component_24x24.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj">
-      <Project>{0ab66830-7875-4c0a-b6ea-a2239c01fbc0}</Project>
-      <Name>Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Icons\icon_deoriented_polyline_component_24x24.png" />
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +82,12 @@
       <Version>6.7.18210.11281</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj">
+      <Project>{0ab66830-7875-4c0a-b6ea-a2239c01fbc0}</Project>
+      <Name>Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -103,13 +103,4 @@
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
   </PropertyGroup>
-  <Import Project="..\packages\RhinoCommon.6.7.18210.11281\build\net45\RhinoCommon.targets" Condition="Exists('..\packages\RhinoCommon.6.7.18210.11281\build\net45\RhinoCommon.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\RhinoCommon.6.7.18210.11281\build\net45\RhinoCommon.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\RhinoCommon.6.7.18210.11281\build\net45\RhinoCommon.targets'))" />
-    <Error Condition="!Exists('..\packages\Grasshopper.6.7.18210.11281\build\net45\Grasshopper.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Grasshopper.6.7.18210.11281\build\net45\Grasshopper.targets'))" />
-  </Target>
-  <Import Project="..\packages\Grasshopper.6.7.18210.11281\build\net45\Grasshopper.targets" Condition="Exists('..\packages\Grasshopper.6.7.18210.11281\build\net45\Grasshopper.targets')" />
 </Project>
