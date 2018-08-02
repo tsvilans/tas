@@ -29,6 +29,7 @@ namespace tas.Lam.GH
             values = new List<GH_Glulam>();
             return GH_GetterResult.success;
         }
+
     }
 
     public class GlulamAssemblyParameter : GH_PersistentParam<GH_Assembly>
