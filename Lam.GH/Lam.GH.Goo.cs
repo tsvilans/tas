@@ -101,6 +101,7 @@ namespace tas.Lam.GH
 
         public void DrawViewportWires(GH_PreviewWireArgs args)
         {
+            args.Pipeline.DrawMeshWires(Value.GetBoundingMesh(), args.Color);
         }
 
         public override bool Write(GH_IWriter writer)
