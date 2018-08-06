@@ -38,6 +38,16 @@ namespace tas.Core
 
     }
 
+    public enum Side
+    {
+        Top = 1,
+        Bottom = 2,
+        Left = 4,
+        Right = 8,
+        Front = 16,
+        Back = 32
+    }
+
     public static class Util
     {
         public enum Axis
@@ -1208,7 +1218,54 @@ namespace tas.Core
             return result;
         }
 
-        
+        /// <summary>
+        /// Create frames that are aligned with a Brep. The input curve does not
+        /// necessarily have to lie on the Brep.
+        /// </summary>
+        /// <param name="curve">Input centreline of the glulam.</param>
+        /// <param name="brep">Brep to align the glulam orientation to.</param>
+        /// <param name="num_samples">Number of orientation frames to use for alignment.</param>
+        /// <returns>New Glulam oriented to the brep.</returns>
+        public static Plane[] FramesNormalToSurface(Curve curve, Brep brep, int num_samples = 20)
+        {
+            num_samples = Math.Max(num_samples, 2);
+            double[] t = curve.DivideByCount(num_samples - 1, true);
+            Plane[] planes = new Plane[num_samples];
+            Vector3d xaxis, yaxis, zaxis;
+            Point3d pt;
+            ComponentIndex ci;
+
+            for (int i = 0; i < t.Length; ++i)
+            {
+                brep.ClosestPoint(curve.PointAt(t[i]), out pt, out ci, out double u, out double v, 0, out yaxis);
+
+                // ripped from: https://discourse.mcneel.com/t/brep-closestpoint-normal-is-not-normal/15147/8
+                // if the closest point is found on an edge, average the face normals
+                if (ci.ComponentIndexType == ComponentIndexType.BrepEdge)
+                {
+                    BrepEdge edge = brep.Edges[ci.Index];
+                    int[] faces = edge.AdjacentFaces();
+                    yaxis = Vector3d.Zero;
+                    for (int j = 0; j < faces.Length; ++j)
+                    {
+                        BrepFace bf = edge.Brep.Faces[j];
+                        if (bf.ClosestPoint(pt, out u, out v))
+                        {
+                            Vector3d faceNormal = bf.NormalAt(u, v);
+                            yaxis += faceNormal;
+                        }
+                    }
+                    yaxis.Unitize();
+                }
+
+                zaxis = curve.TangentAt(t[i]);
+                xaxis = Vector3d.CrossProduct(zaxis, yaxis);
+                planes[i] = new Plane(pt, xaxis, yaxis);
+            }
+
+            return planes;
+        }
+
         #region Carve booleans
 
         /// <summary>

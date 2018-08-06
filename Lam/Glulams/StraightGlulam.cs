@@ -248,7 +248,6 @@ namespace tas.Lam
             brep.UserDictionary.Set("glulam", GetArchivableDictionary());
 
             return brep;
-
         }
 
         public override List<Brep> GetLamellaBreps()

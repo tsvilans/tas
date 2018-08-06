@@ -91,8 +91,7 @@ namespace tas.Lam.GH
             DA.GetData("Samples", ref samples);
             samples = Math.Max(samples, 2);
 
-            Plane[] frames = Glulam.FramesNormalToSurface(crv, brep);
-
+            Plane[] frames = tas.Core.Util.FramesNormalToSurface(crv, brep);
 
             Lam.GlulamData data = null;
             if (calculate_data)

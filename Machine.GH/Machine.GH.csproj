@@ -144,10 +144,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.7.18210.11281</Version>
+      <Version>6.7.18199.22081</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>6.7.18210.11281</Version>
+      <Version>6.7.18199.22081</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -165,5 +165,4 @@ Erase "$(TargetPath)"</PostBuildEvent>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
   </PropertyGroup>
-
 </Project>

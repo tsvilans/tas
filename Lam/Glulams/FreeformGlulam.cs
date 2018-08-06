@@ -30,10 +30,10 @@ namespace tas.Lam
 {
     public abstract class FreeformGlulam : Glulam
     {
-        public override void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             planes = new Plane[N];
-            Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
+            Curve CL = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
             t = CL.DivideByCount(N - 1, true);
 

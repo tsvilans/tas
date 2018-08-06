@@ -190,7 +190,7 @@ namespace tas.Lam
         /// <returns>New Glulam oriented to the brep.</returns>
         static public Glulam CreateGlulamNormalToSurface(Curve curve, Brep brep, int num_samples = 20, GlulamData data = null)
         {
-            Plane[] frames = FramesNormalToSurface(curve, brep, num_samples);
+            Plane[] frames = tas.Core.Util.FramesNormalToSurface(curve, brep, num_samples);
             return Glulam.CreateGlulam(curve, frames, data);
         }
 
@@ -459,59 +459,7 @@ namespace tas.Lam
             return CreateGlulamFromBeamGeometry2(curve, beam, out w, out h, out l, extra);
         }
 
-        /// <summary>
-        /// Create frames that are aligned with a Brep. The input curve does not
-        /// necessarily have to lie on the Brep.
-        /// </summary>
-        /// <param name="curve">Input centreline of the glulam.</param>
-        /// <param name="brep">Brep to align the glulam orientation to.</param>
-        /// <param name="num_samples">Number of orientation frames to use for alignment.</param>
-        /// <returns>New Glulam oriented to the brep.</returns>
-        static public Plane[] FramesNormalToSurface(Curve curve, Brep brep, int num_samples = 20)
-        {
-            num_samples = Math.Max(num_samples, 2);
-            double[] t = curve.DivideByCount(num_samples-1, true);
-            Plane[] planes = new Plane[num_samples];
-            double u, v;
-            Vector3d xaxis, yaxis, zaxis;
-            Point3d pt;
-            ComponentIndex ci;
 
-            for (int i = 0; i < t.Length; ++i)
-            {
-                brep.ClosestPoint(curve.PointAt(t[i]), out pt, out ci, out u, out v, 0, out yaxis);
-
-                // ripped from: https://discourse.mcneel.com/t/brep-closestpoint-normal-is-not-normal/15147/8
-                // if the closest point is found on an edge, average the face normals
-                if (ci.ComponentIndexType == ComponentIndexType.BrepEdge)
-                {
-                    BrepEdge edge = brep.Edges[ci.Index];
-                    int[] faces = edge.AdjacentFaces();
-                    yaxis = Vector3d.Zero;
-                    for (int j = 0; j < faces.Length; ++j)
-                    {
-                        BrepFace bf = edge.Brep.Faces[j];
-                        if (bf.ClosestPoint(pt, out u, out v))
-                        {
-                            Vector3d faceNormal = bf.NormalAt(u, v);
-                            yaxis += faceNormal;
-                        }
-                    }
-                    yaxis.Unitize();
-                }
-
-                //srf.ClosestPoint(curve.PointAt(t[i]), out u, out v);
-                //yaxis = srf.NormalAt(u, v);
-                zaxis = curve.TangentAt(t[i]);
-
-                xaxis = Vector3d.CrossProduct(zaxis, yaxis);
-
-                //planes.Add(new Plane(curve.PointAt(t[i]), xaxis, yaxis));
-                planes[i] = new Plane(pt, xaxis, yaxis);
-            }
-
-            return planes;
-        }
 
         static public Brep GetGlulamBisector(Glulam g1, Glulam g2, double extension = 50.0, bool normalized = false)
         {
@@ -629,7 +577,7 @@ namespace tas.Lam
             return props;
         }
 
-        public abstract void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
+        public abstract void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
 
         public ArchivableDictionary GetArchivableDictionary()
         {
@@ -1153,6 +1101,72 @@ namespace tas.Lam
             Rectangle3d rec = new Rectangle3d(endPlane, new Interval(-hwidth, hwidth), new Interval(-hheight, hheight));
 
             return Brep.CreateFromCornerPoints(rec.Corner(0), rec.Corner(1), rec.Corner(2), rec.Corner(3), Tolerance);
+        }
+
+        public Brep GetGlulamFace(tas.Core.Side side)
+        {
+            Plane[] planes;
+            double[] t;
+
+            this.GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out t, GlulamData.Interpolation.HERMITE);
+
+            double hWidth = this.Width() / 2;
+            double hHeight = this.Height() / 2;
+            double x1, y1, x2, y2;
+            x1 = y1 = x2 = y2 = 0;
+            Rectangle3d face;
+
+            switch (side)
+            {
+                case (Side.Back):
+                    face = new Rectangle3d(planes.First(), new Interval(-hWidth, hWidth), new Interval(-hHeight, hHeight));
+                    return Brep.CreateFromCornerPoints(face.Corner(0), face.Corner(1), face.Corner(2), face.Corner(3), 0.001);
+                case (Side.Front):
+                    face = new Rectangle3d(planes.Last(), new Interval(-hWidth, hWidth), new Interval(-hHeight, hHeight));
+                    return Brep.CreateFromCornerPoints(face.Corner(0), face.Corner(1), face.Corner(2), face.Corner(3), 0.001);
+                case (Side.Left):
+                    x1 = hWidth; y1 = hHeight;
+                    x2 = hWidth; y2 = -hHeight;
+                    break;
+                case (Side.Right):
+                    x1 = -hWidth; y1 = hHeight;
+                    x2 = -hWidth; y2 = -hHeight;
+                    break;
+                case (Side.Top):
+                    x1 = hWidth; y1 = hHeight;
+                    x2 = -hWidth; y2 = hHeight;
+                    break;
+                case (Side.Bottom):
+                    x1 = hWidth; y1 = -hHeight;
+                    x2 = -hWidth; y2 = -hHeight;
+                    break;
+            }
+
+            Curve[] rules = new Curve[t.Length];
+            for (int i = 0; i < t.Length; ++i)
+                    rules[i] = new Line(planes[i].Origin + planes[i].XAxis * x1 + planes[i].YAxis * y1,
+                        planes[i].Origin + planes[i].XAxis * x2 + planes[i].YAxis * y2).ToNurbsCurve();
+
+            Brep[] loft = Brep.CreateFromLoft(rules, Point3d.Unset, Point3d.Unset, LoftType.Normal, false);
+            if (loft == null || loft.Length < 1) throw new Exception("Glulam::GetGlulamFace::Loft failed!");
+
+            Brep brep = loft[0];
+
+            return brep;
+        }
+
+        public Brep[] GetGlulamFaces(int mask)
+        {
+            bool[] flags = new bool[6];
+            List<Brep> breps = new List<Brep>();
+
+            for (int i = 0; i < 6; ++i)
+            {
+                if ((mask & (1 << i)) > 0)
+                    breps.Add(GetGlulamFace((Side)i));
+            }
+
+            return breps.ToArray();
         }
 
         public Brep GetSideSurface(int side, double offset, double width, double extension = 0.0, bool flip = false)
