@@ -96,7 +96,7 @@ namespace tas.Core.Types
             }
         }
 
-        public PPolyline Duplicate()
+        public new PPolyline Duplicate()
         {
             List<Plane> p = new List<Plane>();
             for (int i = 0; i < this.Count; ++i)

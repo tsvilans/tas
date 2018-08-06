@@ -83,7 +83,11 @@ namespace tas.Lam.GH
 
             m_params.Sort();
 
+
             List<Glulam> m_glulams = new List<Glulam>();
+            m_glulams = g.Split(m_params.ToArray(), m_overlap);
+
+            /*
             List<Glulam> res = new List<Glulam>();
             Glulam m_temp = g;
             for (int i = 0; i < m_params.Count; ++i)
@@ -99,6 +103,7 @@ namespace tas.Lam.GH
             }
             if (res.Count > 0)
                 m_glulams.Add(res.Last());
+            */
 
             DA.SetDataList("Glulams", m_glulams.Select(x => new GH_Glulam(x)));
         }

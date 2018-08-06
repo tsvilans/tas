@@ -989,14 +989,20 @@ namespace tas.Lam
             if (overlap < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance) return Split(t);
 
             if (!Centreline.Domain.IncludesParameter(t)) return null;
-            double t1 = t + (overlap / 2);
-            double t2 = t - (overlap / 2);
+            double split_length = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
+
+            double t1;
+            double t2;
+
+            if (!Centreline.LengthParameter(split_length + (overlap / 2), out t1)) return null;
+            if (!Centreline.LengthParameter(split_length - (overlap / 2), out t2)) return null;
+
             if (!Centreline.Domain.IncludesParameter(t1) || !Centreline.Domain.IncludesParameter(t2)) return null;
 
             Curve[] split_curves;
             Plane split_plane;
             double percentage;
-            //OrientedGlulamBlank Blank1, Blank2;
+
             Glulam Blank1, Blank2;
             GlulamData Data1, Data2;
             {
@@ -1008,7 +1014,7 @@ namespace tas.Lam
                 List<Tuple<double, Plane>> Frames1 = Frames.Where(x => x.Item1 < t1).ToList();
 
                 Data1 = Data.Duplicate();
-                Data1.Samples = (int)(Data.Samples * percentage);
+                Data1.Samples = Math.Max(2, (int)(Data.Samples * percentage));
 
                 Blank1 = CreateGlulam(split_curves[0], new Plane[] { split_plane }, Data1);
                 Blank1.Frames.AddRange(Frames1);
@@ -1021,10 +1027,12 @@ namespace tas.Lam
                 percentage = (t2 - Centreline.Domain.Min) / (Centreline.Domain.Max - Centreline.Domain.Min);
                 split_plane = GetPlane(t2);
                 split_curves = Centreline.Split(t2);
+                if (split_curves == null || split_curves.Length != 2) return null;
+
                 List<Tuple<double, Plane>> Frames2 = Frames.Where(x => x.Item1 >= t2).ToList();
 
                 Data2 = Data.Duplicate();
-                Data2.Samples = (int)(Data.Samples * (1 - percentage));
+                Data2.Samples = Math.Max(2, (int)(Data.Samples * (1 - percentage)));
 
                 Blank2 = CreateGlulam(split_curves[1], new Plane[] { split_plane }, Data2);
                 Blank2.Frames.AddRange(Frames2);
@@ -1034,6 +1042,30 @@ namespace tas.Lam
 
             List<Glulam> blanks = new List<Glulam>() { Blank1, Blank2 };
             return blanks;
+        }
+
+        public List<Glulam> Split(double[] t, double overlap = 0.0)
+        {
+            Glulam temp = this;
+            Array.Sort(t);
+            List<Glulam> glulams = new List<Glulam>();
+
+            for (int i = 1; i < t.Length - 1; ++i)
+            {
+                List<Glulam> splits = Split(t[i], overlap);
+
+                if (splits == null || splits.Count < 2)
+                    continue;
+
+                if (splits[0] != null)
+                    glulams.Add(splits[0]);
+                temp = splits[1];
+            }
+
+            if (temp != null)
+                glulams.Add(temp);
+
+            return glulams;
         }
 
         /// <summary>
