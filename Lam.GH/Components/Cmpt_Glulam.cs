@@ -83,7 +83,7 @@ namespace tas.Lam.GH
             int samples = 0;
             int flags = 0;
             List<Plane> planes = new List<Plane>();
-            Plane[] plane_array;
+            Plane[] plane_array = null;
 
             if (!DA.GetData("Curve", ref crv))
                 return;
@@ -97,9 +97,9 @@ namespace tas.Lam.GH
 
             if (!DA.GetDataList("Frames", planes))
             {
-                Plane p;
-                crv.PerpendicularFrameAt(crv.Domain.Min, out p);
-                plane_array = new Plane[] { p };
+                //Plane p;
+                //crv.PerpendicularFrameAt(crv.Domain.Min, out p);
+                //plane_array = new Plane[] { p };
             }
             else
                 plane_array = planes.ToArray();

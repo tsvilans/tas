@@ -175,6 +175,7 @@ namespace tas.Lam
                 }
             }
 
+            glulam.ValidateFrames();
             glulam.Data = data;
 
             return glulam;
@@ -644,6 +645,11 @@ namespace tas.Lam
             Frames.Sort((x, y) => x.Item1.CompareTo(y.Item1));
         }
 
+        public void ValidateFrames()
+        {
+            Frames = Frames.Where(x => x.Item2.IsValid).ToList();
+        }
+
         public Plane GetPlane(Point3d p)
         {
             double t;
@@ -886,6 +892,14 @@ namespace tas.Lam
             GlulamData data = Data;
 
             return CreateGlulam(c, NewPlanes, data);
+        }
+
+        public bool Extend(CurveEnd end, double length)
+        {
+            Curve c = Centreline.Extend(end, length, CurveExtensionStyle.Smooth);
+            Centreline = c;
+
+            return true;
         }
 
         /// <summary>
@@ -1140,7 +1154,7 @@ namespace tas.Lam
             Plane[] planes;
             double[] t;
 
-            this.GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out t, GlulamData.Interpolation.HERMITE);
+            GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out t, Data.InterpolationType);
 
             double hWidth = this.Width() / 2;
             double hHeight = this.Height() / 2;
@@ -1175,11 +1189,13 @@ namespace tas.Lam
             }
 
             Curve[] rules = new Curve[t.Length];
-            for (int i = 0; i < t.Length; ++i)
-                    rules[i] = new Line(planes[i].Origin + planes[i].XAxis * x1 + planes[i].YAxis * y1,
-                        planes[i].Origin + planes[i].XAxis * x2 + planes[i].YAxis * y2).ToNurbsCurve();
+            for (int i = 0; i < planes.Length; ++i)
+                    rules[i] = new Line(
+                        planes[i].Origin + planes[i].XAxis * x1 + planes[i].YAxis * y1,
+                        planes[i].Origin + planes[i].XAxis * x2 + planes[i].YAxis * y2
+                        ).ToNurbsCurve();
 
-            Brep[] loft = Brep.CreateFromLoft(rules, Point3d.Unset, Point3d.Unset, LoftType.Normal, false);
+            Brep[] loft = Brep.CreateFromLoft(rules, Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
             if (loft == null || loft.Length < 1) throw new Exception("Glulam::GetGlulamFace::Loft failed!");
 
             Brep brep = loft[0];

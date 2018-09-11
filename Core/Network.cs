@@ -101,6 +101,8 @@ namespace tas.Core
             public Guid Id { get; private set; }
             public List<Edge> Edges;
             public List<string> Tags;
+            public List<object> Data;
+
             public string Name;
 
             public int Valence {
@@ -119,6 +121,7 @@ namespace tas.Core
 
                 Edges = new List<Edge>();
                 Tags = new List<string>();
+                Data = new List<object>();
             }
 
             public Node GetConnectedNode(int index)
@@ -200,6 +203,8 @@ namespace tas.Core
                 Node n = new Node(Id);
                 n.Edges.AddRange(Edges);
                 n.Name = Name;
+                n.Tags.AddRange(this.Tags);
+                n.Data.AddRange(this.Data);
 
                 return n;
             }
@@ -239,6 +244,9 @@ namespace tas.Core
                 SNode sn = new SNode(Frame, Id);
                 sn.Name = Name;
                 sn.Edges.AddRange(Edges);
+                sn.Data.AddRange(this.Data);
+                sn.Tags.AddRange(this.Tags);
+                sn.Frame = this.Frame;
 
                 return sn;
             }
@@ -293,6 +301,10 @@ namespace tas.Core
             public Guid Id { get; private set; }
             public Node Start;
             public Node End;
+            public string Meta;
+            public Dictionary<string, object> MetaDictionary;
+            public object StartData;
+            public object EndData;
 
             public Edge(Guid id = new Guid())
             {
@@ -300,6 +312,11 @@ namespace tas.Core
                     Id = Guid.NewGuid();
                 else
                     Id = id;
+
+                Meta = "";
+                StartData = null;
+                EndData = null;
+                MetaDictionary = new Dictionary<string, object>();
             }
 
             public Edge(Node n0, Node n1, Guid id = new Guid()) : this(id)

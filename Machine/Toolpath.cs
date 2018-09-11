@@ -39,6 +39,7 @@ namespace tas.Machine
         public double SafeZ { get; set; }
         public double RapidZ { get; set; }
         public bool IsPlanar { get; set; }
+        public bool FlipWrist;
 
         public Toolpath()
         {
@@ -58,6 +59,7 @@ namespace tas.Machine
             Tool = tp.Tool;
             Safety = tp.Safety;
             IsPlanar = tp.IsPlanar;
+            FlipWrist = tp.FlipWrist;
 
             for (int i = 0; i < tp.Paths.Count; ++i)
             {
@@ -102,7 +104,7 @@ namespace tas.Machine
                         new_path.AddRange(LinkOnSafety(LastTarget, temp));
                 
                 new_path.Add(temp);
-                new_path.Add(new Waypoint(p, (int)WaypointType.RAPID));
+                new_path.Add(new Waypoint(p, (int)WaypointType.FEED));
 
                 p = Paths[i][0].Plane;
                 new_path.Add(new Waypoint(p, (int)WaypointType.PLUNGE));

@@ -28,8 +28,8 @@ namespace tas.Machine.GH
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddPlaneParameter("Workplane", "WP", "Workplane for area clearance strategy.", GH_ParamAccess.item, Plane.WorldXY);
-            pManager.AddMeshParameter("Geometry", "Geo", "Geometry to rough out.", GH_ParamAccess.list);
-            pManager.AddMeshParameter("Stock", "St", "Stock model.", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Geometry", "G", "Geometry to rough out.", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Stock", "S", "Stock model.", GH_ParamAccess.list);
 
         }
 
@@ -87,7 +87,7 @@ namespace tas.Machine.GH
             var paths = ac.GetPaths();
             debug += "Generated " + paths.Count.ToString() + " paths.\n";
 
-            DA.SetDataList("tasTP", GH_PPolyline.MakeGoo(paths));
+            DA.SetDataList("Paths", GH_PPolyline.MakeGoo(paths));
             DA.SetData("debug", debug);
         }
 

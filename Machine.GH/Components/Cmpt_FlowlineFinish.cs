@@ -37,6 +37,7 @@ namespace tas.Machine.GH
             pManager.AddGeometryParameter("Boundary", "Bnd", "Boundary to constrain toolpath to.", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Direction", "D", "Bitmask to control direction and starting point. Switches between u and v directions (bit 1) and start ends (bit 2).", GH_ParamAccess.item, 0);
             pManager.AddBooleanParameter("ZigZag", "Z", "Alternate start points of path.", GH_ParamAccess.item, true);
+            pManager.AddNumberParameter("Tolerance", "T", "Tolerance for converting curves to polylines.", GH_ParamAccess.item, 0.01);
             pManager[2].Optional = true;
             pManager[4].Optional = true;
         }
@@ -67,12 +68,14 @@ namespace tas.Machine.GH
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Curve boundary = null;
+            double tolerance = 0.01;
             Workplane = Plane.WorldXY;
             List<Brep> Surfaces = new List<Brep>();
             DA.GetData("Workplane", ref Workplane);
             DA.GetDataList("Surfaces", Surfaces);
             DA.GetData("Boundary", ref boundary);
             DA.GetData("ZigZag", ref ZigZag);
+            DA.GetData("Tolerance", ref tolerance);
 
             int Switch = 0;
             DA.GetData("Direction", ref Switch);
@@ -89,7 +92,7 @@ namespace tas.Machine.GH
                 Toolpath_Flowline2 fl = new Toolpath_Flowline2(Surfaces[i], UV, boundary);
                 fl.StartEnd = StartEnd;
                 fl.Tool = Tool;
-                fl.Tolerance = 0.01;
+                fl.Tolerance = tolerance;
                 fl.Workplane = Workplane;
 
                 //fl.MaxDepth = 30.0;

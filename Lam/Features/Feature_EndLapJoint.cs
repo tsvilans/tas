@@ -30,7 +30,7 @@ namespace tas.Lam.Features
 
         }
 
-        public override void Compute()
+        public override bool Compute()
         {
             double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
 
@@ -63,6 +63,87 @@ namespace tas.Lam.Features
 
             m_result = new List<Brep>();
             m_result.Add(brep);
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Tentative replacement of EndLapJoint. Improved geometry creation and drilling geometry.
+    /// </summary>
+    public class EndLapJoint2 : FeatureX
+    {
+        Glulam m_glulam1;
+        Glulam m_glulam2;
+
+        double m_extension;
+        double m_incline;
+        double m_length;
+        double m_t1, m_t2;
+
+        public EndLapJoint2(Glulam glulam1, Glulam glulam2, double t1, double t2, double length, double incline, double extension = 5.0)
+        {
+            m_glulam1 = glulam1;
+            m_glulam2 = glulam2;
+            m_t1 = t1;
+            m_t2 = t2;
+
+            m_length = length;
+            m_incline = incline;
+            m_extension = extension;
+        }
+
+        public override bool Compute()
+        {
+            double drill_depth = 200.0;
+            double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+
+            Plane p1 = m_glulam1.GetPlane(m_t1);
+            Plane p2 = m_glulam2.GetPlane(m_t2);
+
+            Plane p0 = tas.Core.Util.Interpolation.InterpolatePlanes2(p1, p2, 0.5);
+
+            Plane plane = new Plane(p0.Origin, p0.XAxis, p0.ZAxis);
+
+            double w = Math.Max(m_glulam1.Width(), m_glulam2.Width());
+            double h = Math.Max(m_glulam1.Height(), m_glulam2.Height());
+
+            Curve[] crvs = new Curve[4];
+            crvs[0] = new Line(new Point3d(-w / 2 - m_extension, m_length / 2, h / 2 + m_extension),
+              new Point3d(w / 2 + m_extension, m_length / 2, h / 2 + m_extension)).ToNurbsCurve();
+            crvs[1] = new Line(new Point3d(-w / 2 - m_extension, m_length / 2, m_incline),
+              new Point3d(w / 2 + m_extension, m_length / 2, m_incline)).ToNurbsCurve();
+            crvs[2] = new Line(new Point3d(-w / 2 - m_extension, -m_length / 2, -m_incline),
+              new Point3d(w / 2 + m_extension, -m_length / 2, -m_incline)).ToNurbsCurve();
+            crvs[3] = new Line(new Point3d(-w / 2 - m_extension, -m_length / 2, -h / 2 - m_extension),
+              new Point3d(w / 2 + m_extension, -m_length / 2, -h / 2 - m_extension)).ToNurbsCurve();
+
+            Brep brep = Brep.CreateFromLoft(crvs, Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+            brep.Transform(Transform.PlaneToPlane(Plane.WorldXY, plane));
+
+            m_result = new List<Brep>();
+            m_result.Add(brep);
+
+            m_result.Add(Brep.CreateFromCylinder(
+              new Cylinder(
+              new Circle(
+              new Plane(plane.Origin - plane.ZAxis * drill_depth / 2
+              + plane.YAxis * -m_length / 3.6,
+              plane.XAxis, plane.YAxis),
+              12.0), drill_depth),
+              false, false));
+
+            m_result.Add(Brep.CreateFromCylinder(
+              new Cylinder(
+              new Circle(
+              new Plane(plane.Origin - plane.ZAxis * drill_depth / 2
+              + plane.YAxis * m_length / 3.6,
+              plane.XAxis, plane.YAxis),
+              12.0), drill_depth),
+              false, false));
+
+            return true;
         }
     }
 }

@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="MachinePost.cs" />
     <Compile Include="Posts\Post_ABB.cs" />
+    <Compile Include="Posts\Post_Basic3Axis.cs" />
     <Compile Include="Posts\Post_CMS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolSettings.cs" />

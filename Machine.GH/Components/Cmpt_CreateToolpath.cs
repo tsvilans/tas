@@ -33,6 +33,7 @@ namespace tas.Machine.GH.Components
             pManager.AddNumberParameter("RapidZ", "Rz", "Z-height for rapids.", GH_ParamAccess.item, 20.0);
             pManager.AddNumberParameter("SafeZ", "Sz", "Z-height for safe movements.", GH_ParamAccess.item, 10.0);
             pManager.AddBooleanParameter("VertRetract", "VRet", "Retract vertically (true) or along tool (false).", GH_ParamAccess.item, true);
+            pManager.AddBooleanParameter("FlipWrist", "FW", "Optionally specify to flip the wrist of a multi-axis machine.", GH_ParamAccess.item, false);
         }
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace tas.Machine.GH.Components
             double iRapidZ = 20, iSafeZ = 10;
             bool iVR = true;
             string name = "Toolpath";
+            bool flipWrist = false;
 
             DA.GetData("Name", ref name);
             DA.GetDataList("Toolpaths", iToolpaths);
@@ -63,9 +65,13 @@ namespace tas.Machine.GH.Components
             DA.GetData("RapidZ", ref iRapidZ);
             DA.GetData("SafeZ", ref iSafeZ);
             DA.GetData("VertRetract", ref iVR);
+            DA.GetData("FlipWrist", ref flipWrist);
+
+            this.Message = flipWrist.ToString();
 
             Toolpath tp = new Toolpath();
             tp.Name = name;
+            tp.FlipWrist = flipWrist;
 
             // Cast tool
             MachineTool mt;
@@ -89,7 +95,10 @@ namespace tas.Machine.GH.Components
                 else if (iToolpaths[i] is GH_PPolyline)
                     poly = (iToolpaths[i] as GH_PPolyline).Value;
                 else
+                {
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Error in PPolyline wrangling.");
                     continue;
+                }
 
                 tp.Paths.Add(poly.Select(x => new Waypoint(x, (int)WaypointType.FEED)).ToList());
             }

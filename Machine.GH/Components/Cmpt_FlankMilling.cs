@@ -121,7 +121,7 @@ namespace tas.Machine.GH.Components
                     double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth) / Nsteps;
                     Point3d pt = rules[j].From - directions[j] * l * i;
                     iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
-                    poly.Add(new Plane(pt + normal * iToolDiameter / 2, directions[j]));
+                    poly.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
                 }
 
                 if (iPathExt > 0.0)
@@ -142,6 +142,39 @@ namespace tas.Machine.GH.Components
 
                 paths.Add(poly);
             }
+
+            #region Last layer
+
+            PPolyline last = new PPolyline();
+            for (int j = 0; j < rules.Count; ++j)
+            {
+                double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth);
+                Point3d pt = rules[j].From - directions[j] * l;
+                iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
+                last.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
+            }
+
+            if (iPathExt > 0.0)
+            {
+                Vector3d start = new Vector3d(last.First.Origin - last[1].Origin);
+                start.Unitize();
+
+                Vector3d end = new Vector3d(last.Last.Origin - last[last.Count - 2].Origin);
+                end.Unitize();
+
+                Plane pStart = last.First;
+                Plane pEnd = last.Last;
+                pStart.Origin = pStart.Origin + start * iPathExt;
+                pEnd.Origin = pEnd.Origin + end * iPathExt;
+                last.Insert(0, pStart);
+                last.Add(pEnd);
+            }
+
+            last.Add(paths.First().Last);
+
+            paths.Add(last);
+
+            #endregion
 
 
 

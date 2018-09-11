@@ -31,6 +31,7 @@ namespace tas.Machine.Toolpaths
     {
         Brep Driver;
         bool Direction;
+        public bool OffsetSides;
         public bool StartEnd;
         List<PPolyline> Paths;
         Curve Boundary;
@@ -58,12 +59,24 @@ namespace tas.Machine.Toolpaths
             else
                 IsoFence = Driver.Faces[0].IsoCurve(U, Driver.Faces[0].Domain(V).Max);
 
-            double[] Uts = IsoFence.DivideByLength(Tool.StepOver, true);
+            double[] Uts;
+            double length = IsoFence.GetLength();
+            double minOffset = IsoFence.Domain.Min;
+            double maxOffset = IsoFence.Domain.Max;
+
+            if (OffsetSides)
+            {
+                IsoFence.LengthParameter(Tool.StepOver, out minOffset);
+                IsoFence.LengthParameter(length - Tool.StepOver, out maxOffset);
+                IsoFence = IsoFence.Trim(new Interval(minOffset, maxOffset));
+            }
+
+            Uts = IsoFence.DivideByLength(Tool.StepOver, true);
             if (Uts == null) return;
 
             List<double> UtsList = Uts.ToList();
 
-            UtsList.Add(IsoFence.Domain.Max);
+            UtsList.Add(maxOffset);
 
             /*
             if (Boundary != null)

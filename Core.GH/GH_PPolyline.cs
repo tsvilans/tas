@@ -21,7 +21,7 @@ namespace tas.Core.GH
         public override bool IsValid => true;
         public override string TypeName => "OrientedPolyline";
         public override string TypeDescription => "OrientedPolyline";
-        public override string ToString() => "OrientedPolyline"; //this.Value.ToString();
+        public override string ToString() => "PPolyline"; //this.Value.ToString();
         public override object ScriptVariable() => Value;
 
         public static IEnumerable<GH_PPolyline> MakeGoo(List<PPolyline> OrientedPolylines)

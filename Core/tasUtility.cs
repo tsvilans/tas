@@ -866,6 +866,76 @@ namespace tas.Core
             }
         }
 
+        public static void GetOverlappingDomain(Curve c1, Curve c2, double maxDist, out Interval int1, out Interval int2, int N = 100, double extension = 0.0)
+        {
+            double[] tt1 = c1.DivideByCount(N - 1, true);
+            double[] tt2 = c2.DivideByCount(N - 1, true);
+
+            double t;
+            double d;
+            Point3d p1, p2;
+
+            double t1Min = tt1[0];
+            double t2Min = tt2[0];
+            double t1Max = tt1[0];
+            double t2Max = tt2[0];
+
+            bool isIn = false;
+            for (int i = 0; i < N; ++i)
+            {
+                p1 = c1.PointAt(tt1[i]);
+                c2.ClosestPoint(p1, out t);
+                p2 = c2.PointAt(t);
+
+                d = p1.DistanceTo(p2);
+                if (d < maxDist && !isIn)
+                {
+                    t1Min = tt1[i];
+                    isIn = true;
+                }
+                else if (d > maxDist && isIn)
+                {
+                    t1Max = tt1[i];
+                    isIn = false;
+                    break;
+                }
+                else if (isIn)
+                {
+                    t1Max = tt1[i];
+                }
+            }
+            isIn = false;
+
+            int1 = new Interval(t1Min, t1Max);
+
+            for (int i = 0; i < N; ++i)
+            {
+                p1 = c2.PointAt(tt2[i]);
+                c1.ClosestPoint(p1, out t);
+                p2 = c1.PointAt(t);
+
+                d = p1.DistanceTo(p2);
+                if (d < maxDist && !isIn)
+                {
+                    t2Min = tt2[i];
+                    isIn = true;
+                }
+                else if (d > maxDist && isIn)
+                {
+                    t2Max = tt2[i];
+                    isIn = false;
+                    break;
+                }
+                else if (isIn)
+                {
+                    t2Max = tt2[i];
+                }
+            }
+
+            int2 = new Interval(t2Min - extension, t2Max + extension);
+        }
+
+
         public static double ScaleFromMeter(double MeterUnit = 1.0)
         {
             switch (Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem)

@@ -93,11 +93,11 @@ namespace tas.Lam.GH
 
             Plane[] frames = tas.Core.Util.FramesNormalToSurface(crv, brep);
 
-            Lam.GlulamData data = null;
+            GlulamData data = null;
             if (calculate_data)
                 data = Lam.GlulamData.FromCurveLimits(crv, w, h, frames);
             else
-                data = new Lam.GlulamData(1, 1, w, h);
+                data = new Lam.GlulamData(1, 1, w, h, samples);
             //data.LamHeight = lh > 0.001 ? lh : 20.0;
             //data.LamWidth = lw > 0.001 ? lw : 20.0;
             //data.NumHeight = h > 0 ? (int)Math.Ceiling(h / lh) : 4;

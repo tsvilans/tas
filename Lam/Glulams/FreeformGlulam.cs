@@ -32,6 +32,9 @@ namespace tas.Lam
     {
         public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
+            if (Frames.Count < 3)
+                interpolation = GlulamData.Interpolation.LINEAR;
+
             planes = new Plane[N];
             Curve CL = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
@@ -45,6 +48,7 @@ namespace tas.Lam
             {
                 CL.PerpendicularFrameAt(Frames[i].Item1, out temp);
                 ft[i] = Frames[i].Item1;
+                //fa[i] = Math.Acos(temp.YAxis * Frames[i].Item2.YAxis);
                 fa[i] = Vector3d.VectorAngle(temp.YAxis, Frames[i].Item2.YAxis, Frames[i].Item2);
             }
 
@@ -85,7 +89,12 @@ namespace tas.Lam
                             res--;
                         }
 
-                        if (res > 0 && res < max - 1)
+                        if (res == 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
+                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[0], fa[0], fa[1], fa[2], mu, 0, 0);
+                        }
+                        else if (res > 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
                             angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu, 0, 0);
@@ -96,15 +105,11 @@ namespace tas.Lam
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
                             angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu, 0, 0);
                         }
-                        else if (res > 0 && res == max)
+                        else if (res == max)
                         {
                             angles[i] = fa[res];
                         }
-                        else if (res == 0 && res < max - 1)
-                        {
-                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
-                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[0], fa[0], fa[1], fa[2], mu, 0, 0);
-                        }
+
                         else
                             continue;
                     }
@@ -131,7 +136,12 @@ namespace tas.Lam
                             res--;
                         }
 
-                        if (res > 0 && res < max - 1)
+                        if (res == 0 && res < max - 1)
+                        {
+                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
+                            angles[i] = Util.Interpolation.CubicInterpolate(fa[0], fa[0], fa[1], fa[2], mu);
+                        }
+                        else if (res > 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
                             angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu);
@@ -142,15 +152,11 @@ namespace tas.Lam
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
                             angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu);
                         }
-                        else if (res > 0 && res == max)
+                        else if (res == max)
                         {
                             angles[i] = fa[res];
                         }
-                        else if (res == 0 && res < max - 1)
-                        {
-                            mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
-                            angles[i] = Util.Interpolation.CubicInterpolate(fa[0], fa[0], fa[1], fa[2], mu);
-                        }
+
                         else
                             continue;
                     }
@@ -315,43 +321,54 @@ namespace tas.Lam
         {
             Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
 
-            double Length = CL.GetLength();
+            Plane[] planes;
+            double[] tt;
+            GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out tt, Data.InterpolationType);
+
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
-            double[] DivParams = CL.DivideByCount(Data.Samples, true);
 
-            Polyline[] LoftCurves = new Polyline[DivParams.Length];
+            Polyline[] xSections = new Polyline[Data.Samples];
 
             Rhino.Geometry.Transform xform;
-            Polyline pl = new Polyline(new Point3d[] { new Point3d(-hW, hH, 0), new Point3d(hW, hH, 0),
-            new Point3d(hW, -hH, 0), new Point3d(-hW, -hH, 0),
-            new Point3d(-hW, hH, 0)});
+            Polyline pl = new Polyline(
+                new Point3d[] {
+                    new Point3d(-hW, -hH, 0),
+                    new Point3d(hW, -hH, 0),
+                    new Point3d(hW, hH, 0),
+                    new Point3d(-hW, hH, 0),
+                    new Point3d(-hW, -hH, 0)});
 
             Polyline temp;
 
-            for (int i = 0; i < DivParams.Length; ++i)
+            for (int i = 0; i < planes.Length; ++i)
             {
-                Plane p = GetPlane(DivParams[i]);
-                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, p);
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes[i]);
                 temp = new Polyline(pl); temp.Transform(xform);
-                LoftCurves[i] = temp;
+                xSections[i] = temp;
             }
 
-            return LoftCurves;
+            return xSections;
         }
 
         public override Brep GetBoundingBrep(double offset = 0.0)
         {
             Polyline[] xsections = GetCrossSections(offset);
-            Brep[] loft1 = Brep.CreateFromLoft(xsections.Select(x => x.ToNurbsCurve()), Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
+
+            Brep[] lofts = Brep.CreateFromLoft(xsections.Select(x => x.ToNurbsCurve()), Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
 
             Brep brep1 = new Brep();
 
-            for (int j = 0; j < loft1.Length; ++j)
-                brep1.Append(loft1[j]);
-            brep1 = brep1.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            return brep1;
+            for (int j = 0; j < lofts.Length; ++j)
+                //brep1.Join(lofts[j], 0.001, true);
+                brep1.Append(lofts[j]);
+            Brep capped = brep1.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
 
+            if (capped != null)
+                return brep1 = capped;
+
+            brep1.Faces.SplitKinkyFaces(0.01, true);
+            return brep1;
 
             Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
 

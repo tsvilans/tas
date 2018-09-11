@@ -67,10 +67,10 @@ namespace tas.Lam.GH.Components
 
                 foreach (object obj in RawBlanks)
                 {
-                    if (obj is Lam.Glulam)
-                        Blanks.Add(obj as Lam.Glulam);
-                    else if (obj is GH.GH_Glulam)
-                        Blanks.Add((obj as GH.GH_Glulam).Value);
+                    if (obj is Glulam glulam)
+                        Blanks.Add(glulam);
+                    else if (obj is GH_Glulam gh_glulam)
+                        Blanks.Add(gh_glulam.Value);
                 }
 
                 //if (DA.GetData("Radius factor", ref m_radius_factor))
@@ -97,6 +97,9 @@ namespace tas.Lam.GH.Components
                 {
                     GetRibbonEdges(blank, m_offset, m_line_list, m_length_list, m_flip);
                 }
+
+                if (m_length_list.Count != m_line_list.Count)
+                    throw new Exception("Something went awry...");
             }
         }
 
@@ -116,7 +119,7 @@ namespace tas.Lam.GH.Components
                 w = g.Data.LamWidth * g.Data.NumWidth;
 
             double hw = w / 2;
-            double l, hyp;
+            double l;
 
             Point3d p0, p1;
             Point3d p2, p3;
@@ -188,23 +191,26 @@ namespace tas.Lam.GH.Components
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
             double c;
+            double l;
             if (m_display_enabled)
             {
                 for (int i = 0; i < m_line_list.Count; ++i)
                 {
+                    l = m_length_list[i];
                     if (m_drawK)
                     {
-                        if (m_length_list[i] < -1.0)
-                            c = 0.0;
-                        else if (m_length_list[i] > 1.0)
-                            c = 1.0;
+                        if (l <= -1.0)
+                            c = 0;
+                        else if (l >= 1.0)
+                            c = 1;
                         else
                             c = 0.5;
                         //c = Math.Abs(0.5 - m_length_list[i]) > m_radius_factor ? 1.0 : 0.0;
                     }
                     else
-                        c = 
-                        c = Math.Max(0, Math.Min(1.0, ((m_length_list[i] + 1.0) / 2)));
+                        c = Math.Max(
+                            0, Math.Min(
+                                1.0, ((l + 1.0) / 2)));
 
                     args.Display.DrawLine(m_line_list[i], m_grad.GetColor(c), 1);
 

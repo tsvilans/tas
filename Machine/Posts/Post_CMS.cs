@@ -95,7 +95,11 @@ namespace tas.Machine.Posts
         public Interval LimitC { get { return new Interval(m_limit_min_c, m_limit_max_c); } }
         #endregion
 
-        private bool InMachineLimits(double x, double y, double z, double b, double c)
+        #region HackVariables
+        List<bool> m_flipList = new List<bool>();
+        #endregion
+
+        private bool CheckMachineLimits(double x, double y, double z, double b, double c)
         {
             //return (LimitX.IncludesParameter(x) && LimitY.IncludesParameter(y) && LimitZ.IncludesParameter(z) &&
             //    LimitB.IncludesParameter(b) && LimitC.IncludesParameter(c));
@@ -110,6 +114,41 @@ namespace tas.Machine.Posts
                 b < m_limit_max_b &&
                 c > m_limit_min_c &&
                 c < m_limit_max_c;
+        }
+
+        private bool CheckAbsoluteLimits(Plane plane, MachineTool tool)
+        {
+            Point3d abs = plane.Origin + plane.ZAxis * (tool.Length + 135.0);
+            double x = abs.X - 2549.027;
+            double y = abs.Y - 1141.193;
+            double z = abs.Z - 784.467;
+
+            if (x > 0 || y > 0 || z > 0 ||
+                x < -2600 || y < -1600 || z < -800)
+                return false;
+            return true;
+        }
+
+        public void AddFlips(List<bool> flips)
+        {
+            m_flipList = flips;
+        }
+
+        public void GetBC(Vector3d v, out double B, out double C, bool flip = false)
+        {
+            v.Unitize();
+            B = Rhino.RhinoMath.ToDegrees(Math.Acos(v * Vector3d.ZAxis));
+            C = Rhino.RhinoMath.ToDegrees(Math.Atan2(v.Y, v.X));
+
+            if (flip)
+            {
+                B = -B;
+
+                if (Math.Abs(C - 180) < Math.Abs(C + 180))
+                    C -= 180;
+                else
+                    C += 180;
+            }
         }
 
         public override object Compute()
@@ -207,13 +246,22 @@ namespace tas.Machine.Posts
             Program.Add("G0 G53 Z0");
             Program.Add("G0 B0 C0");
             Program.Add("G#560");
+
+            // Work offset
             Program.Add("G52 X#561 Y#562 Z#563");
 
 
             // TODO: Check out the G codes in here...
+            double B, C, prevB, prevC;
+            B = C = prevB = prevC = 0;
 
             for (int i = 0; i < Paths.Count; ++i)
             {
+                bool flip = false;
+                if (i < m_flipList.Count)
+                {
+                    flip = m_flipList[i];
+                }
                 Toolpath TP = Paths[i];
 
                 // Add toolpath info
@@ -237,6 +285,7 @@ namespace tas.Machine.Posts
                 Program.Add("G#560");
 
                 Program.Add("");
+                //Program.Add("G0 G53 Z0 B-90");
 
                 if (HighSpeed)
                     Program.Add("G5.1 Q1");
@@ -254,16 +303,19 @@ namespace tas.Machine.Posts
                     throw new Exception("First waypoint must be rapid. Check code.");
 
                 // Calculate B and C values
-                double B, C, prevB, prevC;
-                Vector3d axisFirst = prev.Plane.ZAxis;
-                axisFirst.Unitize();
+                this.GetBC(prev.Plane.ZAxis, out prevB, out prevC, flip);
 
-                prevB = Rhino.RhinoMath.ToDegrees(Math.Acos(axisFirst * Vector3d.ZAxis));
-                prevC = Rhino.RhinoMath.ToDegrees(Math.Atan2(axisFirst.Y, axisFirst.X));
+                // Vector3d axisFirst = prev.Plane.ZAxis;
+                //axisFirst.Unitize();
+
+                //prevB = Rhino.RhinoMath.ToDegrees(Math.Acos(axisFirst * Vector3d.ZAxis));
+                //prevC = Rhino.RhinoMath.ToDegrees(Math.Atan2(axisFirst.Y, axisFirst.X));
 
                 //Program.Add($"G{(int)prev.Type} X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}  Z{prev.Plane.Origin.Z:F3} B{prevB:F3} C{prevC:F3}");
                 //Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} B{prevB:F3} C{prevC:F3} Z#568");
-                Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} B{prevB:F3} C{prevC:F3}");
+                Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}");
+                Program.Add($"G0 B{prevB:F3} C{prevC:F3}");
+                Program.Add($"G0 Z{prev.Plane.Origin.Z:F3}");
 
                 bool write_feedrate = false;
                 double diff;
@@ -280,11 +332,14 @@ namespace tas.Machine.Posts
                         Waypoint wp = Subpath[k];
 
                         // Calculate B and C values
-                        Vector3d axis = wp.Plane.ZAxis;
+                        //Vector3d axis = wp.Plane.ZAxis;
                         //axis.Unitize();
 
-                        B = Rhino.RhinoMath.ToDegrees(Math.Acos(axis * Vector3d.ZAxis));
-                        C = Rhino.RhinoMath.ToDegrees(Math.Atan2(axis.Y, axis.X));
+                        //B = Rhino.RhinoMath.ToDegrees(Math.Acos(axis * Vector3d.ZAxis));
+                        //C = Rhino.RhinoMath.ToDegrees(Math.Atan2(axis.Y, axis.X));
+
+                        this.GetBC(wp.Plane.ZAxis, out B, out C, flip);
+
 
                         // Deal with abrupt 180 to -180 switches
                         diff = C - prevC;
@@ -292,8 +347,13 @@ namespace tas.Machine.Posts
                         if (diff < -270) C += 360.0;
 
                         // Check limits
-                        if (!InMachineLimits(wp.Plane.Origin.X, wp.Plane.Origin.Y, wp.Plane.Origin.Z, B, C))
+                        if (!CheckMachineLimits(wp.Plane.Origin.X, wp.Plane.Origin.Y, wp.Plane.Origin.Z, B, C))
                             Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}, {B}, {C}");
+
+                        if (!this.CheckAbsoluteLimits(wp.Plane, TP.Tool))
+                        {
+                            Errors.Add(string.Format("Target {0} in toolpath {1} : {2} out of bounds.", k, j, i));
+                        }
 
                         // Compose line
                         List<string> Line = new List<string>();
@@ -377,6 +437,9 @@ namespace tas.Machine.Posts
                     }
                 }
 
+
+                Program.Add("");
+
                 // Stop spindle
                 Program.Add("M5");
 
@@ -394,6 +457,9 @@ namespace tas.Machine.Posts
                 if (TP.IsPlanar)
                     Program.Add($"M31 M33");
 
+                //Program.Add("G0 G53 Z0");
+                //Program.Add("G0 G53 B-90");
+
 
                 Program.Add("");
 
@@ -404,7 +470,20 @@ namespace tas.Machine.Posts
             // and add if necessary
             //Program.Add("G53");
             Program.Add("G0 G53 Z0");
-            Program.Add("G0 G53 X-2600 Y0");
+
+            //if (prevB >= 0)
+            //    Program.Add("G0 G53 B90");
+            //else if (prevB < 0)
+            //    Program.Add("G0 G53 B-90");
+
+            Program.Add("G0 G53 B-90");
+
+            Program.Add("G0 G53 C0");
+
+            Program.Add("G0 G53 Y0");
+            Program.Add("G0 G53 X-2500");
+            Program.Add("G0 G53 B0");
+            Program.Add("G0 G53 X-2600");
 
             Program.Add("( * * * * *  END  * * * * * )");
 
@@ -416,5 +495,7 @@ namespace tas.Machine.Posts
 
             return Program;
         }
+
+
     }
 }

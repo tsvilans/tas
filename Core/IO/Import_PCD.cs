@@ -19,11 +19,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections;
+using System.Diagnostics;
+using System.Drawing;
 
 using Rhino;
 using Rhino.Geometry;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace tas.Core.IO
 {
@@ -49,7 +51,7 @@ namespace tas.Core.IO
         int width = 1, height = 1;
 
         // fields
-        internal List<PCD_Field> fields;
+        internal List<PCD_Field> m_fields;
 
         // scanner position and orientation
         public Point3d scan_position;
@@ -144,7 +146,7 @@ namespace tas.Core.IO
             int index, lsize, prev;
 
             // get field names and create list of fields
-            fields = new List<PCD_Field>();
+            m_fields = new List<PCD_Field>();
             List<int> field_size = new List<int>();
             List<int> field_type = new List<int>();
 
@@ -190,11 +192,11 @@ namespace tas.Core.IO
 
             for (int i = 1; i < lsize; ++i)
             {
-                this.fields.Add(CreateField(field_type[i - 1], field_size[i - 1]));
+                this.m_fields.Add(CreateField(field_type[i - 1], field_size[i - 1]));
                 int findex = Array.IndexOf(this.field_names, header_data[index][i]);
                 if (header_data[index][i] == "i" || header_data[index][i] == "Intensity")
                     findex = Array.IndexOf(this.field_names, "intensity");
-                this.fields[i-1].id = findex;
+                this.m_fields[i-1].id = findex;
             }
 
             //if (this.fields.Count != lsize - 1)
@@ -256,6 +258,9 @@ namespace tas.Core.IO
 
         public bool Import(string path, out PointCloud pc, bool intensity = false)
         {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
             pc = new PointCloud();
 
             string header;
@@ -268,33 +273,60 @@ namespace tas.Core.IO
                 return false;
             }
 
+            log += string.Format("time {0}\n", watch.ElapsedMilliseconds);
+
             pc.UserDictionary.Set("width", this.width);
             pc.UserDictionary.Set("height", this.height);
 
             if (this.binary)
             {
-                byte[] buffer;
+                //byte[] buffer;
 
                 int log_step = this.num_points / 5;
-                PCD_PointBuilder pbb;
-                for (int i = 0; i < this.num_points; ++i)
-                {
-                    //if (i % log_step == 0)
-                    //    if (UpdateLog != null)
-                    //        UpdateLog(((double)i/this.num_points * 100.0).ToString("0.0") + "%");
-                    int pos = 0;
-                    pbb = new PCD_PointBuilder();
-                    buffer = br.ReadBytes(this.psize);
-                    for (int j = 0; j < this.fields.Count; ++j)
+                //PCD_PointBuilder pbb;
+
+                byte[] total_buffer = br.ReadBytes(psize * num_points);
+                Point3d[] points = new Point3d[num_points];
+                Vector3d[] normals = new Vector3d[num_points];
+                Color[] colors = new Color[num_points];
+
+                Parallel.For(0, num_points, i => {
+                    int total_pos = i * psize;
+                    int pos = total_pos;
+                    PCD_PointBuilder pbb = new PCD_PointBuilder();
+                    for (int k = 0; k < m_fields.Count; ++k)
                     {
-                        this.fields[j].read(buffer, pos, ref pbb);
-                        pos += this.fields[j].size;
+                        m_fields[k].read(total_buffer, pos, ref pbb);
+                        pos += m_fields[k].size;
+                        points[i] = pbb.Point() * scale;
+                        normals[i] = pbb.Normal();
+                        if (intensity)
+                            colors[i] = Color.FromArgb(pbb.Intensity());
+                        else
+                            colors[i] = Color.FromArgb(pbb.Color());
+                    }
+                });
+
+                pc.AddRange(points, normals, colors);
+                /*
+                for (int i = 0, j = 0; i < this.num_points; ++i, j+=psize)
+                {
+                    int pos = j;
+                    pbb = new PCD_PointBuilder();
+                
+                    for (int k = 0; k < this.fields.Count; ++k)
+                    {
+                        this.fields[k].read(total_buffer, pos, ref pbb);
+                        pos += this.fields[k].size;
                     }
                     if (intensity)
                         pc.Add(pbb.Point() * scale, pbb.Normal(), System.Drawing.Color.FromArgb(pbb.Intensity()));
                     else
                         pc.Add(pbb.Point() * scale, pbb.Normal(), System.Drawing.Color.FromArgb(pbb.Color()));
                 }
+                */
+                log += string.Format("time {0}\n", watch.ElapsedMilliseconds);
+
                 this.br.Close();
                 if (use_transform)
                     pc.Transform(this.scan_transform);
@@ -321,12 +353,12 @@ namespace tas.Core.IO
                     string[] tokens = lines[i].Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
                     //log += lines[i];
                     //log += " " + tokens.Length.ToString() + "\n";
-                    if (tokens.Length != this.fields.Count)
+                    if (tokens.Length != this.m_fields.Count)
                         continue;
 
-                    for (int j = 0; j < this.fields.Count; ++j)
+                    for (int j = 0; j < this.m_fields.Count; ++j)
                     {
-                        this.fields[j].readASCII(tokens[j], ref pbb);
+                        this.m_fields[j].readASCII(tokens[j], ref pbb);
                     }
                     if (intensity)
                         pc.Add(pbb.Point() * this.scale, pbb.Normal(), System.Drawing.Color.FromArgb(pbb.Intensity()));
@@ -334,8 +366,13 @@ namespace tas.Core.IO
                         pc.Add(pbb.Point() * this.scale, pbb.Normal(), System.Drawing.Color.FromArgb(pbb.Color()));
                 }
                 this.br.Close();
+
+                log += string.Format("time {0}\n", watch.ElapsedMilliseconds);
+
                 if (use_transform)
                     pc.Transform(this.scan_transform);
+                log += string.Format("time {0}\n", watch.ElapsedMilliseconds);
+
                 return true;
             }
 
@@ -344,9 +381,9 @@ namespace tas.Core.IO
         void PrintFields()
         {
             log += "FIELDS\n";
-            for (int i = 0; i < this.fields.Count; ++i)
+            for (int i = 0; i < this.m_fields.Count; ++i)
             {
-                log += "FIELD " + i.ToString() + ": " + Enum.GetName(typeof(Fields), this.fields[i].id) + "\n";
+                log += "FIELD " + i.ToString() + ": " + Enum.GetName(typeof(Fields), this.m_fields[i].id) + "\n";
             }
             log += "END FIELDS\n";
         }

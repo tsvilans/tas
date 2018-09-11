@@ -40,7 +40,7 @@ namespace tas.Lam
 
         protected List<Brep> m_result;
 
-        public abstract void Compute();
+        public abstract bool Compute();
         public List<Brep> GetCuttingGeometry()
         {
             if (m_result != null)

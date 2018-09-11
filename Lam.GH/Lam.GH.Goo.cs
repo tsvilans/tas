@@ -25,35 +25,76 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using System.Drawing;
 using GH_IO.Serialization;
+using GH_IO;
 
 namespace tas.Lam.GH
 {
 
-    public class GH_Glulam : GH_Goo<Glulam>, IGH_PreviewData
+    public class GH_Glulam : GH_Goo<Glulam>//, IGH_PreviewData, GH_ISerializable
     {
-        public GH_Glulam() { this.Value = null; }
-        public GH_Glulam(GH_Glulam goo) { this.Value = goo.Value; }
+        #region Members
+        //protected Mesh DisplayMesh = null;
+        #endregion
+
+        #region Constructors
+        public GH_Glulam() : this(null) {}
+        //public GH_Glulam(GH_Glulam goo) { this.Value = goo.Value; this.DisplayMesh = goo.DisplayMesh.DuplicateMesh(); }
+        //public GH_Glulam(Glulam native) { this.Value = native; this.DisplayMesh = native.GetBoundingMesh(0, Value.Data.InterpolationType); }
         public GH_Glulam(Glulam native) { this.Value = native; }
-        public override IGH_Goo Duplicate() => new GH_Glulam(this);
-        public override bool IsValid => true;
+
+        public override IGH_Goo Duplicate()
+        {
+            if (Value == null)
+                return new GH_Glulam();
+            else
+                return new GH_Glulam(Value.Duplicate());
+        }
+        #endregion
+
+        public override string ToString()
+        {
+            if (Value == null) return "Null glulam";
+            return Value.ToString();
+        }
+
         public override string TypeName => "GlulamGoo";
         public override string TypeDescription => "GlulamGoo";
-        public override string ToString() => Value.ToString(); //this.Value.ToString();
         public override object ScriptVariable() => Value;
+        //public BoundingBox ClippingBox => DisplayMesh.GetBoundingBox(true);
 
+        public override bool IsValid
+        {
+            get
+            {
+                if (Value == null) return false;
+                return true;
+            }
+        }
+        public override string IsValidWhyNot
+        {
+            get
+            {
+                if (Value == null) return "No data";
+                return string.Empty;
+            }
+        }
+
+        #region Casting
         public override bool CastFrom(object source)
         {
-            if (source is Glulam)
+            if (source == null) return false;
+            if (source is Glulam glulam)
             {
-                Value = source as Glulam;
+                Value = glulam;
+                //DisplayMesh = Value.GetBoundingMesh(0, Value.Data.InterpolationType);
                 return true;
             }
-            else if (source is GH_Glulam)
+            if (source is GH_Glulam ghGlulam)
             {
-                Value = (source as GH_Glulam).Value;
+                Value = ghGlulam.Value;
+                //DisplayMesh = ghGlulam.DisplayMesh;
                 return true;
             }
-
             return false;
         }
 
@@ -62,9 +103,11 @@ namespace tas.Lam.GH
 
         public override bool CastTo<Q>(ref Q target)
         {
+            if (Value == null) return false;
+
             if (typeof(Q).IsAssignableFrom(typeof(GH_Mesh)))
             {
-                object mesh = new GH_Mesh(Value.GetBoundingMesh(0, Value.Data.InterpolationType));
+                object mesh = new GH_Mesh(Value.GetBoundingMesh());
 
                 target = (Q)mesh;
                 return true;
@@ -89,31 +132,160 @@ namespace tas.Lam.GH
                 return true;
             }
 
-            return base.CastTo<Q>(ref target);
+            return false;
         }
 
-        public BoundingBox ClippingBox => Value.GetBoundingMesh(0, Value.Data.InterpolationType).GetBoundingBox(true);
-
+        #endregion
+        /*
         public void DrawViewportMeshes(GH_PreviewMeshArgs args)
         {
-            //args.Pipeline.DrawMeshShaded(Value.GetBoundingMesh(), args.Material);
+            if (DisplayMesh != null)
+                args.Pipeline.DrawMeshShaded(DisplayMesh, args.Material);
         }
 
         public void DrawViewportWires(GH_PreviewWireArgs args)
         {
-            args.Pipeline.DrawMeshWires(Value.GetBoundingMesh(), args.Color);
+            if (DisplayMesh != null)
+                args.Pipeline.DrawMeshWires(DisplayMesh, args.Color);
         }
+        */
+        #region Serialization
 
         public override bool Write(GH_IWriter writer)
         {
+            if (Value == null) return false;
             byte[] centrelineBytes = GH_Convert.CommonObjectToByteArray(Value.Centreline);
-            writer.SetByteArray("centreline", 0, centrelineBytes);
+            writer.SetByteArray("guide", centrelineBytes);
 
+            writer.SetInt32("num_frames", Value.Frames.Count);
 
-            return base.Write(writer);
+            for (int i = 0; i < Value.Frames.Count; ++i)
+            {
+                Plane p = Value.Frames[i].Item2;
+
+                writer.SetPlane("frames", i, new GH_IO.Types.GH_Plane(
+                    p.OriginX, p.OriginY, p.OriginZ, p.XAxis.X, p.XAxis.Y, p.XAxis.Z, p.YAxis.X, p.YAxis.Y, p.YAxis.Z));
+            }
+
+            writer.SetInt32("lcx", Value.Data.NumWidth);
+            writer.SetInt32("lcy", Value.Data.NumHeight);
+            writer.SetDouble("lsx", Value.Data.LamWidth);
+            writer.SetDouble("lsy", Value.Data.LamHeight);
+            writer.SetInt32("interpolation", (int)Value.Data.InterpolationType);
+            writer.SetInt32("samples", Value.Data.Samples);
+
+            return true;
         }
+
+        public override bool Read(GH_IReader reader)
+        {
+            if (!reader.ItemExists("guide"))
+            {
+                Value = null;
+                throw new Exception("Fuckballs didn't work!");
+                return true;
+            }
+
+            byte[] rawGuide = reader.GetByteArray("guide");
+
+            Curve guide = GH_Convert.ByteArrayToCommonObject<Curve>(rawGuide);
+            if (guide == null)
+                throw new Exception("For the gracious love of fuck.");
+
+            int N = reader.GetInt32("num_frames");
+            Plane[] frames = new Plane[N];
+
+            for (int i = 0; i < N; ++i)
+            {
+                var gp = reader.GetPlane("frames", i);
+                frames[i] = new Plane(
+                    new Point3d(
+                        gp.Origin.x,
+                        gp.Origin.y,
+                        gp.Origin.z),
+                    new Vector3d(
+                        gp.XAxis.x,
+                        gp.XAxis.y,
+                        gp.XAxis.z),
+                    new Vector3d(
+                        gp.YAxis.x,
+                        gp.YAxis.y,
+                        gp.YAxis.z)
+                        );
+            }
+
+            int lcx = reader.GetInt32("lcx");
+            int lcy = reader.GetInt32("lcy");
+            double lsx = reader.GetDouble("lsx");
+            double lsy = reader.GetDouble("lsy");
+            int interpolation = reader.GetInt32("interpolation");
+            int samples = reader.GetInt32("samples");
+
+            GlulamData data = new GlulamData(lcx, lcy, lsx, lsy, samples);
+            data.InterpolationType = (GlulamData.Interpolation)interpolation;
+
+            Value = Glulam.CreateGlulam(guide, frames, data);
+
+            if (Value == null)
+                throw new Exception("What in the Lord's name...");
+            //DisplayMesh = Value.GetBoundingMesh();
+
+            return true;
+        }
+        #endregion
+
     }
-    
+
+    public class GH_GlulamData : GH_Goo<GlulamData>
+    {
+        public GH_GlulamData() { this.Value = null; }
+        public GH_GlulamData(GH_GlulamData goo) { this.Value = goo.Value; }
+        public GH_GlulamData(GlulamData native) { this.Value = native; }
+        public override IGH_Goo Duplicate() => new GH_GlulamData(this);
+        public override bool IsValid => true;
+        public override string TypeName => "GlulamDataGoo";
+        public override string TypeDescription => "GlulamDataGoo";
+        public override string ToString() => Value.ToString();
+        public override object ScriptVariable() => Value;
+
+        #region Serialization
+
+        public override bool Write(GH_IWriter writer)
+        {
+            if (Value == null) return false;
+
+            writer.SetInt32("lcx", Value.NumWidth);
+            writer.SetInt32("lcy", Value.NumHeight);
+            writer.SetDouble("lsx", Value.LamWidth);
+            writer.SetDouble("lsy", Value.LamHeight);
+            writer.SetInt32("interpolation", (int)Value.InterpolationType);
+            writer.SetInt32("samples", Value.Samples);
+
+            return true;
+        }
+
+        public override bool Read(GH_IReader reader)
+        {
+            int lcx = reader.GetInt32("lcx");
+            int lcy = reader.GetInt32("lcy");
+            double lsx = reader.GetDouble("lsx");
+            double lsy = reader.GetDouble("lsy");
+            int interpolation = reader.GetInt32("interpolation");
+            int samples = reader.GetInt32("samples");
+
+            GlulamData data = new GlulamData(lcx, lcy, lsx, lsy, samples);
+            data.InterpolationType = (GlulamData.Interpolation)interpolation;
+
+            Value = data;
+
+            if (Value == null)
+                throw new Exception("What in the Lord's name...");
+
+            return true;
+        }
+        #endregion
+    }
+
     public class GH_Assembly : GH_Goo<Assembly>, IGH_PreviewData
     {
         public GH_Assembly() { this.Value = null; }
