@@ -32,11 +32,16 @@ namespace tas.Lam
     {
         public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
+            N = Math.Max(N, 2);
             if (Frames.Count < 3)
                 interpolation = GlulamData.Interpolation.LINEAR;
 
             planes = new Plane[N];
-            Curve CL = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
+            Curve CL;
+            if (Centreline.IsClosed)
+                CL = Centreline.DuplicateCurve();
+            else
+                CL = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
             t = CL.DivideByCount(N - 1, true);
 
@@ -173,7 +178,10 @@ namespace tas.Lam
                         }
                         if (res >= 0 && res < max)
                         {
-                            mu = Math.Min(1.0, Math.Max(0, (t[i] - ft[res]) / (ft[res + 1] - ft[res])));
+                            if (ft[res + 1] - ft[res] == 0)
+                                mu = 0.5;
+                            else
+                                mu = Math.Min(1.0, Math.Max(0, (t[i] - ft[res]) / (ft[res + 1] - ft[res])));
                             angles[i] = Util.Interpolation.Lerp(fa[res], fa[res + 1], mu);
                         }
                         else if (res < 0)
@@ -319,7 +327,11 @@ namespace tas.Lam
 
         public Polyline[] GetCrossSections(double offset = 0.0)
         {
-            Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
+            Curve CL;
+            if (offset > 0)
+                CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
+            else
+                CL = Centreline.DuplicateCurve();
 
             Plane[] planes;
             double[] tt;

@@ -30,26 +30,40 @@ namespace tas.Lam
 {
     class StraightGlulam : Glulam
     {
-        public StraightGlulam(Curve centreline, Plane[] planes) : base()
+        public StraightGlulam(Curve centreline, Plane[] planes, bool with_twist = false) : base()
         {
-            Plane plane;
             if (planes == null || planes.Length < 1)
+            {
+                Plane plane;
                 centreline.PerpendicularFrameAt(centreline.Domain.Min, out plane);
-            else
-                plane = planes[0];
+                planes = new Plane[] { plane };
+            }
 
             if (!centreline.IsLinear(Tolerance)) throw new Exception("StraightGlulam only works with a linear centreline!");
             //Line l = new Line(centreline.PointAtStart, centreline.PointAtEnd);
 
-            plane.Origin = centreline.PointAtStart;
-            if (Math.Abs(plane.ZAxis * centreline.TangentAtStart) < 0)
-                plane = plane.FlipAroundYAxis();
-            if (Math.Abs(plane.ZAxis * centreline.TangentAtStart) < 0.999)
+            if (with_twist)
             {
-                plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, centreline.TangentAtStart, plane.Origin));
+                Frames = new List<Tuple<double, Plane>>();
+                double t;
+                foreach (var plane in planes)
+                {
+                    centreline.ClosestPoint(plane.Origin, out t);
+                    var origin = centreline.PointAt(t);
+                    var x_axis = Vector3d.CrossProduct(plane.YAxis, centreline.TangentAt(t));
+                    var y_axis = Vector3d.CrossProduct(centreline.TangentAt(t), x_axis);
+                    Frames.Add(new Tuple<double, Plane>(t, new Plane(origin, x_axis, y_axis)));
+                }
+            }
+            else
+            {
+                var origin = centreline.PointAtStart;
+                var x_axis = Vector3d.CrossProduct(planes[0].YAxis, centreline.TangentAtStart);
+                var y_axis = Vector3d.CrossProduct(centreline.TangentAtStart, x_axis);
+
+                Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, new Plane(origin, x_axis, y_axis)) };
             }
 
-            Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, plane) };
             Centreline = centreline;
             RecalculateFrames();
         }

@@ -30,7 +30,7 @@ namespace tas.Lam
 {
     public class SingleCurvedGlulam : FreeformGlulam
     {
-        public SingleCurvedGlulam(Curve centreline, Plane[] planes) : base()
+        public SingleCurvedGlulam(Curve centreline, Plane[] planes, bool with_twist = false) : base()
         {
             if (planes == null)
             {

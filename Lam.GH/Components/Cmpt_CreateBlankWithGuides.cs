@@ -96,11 +96,17 @@ namespace tas.Lam.GH
                 double t;
                 crv.ClosestPoint(pt, out t);
 
-                Plane nor_plane = new Plane(crv.PointAt(t), crv.TangentAt(t));
+                //Plane nor_plane = new Plane(crv.PointAt(t), crv.TangentAt(t));
 
-                vec = vec.ProjectToPlane(nor_plane);
+                //vec = vec.ProjectToPlane(nor_plane);
 
-                Plane frame = new Plane(nor_plane.Origin, Vector3d.CrossProduct(crv.TangentAt(t), vec), vec);
+                //Plane frame = new Plane(nor_plane.Origin, Vector3d.CrossProduct(crv.TangentAt(t), vec), vec);
+
+                var origin = crv.PointAt(t);
+                var x_axis = Vector3d.CrossProduct(vec, crv.TangentAt(t));
+                var y_axis = Vector3d.CrossProduct(crv.TangentAt(t), x_axis);
+
+                Plane frame = new Plane(origin, x_axis, y_axis);
 
                 planes.Add(frame);
             }
@@ -124,6 +130,7 @@ namespace tas.Lam.GH
             data.Samples = samples > 1 ? samples : 2;
 
             Lam.Glulam blank = Lam.Glulam.CreateGlulam(crv, planes.ToArray(), data);
+            blank.RemoveDuplicateFrames();
             DA.SetData("Glulam", new GH.GH_Glulam(blank));
         }
 

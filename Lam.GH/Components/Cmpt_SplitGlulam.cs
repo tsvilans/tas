@@ -85,7 +85,24 @@ namespace tas.Lam.GH
 
 
             List<Glulam> m_glulams = new List<Glulam>();
-            m_glulams = g.Split(m_params.ToArray(), m_overlap);
+            //m_glulams = g.Split(m_params.ToArray(), m_overlap);
+
+            List<Interval> domains = new List<Interval>();
+
+            domains.Add(new Interval(g.Centreline.Domain.Min, m_params.First()));
+            for (int i = 0; i < m_params.Count - 1; ++i)
+            {
+                domains.Add(new Interval(m_params[i], m_params[i + 1]));
+            }
+            domains.Add(new Interval(m_params.Last(), g.Centreline.Domain.Max));
+
+            domains = domains.Where(x => x.Length > m_overlap).ToList();
+
+            for (int i = 0; i < domains.Count; ++i)
+            {
+                m_glulams.Add(g.Extract(domains[i], m_overlap));
+            }
+
 
             /*
             List<Glulam> res = new List<Glulam>();

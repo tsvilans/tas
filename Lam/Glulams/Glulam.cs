@@ -102,7 +102,7 @@ namespace tas.Lam
                         glulam = new StraightGlulam(curve, planes);
                     else
                     {
-                        glulam = new StraightGlulam(curve, planes);
+                        glulam = new StraightGlulam(curve, planes, true);
                         // glulam = new StraightGlulamWithTwist(curve, planes);
                         Console.WriteLine("Not implemented...");
                     }
@@ -650,6 +650,7 @@ namespace tas.Lam
             Frames = Frames.Where(x => x.Item2.IsValid).ToList();
         }
 
+
         public Plane GetPlane(Point3d p)
         {
             double t;
@@ -938,6 +939,37 @@ namespace tas.Lam
 
             List<Glulam> blanks = new List<Glulam>() { Blank1, Blank2 };
             return blanks;
+        }
+
+        public Glulam Extract(Interval domain, double overlap)
+        {
+            //domain = new Interval(
+            //    Math.Max(domain.Min, Centreline.Domain.Min),
+            //    Math.Min(domain.Max, Centreline.Domain.Max));
+
+            double l1 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Min));
+            double l2 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Max));
+            double t1, t2;
+            Centreline.LengthParameter(l1 - overlap, out t1);
+            Centreline.LengthParameter(l2 + overlap, out t2);
+
+            domain = new Interval(
+                Math.Max(domain.Min, Centreline.Domain.Min),
+                Math.Min(domain.Max, Centreline.Domain.Max));
+
+            double length = Centreline.GetLength(domain);
+            double percentage = length / Centreline.GetLength();
+
+            GlulamData data = Data.Duplicate();
+            data.Samples = Math.Max(2, (int)(data.Samples * percentage));
+
+            List<Tuple<double, Plane>> NewFrames = Frames.Where(x => domain.IncludesParameter(x.Item1)).ToList();
+            NewFrames.Insert(0, new Tuple<double, Plane>(domain.Min, this.GetPlane(domain.Min)));
+            NewFrames.Add(new Tuple<double, Plane>(domain.Max, this.GetPlane(domain.Max)));
+
+            Glulam glulam = CreateGlulam(Centreline.Trim(domain), NewFrames.Select(x => x.Item2).ToArray(), data);
+
+            return glulam;
         }
 
         /// <summary>
@@ -1383,7 +1415,7 @@ namespace tas.Lam
         public int NumWidth, NumHeight;
         public double LamWidth, LamHeight;
         public int Samples;
-        public Interpolation InterpolationType = Interpolation.CUBIC;
+        public Interpolation InterpolationType = Interpolation.LINEAR;
 
         public static GlulamData Default
         { get { return new GlulamData(); } }
