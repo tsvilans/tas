@@ -35,6 +35,7 @@ namespace tas.Core
     {
         List<Node> NodeList;
         List<Edge> EdgeList;
+        public List<NodeGroup> NodeGroups;
 
         Dictionary<Guid, WeakReference> Nodes;
         Dictionary<Guid, WeakReference> Edges;
@@ -64,6 +65,7 @@ namespace tas.Core
 
             NodeList = new List<Node>();
             EdgeList = new List<Edge>();
+            NodeGroups = new List<NodeGroup>();
         }
 
         /// <summary>
@@ -101,7 +103,7 @@ namespace tas.Core
             public Guid Id { get; private set; }
             public List<Edge> Edges;
             public List<string> Tags;
-            public List<object> Data;
+            public Dictionary<string, object> CustomData;
 
             public string Name;
 
@@ -121,7 +123,7 @@ namespace tas.Core
 
                 Edges = new List<Edge>();
                 Tags = new List<string>();
-                Data = new List<object>();
+                CustomData = new Dictionary<string, object>();
             }
 
             public Node GetConnectedNode(int index)
@@ -204,7 +206,7 @@ namespace tas.Core
                 n.Edges.AddRange(Edges);
                 n.Name = Name;
                 n.Tags.AddRange(this.Tags);
-                n.Data.AddRange(this.Data);
+                n.CustomData = new Dictionary<string, object>(this.CustomData);
 
                 return n;
             }
@@ -244,7 +246,7 @@ namespace tas.Core
                 SNode sn = new SNode(Frame, Id);
                 sn.Name = Name;
                 sn.Edges.AddRange(Edges);
-                sn.Data.AddRange(this.Data);
+                sn.CustomData = new Dictionary<string, object>(this.CustomData);
                 sn.Tags.AddRange(this.Tags);
                 sn.Frame = this.Frame;
 
@@ -406,6 +408,28 @@ namespace tas.Core
             public override string ToString()
             {
                 return "WeightedEdge";
+            }
+        }
+
+        public class NodeGroup
+        {
+            public List<Node> Nodes;
+            public Plane Frame;
+            public Dictionary<string, object> CustomData;
+
+            public NodeGroup()
+            {
+                Nodes = new List<Node>();
+                Frame = Plane.Unset;
+                CustomData = new Dictionary<string, object>();
+            }
+
+            public void GetShared(NodeGroup ng, out List<Node> SharedNodes, out List<Edge> SharedEdges)
+            {
+                SharedNodes = this.Nodes.Where(x => ng.Nodes.Contains(x)).ToList();
+                var theseEdges = this.Nodes.SelectMany(x => x.Edges).ToList();
+                var thoseEdges = ng.Nodes.SelectMany(x => x.Edges).ToList();
+                SharedEdges = theseEdges.Where(x => thoseEdges.Contains(x)).ToList();
             }
         }
 
