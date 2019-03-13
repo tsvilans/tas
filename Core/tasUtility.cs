@@ -388,6 +388,130 @@ namespace tas.Core
         }
 
         /// <summary>
+        /// Insets Polyline based on local corners. Height is derived from the cross
+        /// product of the two corner vectors. Open Polyline endpoints are linked, so
+        /// this is mostly good for insetting polygons / N-gons with the option of 
+        /// having them open (Kelowna project).
+        /// </summary>
+        /// <param name="pl"></param>
+        /// <param name="d"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        public static Polyline InsetPolyline(Polyline pl, Vector3d normal, double d, double h = 0.0)
+        {
+            var newPoly = new Polyline();
+
+            if (pl.Count < 2)
+                throw new Exception("Polyline doesn't contain enough points.");
+
+            Vector3d v1, v2, v3, nor;
+            double alpha, beta;
+            Point3d pt;
+
+            Plane fitPlane;
+            Plane.FitPlaneToPoints(pl, out fitPlane);
+            normal = fitPlane.ZAxis;
+            if (normal * Vector3d.ZAxis < 0)
+                normal.Reverse();
+            normal.Unitize();
+
+            if (pl.IsClosed)
+            {
+                // Handle closed polyline
+                int iPrev, iNext;
+
+                for (int i = 0; i < pl.Count - 1; ++i)
+                {
+                    iPrev = Modulus(i - 1, pl.Count - 1);
+                    iNext = Modulus(i + 1, pl.Count - 1);
+
+                    v1 = pl[iPrev] - pl[i];
+                    v2 = pl[iNext] - pl[i];
+                    v1.Unitize();
+                    v2.Unitize();
+
+                    if (Math.Abs(v1 * v2) > 0.9999999)
+                    {
+                        v3 = Vector3d.CrossProduct(normal, v1);
+                        pt = pl[i] + v3 * d + normal * h;
+
+                    }
+                    else
+                    {
+                        nor = Vector3d.CrossProduct(v1, v2);
+                        alpha = Math.Acos(v1 * v2) / 2;
+
+                        v3 = v1 + v2;
+                        v3.Unitize();
+                        pt = pl[i] + v3 * (d / Math.Sin(alpha)) + nor * h;
+                    }
+
+                    newPoly.Add(pt);
+                }
+
+                newPoly.Add(newPoly[0]);
+            }
+            else
+            {
+                // Handle first point
+                v1 = pl[1] - pl[0];
+                v2 = pl[pl.Count - 1] - pl[0];
+
+                v1.Unitize();
+                v2.Unitize();
+                nor = Vector3d.CrossProduct(v2, v1);
+
+                alpha = Math.Acos(v1 * v2) / 2;
+                beta = alpha - Math.PI / 2;
+
+                newPoly.Add(pl[0] + v2 * (d / Math.Cos(beta)) + nor * h);
+
+                // Handle intermediate points
+                if (pl.Count > 2)
+                {
+                    for (int i = 1; i < pl.Count - 1; ++i)
+                    {
+                        v1 = pl[i - 1] - pl[i];
+                        v2 = pl[i + 1] - pl[i];
+                        v1.Unitize();
+                        v2.Unitize();
+
+                        if (Math.Abs(v1 * v2) > 0.9999999)
+                        {
+                            v3 = Vector3d.CrossProduct(normal, v1);
+                            newPoly.Add(pl[i] + v3 * d + normal * h);
+                        }
+                        else
+                        {
+                            nor = Vector3d.CrossProduct(v1, v2);
+                            alpha = Math.Acos(v1 * v2) / 2;
+
+                            v3 = v1 + v2;
+                            v3.Unitize();
+
+                            newPoly.Add(pl[i] + v3 * (d / Math.Sin(alpha)) + nor * h);
+                        }
+                    }
+                }
+
+                // Handle last point
+                v1 = pl[pl.Count - 2] - pl[pl.Count - 1];
+                v2 = pl[0] - pl[pl.Count - 1];
+                v1.Unitize();
+                v2.Unitize();
+                nor = Vector3d.CrossProduct(v1, v2);
+
+                alpha = Math.Acos(v1 * v2) / 2;
+                beta = alpha - Math.PI / 2;
+
+                newPoly.Add(pl[pl.Count - 1] + v2 * (d / Math.Cos(beta)) + nor * h);
+            }
+
+            return newPoly;
+        }
+
+
+        /// <summary>
         /// Inset a closed polyline until it can't no more.
         /// </summary>
         /// <param name="pl"></param>
