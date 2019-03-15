@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="IO\Import_PCD.cs" />
     <Compile Include="IO\Import_XYB.cs" />
+    <Compile Include="Network2.cs" />
     <Compile Include="NetworkLegacy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="tasExtensions.cs" />
