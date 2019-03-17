@@ -755,17 +755,32 @@ namespace tas.Core.Network
     }
 
     /// <summary>
+    /// Base class for all network elements
+    /// </summary>
+    public abstract class NetworkElement
+    {
+        public List<NetworkElement> Children;
+        public NetworkElement Parent;
+
+        protected NetworkElement()
+        {
+            Children = new List<NetworkElement>();
+            Parent = null;
+        }
+
+    }
+        
+    /// <summary>
     /// Base node class for generic nodes.
     /// </summary>
-    public class Node
+    public class Node : NetworkElement
     {
         public Guid Id { get; private set; }
         public Plane Frame;
 
         // Relations
         public List<Edge> Edges;
-        public List<Node> Children;
-        public Node Parent;
+
 
         public List<string> Tags;
         public Dictionary<string, object> CustomData;
@@ -780,7 +795,7 @@ namespace tas.Core.Network
             }
         }
 
-        public Node(Plane frame = new Plane(), Guid id = new Guid())
+        public Node(Plane frame = new Plane(), Guid id = new Guid()) : base()
         {
             if (id == Guid.Empty)
                 Id = Guid.NewGuid();
@@ -791,8 +806,6 @@ namespace tas.Core.Network
             Tags = new List<string>();
             CustomData = new Dictionary<string, object>();
             Frame = frame;
-            Children = new List<Node>();
-            Parent = null;
         }
 
         public Node GetConnectedNode(int index)
@@ -816,7 +829,7 @@ namespace tas.Core.Network
             n.Tags.AddRange(this.Tags);
             n.CustomData = new Dictionary<string, object>(this.CustomData);
             n.Parent = Parent;
-            n.Children = new List<Node>(Children);
+            n.Children = new List<NetworkElement>(Children);
 
             return n;
         }
@@ -897,29 +910,23 @@ namespace tas.Core.Network
     /// <summary>
     /// Edge between two nodes.
     /// </summary>
-    public class Edge
+    public class Edge : NetworkElement
     {
         public Guid Id { get; private set; }
         public Node Start;
         public Node End;
-
-        public Edge Parent;
-        public List<Edge> Children;
 
         public Dictionary<string, object> CustomData;
 
         public object StartData;
         public object EndData;
 
-        public Edge(Guid id = new Guid())
+        public Edge(Guid id = new Guid()) : base()
         {
             if (id == Guid.Empty)
                 Id = Guid.NewGuid();
             else
                 Id = id;
-
-            Parent = null;
-            Children = new List<Edge>();
 
             StartData = null;
             EndData = null;
@@ -977,6 +984,22 @@ namespace tas.Core.Network
                     return true;
             }
             return false;
+        }
+
+
+        public virtual Edge Duplicate()
+        {
+            Edge e = new Edge(Id);
+            e.Start = Start;
+            e.End = End;
+            e.StartData = StartData;
+            e.EndData = EndData;
+            e.CustomData = new Dictionary<string, object>(CustomData);
+
+            e.Parent = Parent;
+            e.Children = new List<NetworkElement>(Children);
+
+            return e;
         }
 
         public override int GetHashCode()
