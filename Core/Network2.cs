@@ -24,6 +24,7 @@ using System.Linq;
 using Rhino.Geometry;
 using System.Xml.Linq;
 using Rhino;
+using System.Runtime.Serialization;
 
 namespace tas.Core.Network
 {
@@ -31,7 +32,8 @@ namespace tas.Core.Network
     /// Network v3. using pointers to nodes and edges instead of C-style lists and indices. 
     /// Vastly simplifies syntax and modifications.
     /// </summary>
-    public class Net
+    [Serializable]
+    public class Net : ISerializable
     {
         List<Node> NodeList;
         List<Edge> EdgeList;
@@ -66,6 +68,54 @@ namespace tas.Core.Network
             NodeList = new List<Node>();
             EdgeList = new List<Edge>();
             NodeGroups = new List<NodeGroup>();
+        }
+
+        public Net(SerializationInfo info, StreamingContext context) : this()
+        {
+            Name = (string)info.GetValue("name", typeof(string));
+            var snodes = (List<SerializableNode>)info.GetValue("nodes", typeof(List<SerializableNode>));
+            var sedges = (List<SerializableEdge>)info.GetValue("edges", typeof(List<SerializableEdge>));
+
+            foreach (var snode in snodes)
+            {
+                var node = new Node(snode.Frame, snode.Id);
+                node.CustomData = snode.CustomData;
+                node.Name = snode.Name;
+                AddNode(node);
+            }
+
+            foreach (var sedge in sedges)
+            {
+                var edge = new Edge(sedge.Id);
+                edge.CustomData = sedge.CustomData;
+                edge.EndData = sedge.EndData;
+                edge.StartData = sedge.StartData;
+                AddEdge(edge);
+            }
+
+            foreach (var snode in snodes)
+            {
+                var node = GetNode(snode.Id);
+                if (snode.Parent != null)
+                    node.Parent = GetElement(snode.Parent);
+                foreach (var child in snode.Children)
+                    node.Children.Add(GetElement(child));
+
+                foreach (var edge in snode.Edges)
+                    node.Edges.Add(GetEdge(edge));
+            }
+
+            foreach (var sedge in sedges)
+            {
+                var edge = GetEdge(sedge.Id);
+                if (sedge.Parent != null)
+                    edge.Parent = GetElement(sedge.Parent);
+                foreach (var child in sedge.Children)
+                    edge.Children.Add(GetElement(child));
+
+                edge.Start = GetNode(sedge.Start);
+                edge.End = GetNode(sedge.End);
+            }
         }
 
         /// <summary>
@@ -158,6 +208,14 @@ namespace tas.Core.Network
             WeakReference wr;
             if (Nodes.TryGetValue(id, out wr))
                 if (wr.IsAlive) return wr.Target as Node;
+            return null;
+        }
+
+        public NOb GetElement(Guid id)
+        {
+            NOb temp = GetNode(id);
+            if (temp == null)
+                return GetEdge(id);
             return null;
         }
 
@@ -412,292 +470,49 @@ namespace tas.Core.Network
             return dict;
         }
 
-        /// <summary>
-        /// Convert network to XML representation.
-        /// </summary>
-        /// <returns></returns>
-        public XElement ToXML()
+        public static Net FromSerialized(List<SerializableNode> snodes, List<SerializableEdge> sedges, string name = "Net4")
         {
-            XElement root = new XElement("network");
-            root.SetAttributeValue("version", Version);
-            root.SetAttributeValue("name", Name);
-
-            XElement nodes = new XElement("nodes");
-            nodes.SetAttributeValue("count", Nodes.Count);
-            foreach (Guid id in Nodes.Keys)
-                nodes.Add(GetNode(id).ToXml());
-            root.Add(nodes);
-
-            XElement edges = new XElement("edges");
-            edges.SetAttributeValue("count", Edges.Count);
-            foreach (Guid id in Edges.Keys)
-                edges.Add(GetEdge(id).ToXml());
-            root.Add(edges);
-
-            return root;
-        }
-
-        /// <summary>
-        /// Write network to file as XML.
-        /// </summary>
-        /// <param name="path">File path to write to.</param>
-        /// <param name="create_dir">Optional: create target directory if it doesn't exist.</param>
-        public void Write(string path, bool create_dir = false)
-        {
-            string dir = System.IO.Path.GetDirectoryName(path);
-            if (!System.IO.Directory.Exists(dir))
-                if (create_dir)
-                    System.IO.Directory.CreateDirectory(dir);
-                else
-                    throw new Exception("Net3::Write: Directory does not exist! Try creating it?");
-
-            XDocument doc = new XDocument();
-            doc.Add(this.ToXML());
-            doc.Save(path);
-        }
-
-        /// <summary>
-        /// Read network from XML file.
-        /// </summary>
-        /// <param name="path">Path to network file.</param>
-        /// <returns></returns>
-        public static Net Read(string path)
-        {
-            if (!System.IO.File.Exists(path))
-                throw new Exception("Net3::Read: File does not exist!");
-            XDocument doc = XDocument.Load(path);
-            if (doc.Root.Name != "network")
-                throw new Exception("Net3::Read: Root element is not 'network'.");
-
             Net net = new Net();
 
-            net.Version = Convert.ToInt32(doc.Root.Attribute("version").Value);
-            net.Name = doc.Root.Attribute("name").Value;
-
-            //ADD NODES
-
-            XElement nodes = doc.Root.Element("nodes");
-            if (nodes == null)
-                throw new Exception("Net3::Read: Element 'nodes' not found.");
-
-            XElement[] nlist = nodes.Elements("node").ToArray();
-            Dictionary<Guid, List<Guid>> NodeEdges = new Dictionary<Guid, List<Guid>>();
-
-            for (int i = 0; i < nlist.Length; ++i)
-            {
-                List<Guid> edge_ids;
-
-                Node n = Node.FromXml(nlist[i], out edge_ids);
-
-                /*
-                Node n;
-                Guid id = Guid.Parse(nlist[i].Attribute("id").Value);
-                string type = nlist[i].Attribute("type").Value;
-
-                if (type == "SpaceNode")
-                {
-                    n = new SNode();
-                    Point3d p = Point3d.Origin;
-                    Vector3d vx = Vector3d.XAxis, vy = Vector3d.YAxis;
-
-                    XElement frame = nlist[i].Element("frame");
-                    p.X = Convert.ToDouble(frame.Attribute("PosX").Value);
-                    p.Y = Convert.ToDouble(frame.Attribute("PosY").Value);
-                    p.Z = Convert.ToDouble(frame.Attribute("PosZ").Value);
-
-                    vx.X = Convert.ToDouble(frame.Attribute("XX").Value);
-                    vx.Y = Convert.ToDouble(frame.Attribute("XY").Value);
-                    vx.Z = Convert.ToDouble(frame.Attribute("XZ").Value);
-
-                    vy.X = Convert.ToDouble(frame.Attribute("YX").Value);
-                    vy.Y = Convert.ToDouble(frame.Attribute("YY").Value);
-                    vy.Z = Convert.ToDouble(frame.Attribute("YZ").Value);
-
-                    n = new SNode(new Plane(p, vx, vy), id);
-                }
-                else
-                    n = new Node(id);
-
-                XElement[] nedges = nlist[i].Elements("edge").ToArray();
-
-                List<Guid> edge_ids = new List<Guid>();
-                for (int j = 0; j < nedges.Length; ++j)
-                {
-                    edge_ids.Add(Guid.Parse(nedges[j].Attribute("id").Value));
-                }
-                */
-
-                NodeEdges[n.Id] = edge_ids;
-                net.AddNode(n);
+            foreach (var snode in snodes)
+            { 
+                var node = new Node(snode.Frame, snode.Id);
+                node.CustomData = snode.CustomData;
+                node.Name = snode.Name;
+                net.AddNode(node);
             }
 
-            // ADD EDGES
-
-            XElement edges = doc.Root.Element("edges");
-            if (nodes == null)
-                throw new Exception("Net3::Read: Element 'edges' not found.");
-
-            XElement[] elist = edges.Elements("edge").ToArray();
-            if (elist.Length < 1) throw new Exception("Net3::Read: No edges found in file!");
-
-            for (int i = 0; i < elist.Length; ++i)
+            foreach (var sedge in sedges)
             {
-                Guid id = Guid.Parse(elist[i].Attribute("id").Value);
-                Guid n1 = Guid.Parse(elist[i].Attribute("end1").Value);
-                if (n1 == null) continue;
-                Guid n2 = Guid.Parse(elist[i].Attribute("end2").Value);
-                if (n2 == null) continue;
-
-                net.Link(net.GetNode(n1), net.GetNode(n2), id);
-                //net.GetNode(n1).Edges.Add(net.GetEdge(id));
-                //net.GetNode(n2).Edges.Add(net.GetEdge(id));
+                var edge = new Edge(sedge.Id);
+                edge.CustomData = sedge.CustomData;
+                edge.EndData = sedge.EndData;
+                edge.StartData = sedge.StartData;
+                net.AddEdge(edge);
             }
 
-            // CHECK 
-
-            foreach (Guid id in net.Nodes.Keys)
+            foreach (var snode in snodes)
             {
-                List<Guid> ids = NodeEdges[id];
-                Node n = net.GetNode(id);
+                var node = net.GetNode(snode.Id);
+                if (snode.Parent != null)
+                    node.Parent = net.GetElement(snode.Parent);
+                foreach (var child in snode.Children)
+                    node.Children.Add(net.GetElement(child));
 
-                if (n == null) throw new Exception("Net3: Corrupt network structure. Please format your harddrive and try again.");
-
-                bool[] flags = new bool[n.Edges.Count];
-                for (int i = 0; i < n.Edges.Count; ++i)
-                {
-                    Edge e = n.Edges[i];
-                    for (int j = 0; j < ids.Count; ++j)
-                    {
-                        if (ids[j] == e.Id)
-                        {
-                            flags[i] = true;
-                            break;
-                        }
-                    }
-                }
-
-                for (int i = 0; i < flags.Length; ++i)
-                {
-                    if (!flags[i])
-                    {
-                        throw new Exception("Net3: Node " + id.ToString() + ": Edge / Node relationship is not mutual.");
-                    }
-                }
-            }
-            return net;
-        }
-
-        /// <summary>
-        /// Read old network format from XML file.
-        /// </summary>
-        /// <param name="path">Path to legacy network file.</param>
-        /// <returns></returns>
-        public static Net ReadLegacy(string path)
-        {
-            if (!System.IO.File.Exists(path))
-                throw new Exception("Net::ReadLegacy: File does not exist!");
-
-            XDocument doc = XDocument.Load(path);
-            if (doc == null)
-                throw new Exception("Net::ReadLegacy: Failed to load file.");
-
-            XElement root = doc.Root;
-            if (root.Name != "network")
-                throw new Exception("Net::ReadLegacy: Not a valid Network file.");
-
-            Net net = new Net();
-
-            XElement nodes = root.Element("nodes");
-            if (nodes != null)
-            {
-                var node_list = nodes.Elements();
-                foreach (XElement node in node_list)
-                {
-                    if (node.Name != "node")
-                        continue;
-
-                    Node n;
-
-                    string type = node.Attribute("type").Value;
-                    if (type == "FootNode")
-                    {
-                        n = new Node();
-                        n.Tags.Add("foot_node");
-                    }
-                    else if (type == "BranchingNode")
-                    {
-                        n = new Node();
-                        n.Tags.Add("branching_node");
-
-                        //BranchingNode bn = n as BranchingNode;
-
-                        //if (bn == null) continue;
-
-                        XElement branch_weights = node.Element("branch_weights");
-                        if (branch_weights != null)
-                        {
-                            var branch_weight_list = branch_weights.Elements();
-
-                            //foreach (XElement bw in branch_weight_list)
-                            //{
-                            //if (bw.Name == "branch_weight")
-                            //bn.BranchWeights.Add(Convert.ToInt32(bw.Value));
-                            // }
-                        }
-                    }
-                    else
-                        n = new Node();
-
-
-                    XElement node_edges = node.Element("node_edges");
-                    var edge_list = node_edges.Elements("node_edge");
-
-                    foreach (XElement ne in edge_list)
-                    {
-                        double x = Convert.ToDouble(ne.Attribute("vX").Value);
-                        double y = Convert.ToDouble(ne.Attribute("vY").Value);
-                        double z = Convert.ToDouble(ne.Attribute("vZ").Value);
-
-                        //n.Edges.Add(new NodeInterface(new Vector3d(x, y, z), Convert.ToInt32(ne.Attribute("index").Value)));
-                    }
-
-                    XElement frame = node.Element("frame");
-                    double fx = Convert.ToDouble(frame.Attribute("PosX").Value);
-                    double fy = Convert.ToDouble(frame.Attribute("PosY").Value);
-                    double fz = Convert.ToDouble(frame.Attribute("PosZ").Value);
-
-                    double fxx = Convert.ToDouble(frame.Attribute("XX").Value);
-                    double fxy = Convert.ToDouble(frame.Attribute("XY").Value);
-                    double fxz = Convert.ToDouble(frame.Attribute("XZ").Value);
-
-                    double fyx = Convert.ToDouble(frame.Attribute("YX").Value);
-                    double fyy = Convert.ToDouble(frame.Attribute("YY").Value);
-                    double fyz = Convert.ToDouble(frame.Attribute("YZ").Value);
-
-                    n.Frame = new Plane(new Point3d(fx, fy, fz), new Vector3d(fxx, fxy, fxz), new Vector3d(fyx, fyy, fyz));
-
-                    net.AddNode(n);
-                }
+                foreach (var edge in snode.Edges)
+                    node.Edges.Add(net.GetEdge(edge));
             }
 
-            Node[] node_array = net.GetAllNodes();
-
-            XElement edges = root.Element("edges");
-            if (edges != null)
+            foreach (var sedge in sedges)
             {
-                var edge_list = edges.Elements("edge");
-                foreach (XElement edge in edge_list)
-                {
-                    int i = Convert.ToInt32(edge.Attribute("end1").Value);
-                    int j = Convert.ToInt32(edge.Attribute("end2").Value);
+                var edge = net.GetEdge(sedge.Id);
+                if (sedge.Parent != null)
+                    edge.Parent = net.GetElement(sedge.Parent);
+                foreach (var child in sedge.Children)
+                    edge.Children.Add(net.GetElement(child));
 
-                    Edge e = new Edge(node_array[i], node_array[j]);
-
-                    //e.Ends = new IndexPair(i, j);
-
-                    //net.Edges.Add(e);
-                    net.AddEdge(e);
-                }
+                edge.Start = net.GetNode(sedge.Start);
+                edge.End = net.GetNode(sedge.End);
             }
 
             return net;
@@ -751,31 +566,48 @@ namespace tas.Core.Network
             return N;
         }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("nodes", NodeList, typeof(List<Node>));
+            info.AddValue("edges", EdgeList, typeof(List<Edge>));
+            info.AddValue("name", Name, typeof(string));
+        }
+
         #endregion
     }
 
     /// <summary>
     /// Base class for all network elements
     /// </summary>
-    public abstract class NetworkElement
+    public abstract class NOb : ISerializable
     {
-        public List<NetworkElement> Children;
-        public NetworkElement Parent;
+        public Guid Id { get; protected set; }
+        public List<NOb> Children;
+        public NOb Parent;
 
-        protected NetworkElement()
+        protected NOb()
         {
-            Children = new List<NetworkElement>();
+            Children = new List<NOb>();
             Parent = null;
         }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("id", Id);
+            if (Parent != null)
+                info.AddValue("parent", Parent.Id);
+            else
+                info.AddValue("parent", Guid.Empty);
+            info.AddValue("children", Children.Where(x => x != null).Select(x => x.Id));
+        }
     }
-        
+
     /// <summary>
     /// Base node class for generic nodes.
     /// </summary>
-    public class Node : NetworkElement
+    [Serializable]
+    public class Node : NOb, ISerializable
     {
-        public Guid Id { get; private set; }
         public Plane Frame;
 
         // Relations
@@ -829,7 +661,7 @@ namespace tas.Core.Network
             n.Tags.AddRange(this.Tags);
             n.CustomData = new Dictionary<string, object>(this.CustomData);
             n.Parent = Parent;
-            n.Children = new List<NetworkElement>(Children);
+            n.Children = new List<NOb>(Children);
 
             return n;
         }
@@ -837,61 +669,6 @@ namespace tas.Core.Network
         public override string ToString()
         {
             return "Node";
-        }
-
-        public static Node FromXml(XElement elem, out List<Guid> edges)
-        {
-            Node n;
-            if (elem.Name != "node") throw new Exception("Net3::Node: Invalid XElement type!");
-            string type = elem.Attribute("type").Value;
-            Guid id = Guid.Parse(elem.Attribute("id").Value);
-            string name = elem.Attribute("name").Value;
-
-            Point3d p = Point3d.Origin;
-            Vector3d vx = Vector3d.XAxis, vy = Vector3d.YAxis;
-
-            XElement frame = elem.Element("frame");
-            p.X = Convert.ToDouble(frame.Attribute("PosX").Value);
-            p.Y = Convert.ToDouble(frame.Attribute("PosY").Value);
-            p.Z = Convert.ToDouble(frame.Attribute("PosZ").Value);
-
-            vx.X = Convert.ToDouble(frame.Attribute("XX").Value);
-            vx.Y = Convert.ToDouble(frame.Attribute("XY").Value);
-            vx.Z = Convert.ToDouble(frame.Attribute("XZ").Value);
-
-            vy.X = Convert.ToDouble(frame.Attribute("YX").Value);
-            vy.Y = Convert.ToDouble(frame.Attribute("YY").Value);
-            vy.Z = Convert.ToDouble(frame.Attribute("YZ").Value);
-
-            n = new Node(new Plane(p, vx, vy), id);
-
-
-            XElement[] nedges = elem.Elements("edge").ToArray();
-
-            edges = new List<Guid>();
-            for (int j = 0; j < nedges.Length; ++j)
-            {
-                edges.Add(Guid.Parse(nedges[j].Attribute("id").Value));
-            }
-
-            return n;
-        }
-
-        public XElement ToXml()
-        {
-            XElement elem = new XElement("node");
-            elem.SetAttributeValue("name", Name);
-            elem.SetAttributeValue("type", this.ToString());
-            elem.SetAttributeValue("id", Id.ToString());
-
-            for (int i = 0; i < Edges.Count; ++i)
-            {
-                XElement edge = new XElement("edge");
-                edge.SetAttributeValue("id", Edges[i].Id.ToString());
-                elem.Add(edge);
-            }
-
-            return elem;
         }
 
         public override bool Equals(object obj)
@@ -905,14 +682,24 @@ namespace tas.Core.Network
         {
             return Id.GetHashCode();
         }
+
+        public new void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("name", Name);
+            info.AddValue("frame", Frame);
+            info.AddValue("edges", Edges.Where(x => x != null).Select(x => x.Id));
+            info.AddValue("type", ToString());
+            info.AddValue("custom_data", CustomData);
+
+            base.GetObjectData(info, context);
+        }
     }
 
     /// <summary>
     /// Edge between two nodes.
     /// </summary>
-    public class Edge : NetworkElement
+    public class Edge : NOb, ISerializable
     {
-        public Guid Id { get; private set; }
         public Node Start;
         public Node End;
 
@@ -997,7 +784,7 @@ namespace tas.Core.Network
             e.CustomData = new Dictionary<string, object>(CustomData);
 
             e.Parent = Parent;
-            e.Children = new List<NetworkElement>(Children);
+            e.Children = new List<NOb>(Children);
 
             return e;
         }
@@ -1011,33 +798,106 @@ namespace tas.Core.Network
         {
             return "Edge";
         }
+
+
+        public new void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (Start != null)
+                info.AddValue("start", Start.Id);
+            else
+                info.AddValue("start", Guid.Empty);
+
+            if (End != null)
+                info.AddValue("end", End.Id);
+            else
+                info.AddValue("end", Guid.Empty);
+
+            info.AddValue("custom_data", CustomData);
+            info.AddValue("start_data", StartData);
+            info.AddValue("end_data", EndData);
+            info.AddValue("type", ToString());
+
+            base.GetObjectData(info, context);
+        }
+    
     }
 
-    /// <summary>
-    /// Edge with weight value.
-    /// </summary>
-    public class WeightedEdge : Edge
+    #region Serialization
+
+    [Serializable]
+    public class SerializableNOb : ISerializable
     {
-        public double Weight;
+        public Guid Id;
+        public Guid Parent;
+        public List<Guid> Children;
 
-        public WeightedEdge(double weight = 1.0, Guid id = new Guid()) : base(id)
+        public SerializableNOb()
         {
-            Weight = 1.0;
         }
 
-        public override XElement ToXml()
+        public SerializableNOb(SerializationInfo info, StreamingContext context)
         {
-            XElement elem = base.ToXml();
-            elem.SetAttributeValue("type", this.ToString());
-            elem.SetAttributeValue("weight", Weight);
-            return elem;
+            Id = (Guid)info.GetValue("id", typeof(Guid));
+            Parent = (Guid)info.GetValue("parent", typeof(Guid));
+            Children = (List<Guid>)info.GetValue("children", typeof(List<Guid>));
         }
 
-        public override string ToString()
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            return "WeightedEdge";
+            throw new NotImplementedException();
         }
     }
+
+    [Serializable]
+    public class SerializableNode : SerializableNOb, ISerializable
+    {
+        public SerializableNode() : base()
+        {
+        }
+
+        public string Name;
+        public Plane Frame;
+        public List<Guid> Edges;
+        public Dictionary<string, object> CustomData;
+
+        public SerializableNode(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+            Name = (string)info.GetValue("name", typeof(string));
+            Frame = (Plane)info.GetValue("frame", typeof(Plane));
+            Edges = (List<Guid>)info.GetValue("edges", typeof(List<Guid>));
+            CustomData = (Dictionary<string, object>)info.GetValue("custom_data", typeof(Dictionary<string, object>));
+        }
+    }
+
+    [Serializable]
+    public class SerializableEdge : SerializableNOb, ISerializable
+    {
+            public SerializableEdge() : base()
+            {
+            }
+
+        // The value to serialize.
+        public Guid Start;
+        public Guid End;
+        public Dictionary<string, object> CustomData;
+
+        public object StartData;
+        public object EndData;
+
+        // The special constructor is used to deserialize values.
+        public SerializableEdge(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+            // Reset the property value using the GetValue method.
+            Start = (Guid)info.GetValue("start", typeof(Guid));
+            End = (Guid)info.GetValue("end", typeof(Guid));
+            CustomData = (Dictionary<string, object>)info.GetValue("custom_data", typeof(Dictionary<string, object>));
+            StartData = info.GetValue("start_data", typeof(object));
+            EndData = info.GetValue("end_data", typeof(object));
+        }
+    }
+
+    #endregion
+
 
     public class NodeGroup
     {
