@@ -20,7 +20,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_AnalyzeDirectRain()
           : base("Analyze Direct Rain", "Rain",
               "Displays direct rain exposure on mesh.",
-              "tasTools", "Analysis")
+              "tasLam", "Analyze")
         {
         }
 

@@ -36,10 +36,19 @@ namespace tas.Lam
             {
                 Plane p;
                 if (centreline.TryGetPlane(out p))
+                {
+                    double midT = centreline.Domain.Mid;
                     planes = new Plane[] {
-                    new Plane(centreline.PointAtStart,
-                    Vector3d.CrossProduct(centreline.TangentAtStart, p.ZAxis),
-                    p.ZAxis) };
+                        new Plane(centreline.PointAtStart,
+                        Vector3d.CrossProduct(centreline.TangentAtStart, p.ZAxis),
+                        p.ZAxis),
+                        new Plane(centreline.PointAt(midT),
+                        Vector3d.CrossProduct(centreline.TangentAt(midT), p.ZAxis),
+                        p.ZAxis),
+                        new Plane(centreline.PointAtEnd,
+                        Vector3d.CrossProduct(centreline.TangentAtEnd, p.ZAxis),
+                        p.ZAxis)};
+                }
                 else
                 {
                     planes = new Plane[] { centreline.GetAlignedPlane(20) };

@@ -7,13 +7,10 @@ using Rhino.Geometry;
 using tas.Core.GH;
 using tas.Core.Types;
 
-namespace tas.Machine.GH.Components
+namespace tas.Machine.GH
 {
     public class Cmpt_CreateToolpath : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the Cmpt_CreateToolpath class.
-        /// </summary>
         public Cmpt_CreateToolpath()
           : base("Create Toolpath", "Toolpath",
               "Create a machining toolpath with tool data.",
@@ -21,9 +18,6 @@ namespace tas.Machine.GH.Components
         {
         }
 
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Name", "N", "Name of toolpath.", GH_ParamAccess.item, "Toolpath");
@@ -36,9 +30,6 @@ namespace tas.Machine.GH.Components
             pManager.AddBooleanParameter("FlipWrist", "FW", "Optionally specify to flip the wrist of a multi-axis machine.", GH_ParamAccess.item, false);
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Toolpath", "T", "Toolpath with tool and machining data.", GH_ParamAccess.item);

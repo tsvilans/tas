@@ -30,7 +30,7 @@ namespace tas.Lam.GH
         public Cmpt_GlulamData()
           : base("GlulamData", "GlulamData",
               "Create glulam data.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

@@ -29,7 +29,7 @@ namespace tas.Lam.GH
         public Cmpt_InflateGlulam()
           : base("Inflate Glulam", "InfGlulam",
               "Expand Glulam in all directions.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

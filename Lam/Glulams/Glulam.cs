@@ -71,17 +71,17 @@ namespace tas.Lam
                     {
                         new Plane(
                             curve.PointAtStart,
-                            p.ZAxis,
                             Vector3d.CrossProduct(
-                                p.ZAxis, curve.TangentAtStart
-                                )
+                                curve.TangentAtStart, p.ZAxis
+                                ),
+                            p.ZAxis
                             ),
                         new Plane(
                             curve.PointAtEnd,
-                            p.ZAxis,
                             Vector3d.CrossProduct(
-                                p.ZAxis, curve.TangentAtEnd
-                                )
+                                curve.TangentAtEnd, p.ZAxis 
+                                ),
+                            p.ZAxis
                             )
 
                     });
@@ -459,8 +459,6 @@ namespace tas.Lam
             double w, h, l;
             return CreateGlulamFromBeamGeometry2(curve, beam, out w, out h, out l, extra);
         }
-
-
 
         static public Brep GetGlulamBisector(Glulam g1, Glulam g2, double extension = 50.0, bool normalized = false)
         {

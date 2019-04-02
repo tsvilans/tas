@@ -33,7 +33,7 @@ namespace tas.Lam.GH
         public Cmpt_CreateBlankWithGuides()
           : base("Blank with Guides", "Blank",
               "Create Glulam with guide curves.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

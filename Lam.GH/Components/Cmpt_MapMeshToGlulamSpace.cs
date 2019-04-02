@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_MapMeshToGlulamSpace()
           : base("Map Mesh To Glulam Space", "MapMe2Glulam",
               "Maps mesh to free-form Glulam space.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

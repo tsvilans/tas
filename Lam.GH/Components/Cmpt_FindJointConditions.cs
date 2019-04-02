@@ -31,7 +31,7 @@ namespace tas.Lam.GH
         public Cmpt_FindJointConditions()
           : base("Find Joint Conditions", "FindJoints",
               "Try to find joint conditions between all GlulamWorkpiece objects in a list.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

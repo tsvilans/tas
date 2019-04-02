@@ -29,7 +29,7 @@ namespace tas.Lam.GH
         public Cmpt_CreateWorkpiece()
           : base("Create Glulam Workpiece", "Workpiece",
               "Create glulam workpiece.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

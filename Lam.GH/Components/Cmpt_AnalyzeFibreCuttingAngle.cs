@@ -15,7 +15,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_AnalyzeFibreCuttingAngle()
           : base("Analyze Fibre-cutting Angle", "FibreAngle",
               "Displays faces that exceed a specified fibre angle.",
-              "tasTools", "Analysis")
+              "tasLam", "Analyze")
         {
         }
 

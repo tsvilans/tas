@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_OptimalCrvFrames()
           : base("FindOptimalFrames", "OptFrames",
               "Find optimal frames along curve to minimize bending in one direction.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

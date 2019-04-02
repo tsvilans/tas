@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_SplitGlulam()
           : base("Split Glulam", "SplitG",
               "Splits Glulam with optional overlap.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

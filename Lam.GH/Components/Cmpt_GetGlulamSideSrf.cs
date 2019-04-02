@@ -30,7 +30,7 @@ namespace tas.Lam.GH
         public Cmpt_GetGlulamSideSrf()
           : base("Get Glulam Surface", "GSrf",
               "Get Surface from a Glulam side. ",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

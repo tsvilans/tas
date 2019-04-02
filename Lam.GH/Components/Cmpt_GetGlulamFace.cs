@@ -30,7 +30,7 @@ namespace tas.Lam.GH
         public Cmpt_GetGlulamFace()
           : base("Get Glulam Face", "GFace",
               "Get a specific face of the Glulam. ",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

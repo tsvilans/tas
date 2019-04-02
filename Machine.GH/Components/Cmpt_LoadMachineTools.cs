@@ -6,13 +6,10 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace tas.Machine.GH.Components
+namespace tas.Machine.GH
 {
     public class Cmpt_LoadMachineTools : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the Cmpt_LoadMachineTools class.
-        /// </summary>
         public Cmpt_LoadMachineTools()
           : base("Load Machine Tools", "LoadMT",
               "Load machine tool definitions from XML file.",
@@ -20,17 +17,11 @@ namespace tas.Machine.GH.Components
         {
         }
 
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Path", "P", "File path to tool library XML.", GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Tools", "T", "Loaded tools.", GH_ParamAccess.list);

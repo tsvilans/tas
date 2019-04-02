@@ -33,7 +33,7 @@ namespace tas.Lam.GH
         public Cmpt_DeLam()
           : base("Delaminate", "Delam",
               "Extracts parameters from Glulam object.",
-              "tasTools", "Glulam")
+              "tasLam", "Analyze")
         {
         }
 

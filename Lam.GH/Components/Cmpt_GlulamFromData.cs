@@ -32,7 +32,7 @@ namespace tas.Lam.GH
         public Cmpt_GlulamFromData()
           : base("Glulam from Data", "Glulam",
               "Create glulam using curve, frames, and glulam data.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

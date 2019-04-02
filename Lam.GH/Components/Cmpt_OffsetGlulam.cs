@@ -29,7 +29,7 @@ namespace tas.Lam.GH
         public Cmpt_OffsetGlulam()
           : base("Offset Glulam", "OfGlulam",
               "Offset Glulam in its local space.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

@@ -23,7 +23,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_AnalyzeRibbonEdges()
           : base("Analyze Ribbon Edges", "Ribbon",
               "Tests if a Glulam can be made out of a ribbon-like lamella, instead of sticks.",
-              "tasTools", "Analysis")
+              "tasLam", "Analyze")
         {
 
             if (m_grad == null)

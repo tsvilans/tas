@@ -25,7 +25,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_AnalyzeLamellaBending()
           : base("Analyze Lamella Bending", "LamK",
               "Displays curvature limits of a glulam blank.",
-              "tasTools", "Analysis")
+              "tasLam", "Analyze")
         {
 
             if (m_grad == null)

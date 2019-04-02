@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_GetNPlanes()
           : base("Get N Planes", "GetNPlanes",
               "Gets cross-sectional planes at N points along a Glulam object.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

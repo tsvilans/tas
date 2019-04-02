@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_GetEdgePoints()
           : base("Get Edge Points", "GetEdges",
               "Gets list of points for each Glulam section edge.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

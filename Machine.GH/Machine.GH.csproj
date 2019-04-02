@@ -52,19 +52,19 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Components\Cmpt_AreaClearance2.cs" />
-    <Compile Include="Components\Cmpt_CircularFingerJoint.cs" />
-    <Compile Include="Components\Cmpt_CmsPost.cs" />
-    <Compile Include="Components\Cmpt_CreateRamp.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_AreaClearance2.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_CircularFingerJoint.cs" />
+    <Compile Include="Components\Posts\Cmpt_CmsPost.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_CreateRamp.cs" />
     <Compile Include="Components\Cmpt_CreateToolpath.cs" />
-    <Compile Include="Components\Cmpt_FlankMilling.cs" />
-    <Compile Include="Components\Cmpt_FlatFinish.cs" />
-    <Compile Include="Components\Cmpt_FlowlineFinish.cs" />
-    <Compile Include="Components\Cmpt_LinearFingerJoint.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_FlankMilling.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_FlatFinish.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_FlowlineFinish.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_LinearFingerJoint.cs" />
     <Compile Include="Components\Cmpt_LoadMachineTools.cs" />
     <Compile Include="Components\Cmpt_OffsetClip.cs" />
     <Compile Include="Components\Cmpt_OrientPlanesToPoint.cs" />
-    <Compile Include="Components\Cmpt_Pocket.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_Pocket.cs" />
     <Compile Include="Components\Cmpt_Processor2Settings_Form.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -74,7 +74,7 @@
     <Compile Include="Components\Cmpt_Processor2.cs" />
     <Compile Include="Components\Cmpt_Processor.cs" />
     <Compile Include="Components\Cmpt_ShowToolpath.cs" />
-    <Compile Include="Components\Cmpt_SurfOffsetFinish.cs" />
+    <Compile Include="Components\Toolpaths\Cmpt_SurfOffsetFinish.cs" />
     <Compile Include="Components\Cmpt_ToolSettings_Form.cs">
       <SubType>Form</SubType>
     </Compile>

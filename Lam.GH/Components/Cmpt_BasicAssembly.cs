@@ -29,7 +29,7 @@ namespace tas.Lam.GH
         public Cmpt_BasicAssembly()
           : base("Create BasicAssembly", "BasicAssembly",
               "Create a BasicAssembly object from a single glulam. This just wraps a single glulam into the Assembly format.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

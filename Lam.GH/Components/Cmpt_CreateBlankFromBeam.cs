@@ -32,7 +32,7 @@ namespace tas.Lam.GH
         public Cmpt_CreateBlankFromBeam()
           : base("Blank from Geo", "Blank",
               "Create Glulam from a mesh and guide curve.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

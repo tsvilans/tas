@@ -12,7 +12,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_GetFibreCutting()
           : base("Cmpt_GetFibreCutting", "Nickname",
               "Description",
-              "Category", "Subcategory")
+              "tasLam", "Analyze")
         {
         }
 

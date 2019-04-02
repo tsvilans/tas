@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 using tas.Core.Types;
+/*
 namespace GooIoTest
 {
     /// <summary>
@@ -203,19 +205,18 @@ namespace GooIoTest
         }
     }
 }
-
+*/
 namespace tas.Lam.GH
 {
 
     public class GlulamParameter : GH_PersistentParam<GH_Glulam>
     {
-        public GlulamParameter() : this("Glulam parameter", "Glulam", "This is a glulam.", "tasTools", "Parameters") { }
+        public GlulamParameter() : this("Glulam parameter", "Glulam", "This is a glulam.", "tasLam", "Parameters") { }
         public GlulamParameter(string name, string nickname, string description, string category, string subcategory) 
             : base(name, nickname, description, category, subcategory) { }
         public GlulamParameter(GH_InstanceDescription tag) : base(tag) { }
 
         //public override GH_Exposure Exposure => GH_Exposure.secondary;
-        //protected override System.Drawing.Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
 
         public override System.Guid ComponentGuid => new Guid("{9ae1662a-a114-4780-9dbe-c56c32998c95}");
         protected override GH_GetterResult Prompt_Singular(ref GH_Glulam value)
@@ -226,6 +227,9 @@ namespace tas.Lam.GH
         {
             return GH_GetterResult.cancel;
         }
+
+        protected override Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
+
     }
 
     public class GlulamDataParamater : GH_PersistentParam<GH_GlulamData>

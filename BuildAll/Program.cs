@@ -42,7 +42,7 @@ namespace BuildAll
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine("   build " + ver.ToString(4));
             Console.WriteLine("   A personal PhD research toolkit.");
-            Console.WriteLine("   by Tom Svilans, 2016-2018");
+            Console.WriteLine("   by Tom Svilans, 2016-2019");
             Console.WriteLine("   tsvi@kadk.dk");
             Console.WriteLine("   info@tomsvilans.com");
             Console.WriteLine();

@@ -34,7 +34,7 @@ namespace tas.Lam.GH
         public Cmpt_MapPlanesToGlulamSpace()
           : base("Map Planes To Glulam Space", "MapPl2Glulam",
               "Maps planes to free-form Glulam space.",
-              "tasTools", "Glulam")
+              "tasLam", "Modify")
         {
         }
 

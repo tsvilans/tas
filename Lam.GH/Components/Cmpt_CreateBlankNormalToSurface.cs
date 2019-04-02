@@ -31,7 +31,7 @@ namespace tas.Lam.GH
         public Cmpt_CreateBlankNormalToSurface()
           : base("Blank Normal To Srf", "Blank",
               "Create Glulam normal to driving surface.",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 

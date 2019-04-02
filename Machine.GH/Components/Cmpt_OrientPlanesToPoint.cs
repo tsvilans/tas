@@ -12,10 +12,10 @@ using tas.Core.GH;
 
 namespace tas.Machine.GH
 {
-    public class tasTP_OrientPlanesToPoint_Component : GH_Component
+    public class Cmpt_OrientPlanesToPoint : GH_Component
     {
-        public tasTP_OrientPlanesToPoint_Component()
-          : base("tasToolpath: Orient Targets", "tasTP: Orient Targets",
+        public Cmpt_OrientPlanesToPoint()
+          : base("Orient Targets", "Orient Targets",
               "Orient targets towards a point, maintaining normal direction.",
               "tasTools", "Machining")
         {

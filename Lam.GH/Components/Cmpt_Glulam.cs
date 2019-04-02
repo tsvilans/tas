@@ -30,7 +30,7 @@ namespace tas.Lam.GH
         public Cmpt_Glulam()
           : base("Glulam", "Glulam",
               "Create glulam (updated).",
-              "tasTools", "Glulam")
+              "tasLam", "Create")
         {
         }
 
