@@ -33,6 +33,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tasToolsCommon", "tasToolsC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Machine.GH.Extended", "Machine.GH.Extended\Machine.GH.Extended.csproj", "{BC1BD88B-D6BF-4FCA-B158-5514DE01FC85}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project_specific", "project_specific", "{FD07CF75-8BF6-4F04-821D-6D1E52C64EEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kelowna", "Projects\Kelowna\Kelowna.csproj", "{DB842288-87F6-484C-A7E0-F28551C05F14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +99,12 @@ Global
 		{BC1BD88B-D6BF-4FCA-B158-5514DE01FC85}.Release|Any CPU.ActiveCfg = Release|x64
 		{BC1BD88B-D6BF-4FCA-B158-5514DE01FC85}.Release|x64.ActiveCfg = Release|x64
 		{BC1BD88B-D6BF-4FCA-B158-5514DE01FC85}.Release|x64.Build.0 = Release|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Debug|x64.ActiveCfg = Debug|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Debug|x64.Build.0 = Debug|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Release|Any CPU.ActiveCfg = Release|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Release|x64.ActiveCfg = Release|x64
+		{DB842288-87F6-484C-A7E0-F28551C05F14}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +119,7 @@ Global
 		{0234EFD9-459B-45EA-A31C-376B17A62706} = {DA0FBCF3-E993-4E3D-94F9-5508DBF329AA}
 		{AB10B25C-FF58-412F-9981-24A07C0F2ACE} = {DA0FBCF3-E993-4E3D-94F9-5508DBF329AA}
 		{BC1BD88B-D6BF-4FCA-B158-5514DE01FC85} = {DA0FBCF3-E993-4E3D-94F9-5508DBF329AA}
+		{DB842288-87F6-484C-A7E0-F28551C05F14} = {FD07CF75-8BF6-4F04-821D-6D1E52C64EEF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FBDCD337-B8D2-46B2-8747-BA7C2F06CCCE}

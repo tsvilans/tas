@@ -519,6 +519,18 @@ namespace tas.Lam
             ID = Guid.NewGuid();
         }
 
+        public List<Point3d> DiscretizeCentreline(bool adaptive = true)
+        {
+            if (adaptive)
+            {
+                var pCurve = Centreline.ToPolyline(Glulam.Tolerance, Glulam.AngleTolerance, 0.0, 0.0);
+                return pCurve.ToPolyline().ToList();
+            }
+
+            var tt = Centreline.DivideByCount(Data.Samples, true);
+            return tt.Select(x => Centreline.PointAt(x)).ToList();
+        }
+
         public virtual Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             return new Mesh();
@@ -647,7 +659,6 @@ namespace tas.Lam
         {
             Frames = Frames.Where(x => x.Item2.IsValid).ToList();
         }
-
 
         public Plane GetPlane(Point3d p)
         {

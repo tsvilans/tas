@@ -266,6 +266,42 @@ namespace tas.Core.Network
         }
 
         /// <summary>
+        /// Divide an edge into two by inserting a new node.
+        /// </summary>
+        /// <param name="e">Edge to divide. This edge will be destroyed.</param>
+        /// <param name="frame">Optional frame for the new node. If unset, this will be interpolated between start and end nodes.</param>
+        /// <param name="id">Optional ID for the new node.</param>
+        public Node DivideEdge(Edge e, Plane frame = default(Plane), Guid id = new Guid())
+        {
+            var node1 = e.Start as Node;
+            var node2 = e.End as Node;
+            var ei1 = node1.Edges.IndexOf(e);
+            var ei2 = node2.Edges.IndexOf(e);
+
+            if (frame == default(Plane))
+                frame = Util.Interpolation.InterpolatePlanes2(node1.Frame, node2.Frame, 0.5);
+
+            Node n = new Node(frame, id);
+            Edge ne1 = new Edge(node1, n);
+            Edge ne2 = new Edge(n, node2);
+
+            n.Edges.Add(ne1);
+            n.Edges.Add(ne2);
+
+            node1.Edges[ei1] = ne1;
+            node2.Edges[ei2] = ne2;
+
+            AddNode(n);
+            AddEdge(ne1);
+            AddEdge(ne2);
+
+            Edges.Remove(e.Id);
+            EdgeList.Remove(e);
+
+            return n;
+        }
+
+        /// <summary>
         /// Destroy edge.
         /// </summary>
         /// <param name="e">Edge to destroy.</param>

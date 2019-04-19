@@ -152,7 +152,7 @@ namespace tas.Core
             /// <returns></returns>
             public static double LinearInterpolate(double y1, double y2, double mu)
             {
-                return (y1 * (1 - mu) + y2 * mu);
+                return y1 * (1 - mu) + y2 * mu;
             }
 
             /// <summary>
@@ -328,7 +328,287 @@ namespace tas.Core
 
         static Random random = new Random();
 
+        #region KELOWNA
+        public static Point3d[] CreateArcWithArcLength(Point3d pt, Vector3d v1, Vector3d v2, double arc_length, out double offset, out double radius)
+        {
+            var dot = v1 * v2;
 
+            if (Math.Abs(dot) > 1 - 1e-10)
+            {
+                offset = arc_length / 2;
+                radius = double.PositiveInfinity;
+                return new Point3d[] { pt + v1 * (arc_length / 2), pt, pt + v2 * (arc_length / 2) };
+            }
+
+            var v3 = v1 + v2; v3.Unitize();
+
+            var theta = Math.Acos(dot);
+
+            radius = arc_length / (Math.PI - theta);
+
+            var h = radius / Math.Sin(theta / 2);
+            offset = Math.Sqrt(h * h - radius * radius);
+
+            var interior = pt + v3 * (h - radius);
+
+            var pt1 = pt + v1 * offset;
+            var pt2 = pt + v2 * offset;
+
+            return new Point3d[] { pt1, interior, pt2 };
+        }
+
+        public static Point3d[] CreateArcWithOffset(Point3d pt, Vector3d v1, Vector3d v2, double offset, out double arc_length, out double radius)
+        {
+            var dot = v1 * v2;
+
+            if (Math.Abs(dot) > 1 - 1e-10)
+            {
+                arc_length = offset * 2;
+                radius = double.PositiveInfinity;
+                return new Point3d[] { pt + v1 * offset, pt, pt + v2 * offset };
+            }
+
+            var v3 = v1 + v2; v3.Unitize();
+
+            var theta = Math.Acos(dot);
+
+            var h = offset / Math.Cos(theta / 2);
+
+            radius = Math.Sqrt(h * h - offset * offset);
+
+            var interior = pt + v3 * (h - radius);
+
+            var pt1 = pt + v1 * offset;
+            var pt2 = pt + v2 * offset;
+
+            arc_length = radius * (Math.PI - theta);
+
+            return new Point3d[] { pt1, interior, pt2 };
+        }
+
+        public static Point3d[] CreateArcWithRadius(Point3d pt, Vector3d v1, Vector3d v2, double radius, out double arc_length, out double offset)
+        {
+            var dot = v1 * v2;
+
+            if (Math.Abs(dot) > 1 - 1e-10)
+            {
+                arc_length = 0;
+                offset = 0;
+                radius = double.PositiveInfinity;
+                return new Point3d[] { pt + v1, pt, pt + v2 };
+            }
+
+            var v3 = v1 + v2; v3.Unitize();
+
+            var theta = Math.Acos(dot);
+
+            var h = radius / Math.Sin(theta / 2);
+
+            offset = Math.Sqrt(h * h - radius * radius);
+
+            var interior = pt + v3 * (h - radius);
+
+            var pt1 = pt + v1 * offset;
+            var pt2 = pt + v2 * offset;
+
+            arc_length = radius + (Math.PI - theta);
+
+            return new Point3d[] { pt1, interior, pt2 };
+        }
+
+        /// <summary>
+        /// Test polyline to see if it is clockwise around a guide vector.
+        /// </summary>
+        /// <param name="pl">Polyline to test.</param>
+        /// <param name="vec">Guide vector for establishing directionality.</param>
+        /// <returns>True if polyline is CW around vector, false if not.</returns>
+        public static bool IsClockwise(Polyline pl, Vector3d vec)
+        {
+            double temp = 0.0;
+
+            for (int i = 0; i < pl.SegmentCount - 1; ++i)
+            {
+                var v1 = pl.SegmentAt(i).Direction;
+                var v2 = pl.SegmentAt(i + 1).Direction;
+
+                var cross = Vector3d.CrossProduct(v1, v2);
+                temp += cross * vec;
+            }
+
+            return temp > 0;
+        }
+
+
+        public static bool TryGet<T>(Dictionary<string, object> dict, string key, out T val)
+        {
+            //if (typeof(T).IsValueType)
+            //{
+                if (dict.ContainsKey(key))
+                {
+                    val = (T)dict[key];
+                    return true;
+                }
+                else
+                {
+                    val = default(T);
+                    return false;
+                }
+            //}
+
+
+        }
+
+        /// <summary>
+        /// Offset polyline sideways and out-of-plane, guided by a normal vector.
+        /// </summary>
+        /// <param name="pl"></param>
+        /// <param name="normal"></param>
+        /// <param name="d"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        public static Polyline OffsetPolyline(Polyline pl, Vector3d normal, double d, double h = 0.0)
+        {
+            if (normal.IsZero)
+            {
+                Plane fit;
+                Plane.FitPlaneToPoints(pl, out fit);
+                normal = fit.ZAxis;
+                if (normal * Vector3d.ZAxis < 0) normal.Reverse();
+            }
+
+            var newPoly = new Polyline();
+
+            if (pl.Count < 2)
+                throw new Exception("Polyline doesn't contain enough points.");
+
+            Vector3d v1, v2, v3;
+            double alpha, beta;
+            int sign = 1, side = 1;
+            Point3d pt;
+
+            normal.Unitize();
+
+            bool is_clockwise = IsClockwise(pl, normal);
+
+            if (is_clockwise)
+                side = -1;
+
+            if (pl.IsClosed)
+            {
+                // Handle closed polyline
+                int iPrev, iNext;
+
+                for (int i = 0; i < pl.Count - 1; ++i)
+                {
+                    iPrev = Modulus(i - 1, pl.Count - 1);
+                    iNext = Modulus(i + 1, pl.Count - 1);
+
+                    v1 = pl[iPrev] - pl[i];
+                    v2 = pl[iNext] - pl[i];
+                    v1.Unitize();
+                    v2.Unitize();
+
+                    if (-v1 * v2 > 0.9999999)
+                    {
+                        v3 = Vector3d.CrossProduct(normal, v1);
+                        v3.Unitize();
+                        pt = pl[i] + v3 * d * side + normal * h;
+
+                    }
+                    else
+                    {
+                        v3 = Vector3d.CrossProduct(normal, v1);
+
+                        alpha = Math.Acos(v1 * v2) / 2;
+                        sign = v2 * v3 > 0 ? 1 : -1;
+
+                        v3 = v1 + v2; v3.Unitize();
+
+                        pt = pl[i] + v3 * (d / Math.Sin(alpha)) * sign * side + normal * h;
+                    }
+
+                    if (pt.IsValid)
+                        newPoly.Add(pt);
+                    else
+                        throw new Exception("Bad point.");
+                }
+
+                newPoly.Add(newPoly[0]);
+            }
+            else
+            {
+                // Handle first point
+                v1 = pl[1] - pl[0]; v1.Unitize();
+                v2 = pl[pl.Count - 1] - pl[0]; v2.Unitize();
+
+                alpha = Math.Acos(v1 * v2);
+                beta = alpha - Math.PI / 2;
+
+                newPoly.Add(pl[0] + v2 * (d / Math.Cos(beta)) + normal * h);
+
+                // Handle intermediate points
+                if (pl.Count > 2)
+                {
+                    for (int i = 1; i < pl.Count - 1; ++i)
+                    {
+                        v1 = pl[i - 1] - pl[i]; v1.Unitize();
+                        v2 = pl[i + 1] - pl[i]; v2.Unitize();
+
+                        // Co-linear points
+                        if (-v1 * v2 > 0.9999999)
+                        {
+                            v3 = Vector3d.CrossProduct(normal, v1); v3.Unitize();
+                            pt = pl[i] + v3 * d * side + normal * h;
+                        }
+                        else
+                        {
+                            v3 = Vector3d.CrossProduct(normal, v1);
+
+                            alpha = Math.Acos(v1 * v2) / 2;
+                            sign = v2 * v3 > 0 ? 1 : -1;
+
+                            v3 = v1 + v2; v3.Unitize();
+
+                            pt = pl[i] + v3 * (d / Math.Sin(alpha)) * sign * side + normal * h;
+                        }
+
+                        if (pt.IsValid)
+                            newPoly.Add(pt);
+                        else
+                            throw new Exception("Bad point.");
+                    }
+                }
+
+                // Handle last point
+                v1 = pl[pl.Count - 2] - pl[pl.Count - 1]; v1.Unitize();
+                v2 = pl[0] - pl[pl.Count - 1]; v2.Unitize();
+
+                alpha = Math.Acos(v1 * v2);
+                beta = alpha - Math.PI / 2;
+
+                newPoly.Add(pl[pl.Count - 1] + v2 * (d / Math.Cos(beta)) + normal * h);
+            }
+
+            return newPoly;
+        }
+
+        /// <summary>
+        /// Create a perpendicular plane on curve at parameter t, such that its Y-axis aligns with guide vector v.
+        /// </summary>
+        /// <param name="c">Curve to evaluate.</param>
+        /// <param name="t">Curve parameter to place plane at.</param>
+        /// <param name="v">Guide vector for aligning the Y-axis of the plane.</param>
+        /// <returns>Plane perpendicular to the curve.</returns>
+        public static Plane PlaneAtWithGuide(Curve c, double t, Vector3d v)
+        {
+            Point3d origin = c.PointAt(t);
+            var tan = c.TangentAt(t);
+            var xaxis = Vector3d.CrossProduct(tan, v);
+            var yaxis = Vector3d.CrossProduct(xaxis, tan);
+
+            return new Plane(origin, xaxis, yaxis);
+        }
+        #endregion
 
         /// <summary>
         /// Project point onto plane.
