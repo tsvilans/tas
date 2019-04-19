@@ -411,7 +411,7 @@ namespace tas.Core
             var pt1 = pt + v1 * offset;
             var pt2 = pt + v2 * offset;
 
-            arc_length = radius + (Math.PI - theta);
+            arc_length = radius * (Math.PI - theta);
 
             return new Point3d[] { pt1, interior, pt2 };
         }
