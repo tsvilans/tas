@@ -40,9 +40,21 @@ namespace tas.Lam
         {
             if (planes == null || planes.Length < 1)
             {
-                Plane p;
-                centreline.PerpendicularFrameAt(centreline.Domain.Min, out p);
-                planes = new Plane[] { p };
+                if (centreline.IsPlanar())
+                {
+                    Plane cPlane;
+                    centreline.TryGetPlane(out cPlane);
+
+                    Plane p0 = new Plane(centreline.PointAtStart, cPlane.ZAxis, Vector3d.CrossProduct(centreline.TangentAtStart, cPlane.ZAxis));
+                    Plane p1 = new Plane(centreline.PointAtEnd, cPlane.ZAxis, Vector3d.CrossProduct(centreline.TangentAtEnd, cPlane.ZAxis));
+                    planes = new Plane[] { p0, p1 };
+                }
+                else
+                {
+                    Plane p;
+                    centreline.PerpendicularFrameAt(centreline.Domain.Min, out p);
+                    planes = new Plane[] { p };
+                }
             }
 
             Centreline = centreline;
