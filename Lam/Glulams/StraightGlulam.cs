@@ -414,5 +414,14 @@ namespace tas.Lam
         {
             throw new NotImplementedException();
         }
+
+        public override void CalculateLamellaSizes(double height, double width)
+        {
+            Data.LamHeight = height;
+            Data.LamWidth = width;
+
+            Data.NumHeight = 1;
+            Data.NumWidth = 1;
+        }
     }
 }

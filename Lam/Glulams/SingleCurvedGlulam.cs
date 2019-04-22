@@ -40,14 +40,16 @@ namespace tas.Lam
                     double midT = centreline.Domain.Mid;
                     planes = new Plane[] {
                         new Plane(centreline.PointAtStart,
-                        Vector3d.CrossProduct(centreline.TangentAtStart, p.ZAxis),
-                        p.ZAxis),
+                        p.ZAxis,
+                        Vector3d.CrossProduct(centreline.TangentAtStart, p.ZAxis)),
                         new Plane(centreline.PointAt(midT),
-                        Vector3d.CrossProduct(centreline.TangentAt(midT), p.ZAxis),
-                        p.ZAxis),
+                        p.ZAxis,
+                        Vector3d.CrossProduct(centreline.TangentAt(midT), p.ZAxis)
+                        ),
                         new Plane(centreline.PointAtEnd,
-                        Vector3d.CrossProduct(centreline.TangentAtEnd, p.ZAxis),
-                        p.ZAxis)};
+                        p.ZAxis,
+                        Vector3d.CrossProduct(centreline.TangentAtEnd, p.ZAxis)
+                        )};
                 }
                 else
                 {
@@ -133,38 +135,71 @@ namespace tas.Lam
 
             return mesh;
         }
-        /*
-        public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
-        {
-            List<Point3d> pts = new List<Point3d>();
-            double[] t = Centreline.DivideByCount(this.Data.Samples, true);
 
-            for (int i = 0; i < t.Length; ++i)
+        public override void CalculateLamellaSizes(double width, double height)
+        {
+            Plane cPlane;
+            Centreline.TryGetPlane(out cPlane);
+            var normal = cPlane.ZAxis;
+
+            var tt = Centreline.DivideByCount(Data.Samples, true);
+
+            double k = 0.0;
+            Vector3d kVec;
+            for (int i = 0; i < tt.Length; ++i)
             {
-                Plane p = GetPlane(t[i]);
-                pts.Add(p.Origin + p.XAxis * x + p.YAxis * y);
+                kVec = Centreline.CurvatureAt(tt[i]);
+                k = Math.Max(k, kVec.Length);
             }
 
-            Curve new_curve = Curve.CreateInterpolatedCurve(pts, 3, CurveKnotStyle.Uniform,
-                Centreline.TangentAtStart, Centreline.TangentAtEnd);
+            double lh = Math.Floor((1 / Math.Abs(k)) * Glulam.RadiusMultiplier);
+
+            Data.LamWidth = width;
+            Data.NumWidth = 1;
 
 
-            if (new_curve == null)
-                throw new Exception("SingleCurvedGlulam::CreateOffsetCurve:: Failed to create interpolated curve!");
+            Data.NumHeight = (int)Math.Ceiling(height / lh);
+            Data.LamHeight = height / Data.LamHeight;
 
-            double len = new_curve.GetLength();
-            new_curve.Domain = new Interval(0.0, len);
-
-            if (rebuild)
-                new_curve = new_curve.Rebuild(rebuild_pts, new_curve.Degree, true);
-
-            return new_curve;
+            if (Data.NumHeight < 2)
+            {
+                Data.NumHeight = 2;
+                Data.LamHeight /= 2;
+            }
+            
         }
+        /*
+public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
+{
+   List<Point3d> pts = new List<Point3d>();
+   double[] t = Centreline.DivideByCount(this.Data.Samples, true);
 
-        public override Curve CreateOffsetCurve(double x, double y, bool offset_start, bool offset_end, bool rebuild = false, int rebuild_pts = 20)
-        {
-            throw new NotImplementedException();
-        }
-        */
+   for (int i = 0; i < t.Length; ++i)
+   {
+       Plane p = GetPlane(t[i]);
+       pts.Add(p.Origin + p.XAxis * x + p.YAxis * y);
+   }
+
+   Curve new_curve = Curve.CreateInterpolatedCurve(pts, 3, CurveKnotStyle.Uniform,
+       Centreline.TangentAtStart, Centreline.TangentAtEnd);
+
+
+   if (new_curve == null)
+       throw new Exception("SingleCurvedGlulam::CreateOffsetCurve:: Failed to create interpolated curve!");
+
+   double len = new_curve.GetLength();
+   new_curve.Domain = new Interval(0.0, len);
+
+   if (rebuild)
+       new_curve = new_curve.Rebuild(rebuild_pts, new_curve.Degree, true);
+
+   return new_curve;
+}
+
+public override Curve CreateOffsetCurve(double x, double y, bool offset_start, bool offset_end, bool rebuild = false, int rebuild_pts = 20)
+{
+   throw new NotImplementedException();
+}
+*/
     }
 }

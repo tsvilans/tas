@@ -113,12 +113,17 @@ namespace tas.Lam.GH
             data.Samples = samples > 1 ? samples : 2;
             */
             Lam.GlulamData data = null;
+            data = new GlulamData(crv, w, h, plane_array, (int)Math.Ceiling(crv.GetLength() / GlulamData.DefaultSampleDistance));
+
+            /*
             if (calculate_data)
                 data = Lam.GlulamData.FromCurveLimits(crv, w, h, plane_array);
             else
                 data = new Lam.GlulamData(1, 1, w, h);
+            */
 
             Lam.Glulam blank = Lam.Glulam.CreateGlulam(crv, plane_array, data);
+            //blank.CalculateLamellaSizes(w, h);
 
             List<object> output = new List<object>();
 

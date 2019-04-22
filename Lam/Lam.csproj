@@ -56,6 +56,7 @@
     <Compile Include="Glulams\DoubleCurvedGlulam.cs" />
     <Compile Include="Glulams\FreeformGlulam.cs" />
     <Compile Include="Glulams\Glulam.cs" />
+    <Compile Include="Glulams\GlulamFactory.cs" />
     <Compile Include="Glulams\SingleCurvedGlulam.cs" />
     <Compile Include="Glulams\Stick.cs" />
     <Compile Include="Glulams\StraightGlulam.cs" />

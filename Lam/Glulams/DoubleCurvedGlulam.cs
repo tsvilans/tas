@@ -113,6 +113,48 @@ namespace tas.Lam
             return mesh;
         }
 
+        public override void CalculateLamellaSizes(double width, double height)
+        {
+             var tt = Centreline.DivideByCount(Data.Samples, true);
+
+            Plane kPlane;
+            Vector3d kVec;
+            double maxKX = 0.0, maxKY = 0.0;
+            double dotKX, dotKY;
+
+            for (int i = 0; i < tt.Length; ++i)
+            {
+                kPlane = GetPlane(tt[i]);
+                kVec = Centreline.CurvatureAt(tt[i]);
+
+                dotKX = kVec * kPlane.XAxis;
+                dotKY = kVec * kPlane.YAxis;
+
+                maxKX = Math.Max(dotKX, maxKX);
+                maxKY = Math.Max(dotKY, maxKY);
+            }
+
+            double lh = Math.Floor((1 / Math.Abs(maxKY)) * Glulam.RadiusMultiplier);
+            double lw = Math.Floor((1 / Math.Abs(maxKX)) * Glulam.RadiusMultiplier);
+
+            Data.NumHeight = (int)Math.Ceiling(height / lh);
+            Data.LamHeight = height / Data.LamHeight;
+
+            Data.NumWidth = (int)Math.Ceiling(width / lw);
+            Data.LamWidth = width / Data.LamHeight;
+
+            if (Data.NumHeight < 2)
+            {
+                Data.NumHeight = 2;
+                Data.LamHeight /= 2;
+            }
+
+            if (Data.NumWidth < 2)
+            {
+                Data.NumWidth = 2;
+                Data.LamWidth /= 2;
+            }
+        }
         /*
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
         {

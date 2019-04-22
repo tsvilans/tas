@@ -66,22 +66,22 @@ namespace tas.Lam
                 }
                 else if (curve.IsPlanar(Tolerance))
                 {
-                    curve.TryGetPlane(out p);
+                    curve.TryGetPlane(out p, Tolerance);
                     glulam = new SingleCurvedGlulam(curve, new Plane[]
                     {
                         new Plane(
                             curve.PointAtStart,
+                            p.ZAxis,
                             Vector3d.CrossProduct(
                                 curve.TangentAtStart, p.ZAxis
-                                ),
-                            p.ZAxis
+                                )
                             ),
                         new Plane(
                             curve.PointAtEnd,
+                            p.ZAxis,
                             Vector3d.CrossProduct(
                                 curve.TangentAtEnd, p.ZAxis 
-                                ),
-                            p.ZAxis
+                                )
                             )
 
                     });
@@ -134,8 +134,9 @@ namespace tas.Lam
                     else
                     {
 
-                        Plane first = new Plane(curve.PointAtStart, crv_plane.ZAxis, Vector3d.CrossProduct(crv_plane.ZAxis, curve.TangentAtStart));
-                        glulam = new SingleCurvedGlulam(curve, new Plane[] { first });
+                        Plane first = new Plane(curve.PointAtStart, crv_plane.ZAxis, Vector3d.CrossProduct(curve.TangentAtStart, crv_plane.ZAxis));
+                        Plane last = new Plane(curve.PointAtEnd, crv_plane.ZAxis, Vector3d.CrossProduct(curve.TangentAtEnd, crv_plane.ZAxis));
+                        glulam = new SingleCurvedGlulam(curve, new Plane[] { first, last });
                     }
                 }
                 else
@@ -176,6 +177,30 @@ namespace tas.Lam
             }
 
             glulam.ValidateFrames();
+
+            if (glulam is DoubleCurvedGlulam)
+            {
+                if (data.NumHeight < 2)
+                {
+                    data.NumHeight = 2;
+                    data.LamHeight /= 2;
+                }
+
+                if (data.NumWidth < 2)
+                {
+                    data.NumWidth = 2;
+                    data.LamWidth /= 2;
+                }
+            }
+            else if (glulam is SingleCurvedGlulam)
+            {
+                if (data.NumHeight < 2)
+                {
+                    data.NumHeight = 2;
+                    data.LamHeight /= 2;
+                }
+            }
+
             glulam.Data = data;
 
             return glulam;
@@ -518,6 +543,8 @@ namespace tas.Lam
         {
             ID = Guid.NewGuid();
         }
+
+        public abstract void CalculateLamellaSizes(double width, double height);
 
         public List<Point3d> DiscretizeCentreline(bool adaptive = true)
         {
@@ -1419,7 +1446,7 @@ namespace tas.Lam
         public static double DefaultWidth = 80.0;
         public static double DefaultHeight = 80.0;
         public static double DefaultSampleDistance = 50.0;
-        public static int DefaultCurvatureSamples = 20;
+        public static int DefaultCurvatureSamples = 40;
 
         public int NumWidth, NumHeight;
         public double LamWidth, LamHeight;
@@ -1438,35 +1465,148 @@ namespace tas.Lam
             Samples = samples;
         }
 
-        public static GlulamData FromCurveLimits(Curve c, Plane[] frames = null, int crv_samples = 0)
+        /// <summary>
+        /// Get lamella widths and heights from input curve and cross-section guide frames.
+        /// </summary>
+        /// <param name="c">Centreline curve.</param>
+        /// <param name="lamella_width">Maximum lamella width.</param>
+        /// <param name="lamella_height">Maximum lamella height</param>
+        /// <param name="frames">Guide frames.</param>
+        /// <param name="k_samples">Number of curvature samples to use.</param>
+        /// <returns>A pair of doubles for maximum curvature in X and Y directions.</returns>
+        public static double[] GetLamellaSizes(Curve c, out double lamella_width, out double lamella_height, Plane[] frames = null, int k_samples = 0)
         {
+            if (c.IsLinear())
+            {
+                lamella_width = double.MaxValue;
+                lamella_height = double.MaxValue;
+                return new double[] { 0, 0 };
+            }
+            
             Beam beam = new Lam.Beam(c, frames);
-            if (crv_samples < 3) crv_samples = DefaultCurvatureSamples;
+            if (k_samples < 3) k_samples = DefaultCurvatureSamples;
 
-            double[] tt = beam.Centreline.DivideByCount(crv_samples, false);
+            double[] tt = beam.Centreline.DivideByCount(k_samples, false);
 
             double maxK = 0.0;
             int index = 0;
             Vector3d kvec = Vector3d.Unset;
-            Vector3d temp;
+            Vector3d tVec;
+
+            double maxKX = 0.0;
+            double maxKY = 0.0;
+            double dotKX, dotKY;
+            Plane tPlane;
 
             for (int i = 0; i < tt.Length; ++i)
             {
-                temp = beam.Centreline.CurvatureAt(tt[i]);
-                if (temp.Length > maxK)
+                tVec = beam.Centreline.CurvatureAt(tt[i]);
+                tPlane = beam.GetPlane(tt[i]);
+
+                dotKX = Math.Abs(tVec * tPlane.XAxis);
+                dotKY = Math.Abs(tVec * tPlane.YAxis);
+
+                maxKX = Math.Max(dotKX, maxKX);
+                maxKY = Math.Max(dotKY, maxKY);
+
+                if (tVec.Length > maxK)
                 {
                     index = i;
-                    kvec = temp;
-                    maxK = temp.Length;
+                    kvec = tVec;
+                    maxK = tVec.Length;
                 }
             }
+
+            if (maxKX == 0.0)
+                lamella_width = double.MaxValue;
+            else
+                lamella_width = 1 / maxKX / Glulam.RadiusMultiplier;
+
+            if (maxKY == 0.0)
+                lamella_height = double.MaxValue;
+            else
+                lamella_height = 1 / maxKY / Glulam.RadiusMultiplier;
+
+            return new double[] { maxKX, maxKY };
+
+        }
+
+        public GlulamData(Curve c, double width, double height, Plane[] frames = null, int glulam_samples = 50, int curve_samples = 0)
+        {
+            double lw, lh;
+            GlulamData.GetLamellaSizes(c, out lw, out lh, frames, curve_samples);
+            //var r = new double[] { 1 / k[0], 1 / k[1] };
+
+            //lw = Math.Abs(r[0] - width / 2) / Glulam.RadiusMultiplier;
+            //lh = Math.Abs(r[1] - height / 2) / Glulam.RadiusMultiplier;
+
+            lw = Math.Min(lw, width);
+            lh = Math.Min(lh, height);
+
+            this.NumWidth = (int)Math.Ceiling(width / lw);
+            this.NumHeight = (int)Math.Ceiling(height / lh);
+
+            this.LamWidth = width / NumWidth;
+            this.LamHeight = height / NumHeight;
+
+            this.Samples = glulam_samples;
+        }
+
+        public static GlulamData FromCurveLimits(Curve c, Plane[] frames = null, int k_samples = 0)
+        {
+
+            return new GlulamData(c, 100.0, 100.0, frames, (int)(c.GetLength() / DefaultSampleDistance), k_samples);
+
+            Beam beam = new Lam.Beam(c, frames);
+            if (k_samples < 3) k_samples = DefaultCurvatureSamples;
+
+            double[] tt = beam.Centreline.DivideByCount(k_samples, false);
+
+            double maxK = 0.0;
+            int index = 0;
+            Vector3d kvec = Vector3d.Unset;
+            Vector3d tVec;
+
+            double maxKX = 0.0;
+            double maxKY = 0.0;
+            double dotKX, dotKY;
+            Plane tPlane;
+
+            for (int i = 0; i < tt.Length; ++i)
+            {
+                tVec = beam.Centreline.CurvatureAt(tt[i]);
+                tPlane = beam.GetPlane(tt[i]);
+
+                dotKX = tVec * tPlane.XAxis;
+                dotKY = tVec * tPlane.YAxis;
+
+                if (dotKX > maxKX)
+                {
+                    maxKX = dotKX;
+                }
+                if (dotKY > maxKY)
+                {
+                    maxKY = dotKY;
+                }
+
+                if (tVec.Length > maxK)
+                {
+                    index = i;
+                    kvec = tVec;
+                    maxK = tVec.Length;
+                }
+            }
+
+            double lam_width = Math.Floor(1 / Math.Abs(maxKX) * Glulam.RadiusMultiplier);
+            double lam_height = Math.Floor(1 / Math.Abs(maxKY) * Glulam.RadiusMultiplier);
+
             Plane frame = beam.GetPlane(tt[index]);
 
             double max_lam_width = (double)((int)Math.Ceiling(DefaultWidth / 10.0) * 10.0);
             double max_lam_height = (double)((int)Math.Ceiling(DefaultHeight / 10.0) * 10.0);
 
-            double lam_width = Math.Ceiling(Math.Min(1 / (Math.Abs(kvec * frame.XAxis) * Glulam.RadiusMultiplier), max_lam_width));
-            double lam_height = Math.Ceiling(Math.Min(1 / (Math.Abs(kvec * frame.YAxis) * Glulam.RadiusMultiplier), max_lam_height));
+            //double lam_width = Math.Ceiling(Math.Min(1 / (Math.Abs(kvec * frame.XAxis) * Glulam.RadiusMultiplier), max_lam_width));
+            //double lam_height = Math.Ceiling(Math.Min(1 / (Math.Abs(kvec * frame.YAxis) * Glulam.RadiusMultiplier), max_lam_height));
 
             //double max_lam_width = DefaultWidth;
             //double max_lam_height = DefaultHeight;

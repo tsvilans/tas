@@ -495,8 +495,11 @@ namespace tas.Lam
 
         public override List<Curve> GetLamellaCurves()
         {
+            double[] DivParams;
+            Plane[] xPlanes;
+            GenerateCrossSectionPlanes(Data.Samples, 0, out xPlanes, out DivParams, Data.InterpolationType);
+
             List<Rhino.Geometry.Curve> crvs = new List<Rhino.Geometry.Curve>();
-            double[] DivParams = Centreline.DivideByCount(Data.Samples, true);
 
             double hWidth = Data.NumWidth * Data.LamWidth / 2;
             double hHeight = Data.NumHeight * Data.LamHeight / 2;
@@ -519,13 +522,10 @@ namespace tas.Lam
             }
             double t;
             Tuple<Plane, Plane, double> faround;
-            for (int i = 0; i < DivParams.Length; ++i)
+            for (int i = 0; i < xPlanes.Length; ++i)
             {
-                t = DivParams[i];
-                faround = FramesAround(t);
-                plane = Util.Interpolation.InterpolatePlanes(faround.Item1, faround.Item2, faround.Item3);
-                plane.Origin = Centreline.PointAt(t);
-                plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
+                plane = xPlanes[i];
+                var xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, plane);
 
 
                 for (int j = 0; j < Data.NumHeight; ++j)
@@ -533,11 +533,12 @@ namespace tas.Lam
                     for (int k = 0; k < Data.NumWidth; ++k)
                     {
                         Rhino.Geometry.Point3d p = new Rhino.Geometry.Point3d(k * Data.LamWidth - hWidth + hLw, j * Data.LamHeight - hHeight + hLh, 0.0);
-                        p.Transform(Rhino.Geometry.Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, plane));
+                        p.Transform(xform);
                         verts[j][k].Add(p);
                     }
                 }
             }
+
             for (int i = 0; i < Data.NumHeight; ++i)
             {
                 for (int j = 0; j < Data.NumWidth; ++j)
