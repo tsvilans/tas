@@ -136,6 +136,8 @@ namespace tas.Lam.GH.Components
                             Circle c = new Circle(CurveListCurrent[j][k - 1], CurveListCurrent[j][k], CurveListCurrent[j][k + 1]);
                             K = 1 / c.Radius;
 
+                            //K = tas.Core.Util.CurvatureFrom3Points(CurveListCurrent[j][k - 1], CurveListCurrent[j][k], CurveListCurrent[j][k + 1]);
+
                             m_k_list[i][j][k - 1] = (m_k_list[i][j][k - 1] + K) / 2;
                             m_k_list[i][j].Add(K);
                             m_maxk_found = Math.Max(m_maxk_found, K);

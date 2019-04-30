@@ -70,13 +70,14 @@ namespace tas.Lam
 
             Mesh mesh = new Mesh();
 
-            List<Point3d> verts = new List<Point3d>();
+            List<Point3d> verts = new List<Point3d>(m.Vertices.Count);
             object m_lock = new object();
-            Point3d temp1, temp2;
 
-            //Parallel.For(0, m.Vertices.Count, i =>
-            for (int i = 0; i < m.Vertices.Count; ++i)
+            Parallel.For(0, m.Vertices.Count, i =>
+            //for (int i = 0; i < m.Vertices.Count; ++i)
             {
+                Point3d temp1, temp2;
+
                 temp1 = m.Vertices[i];
                 Centreline.ClosestPoint(temp1, out t);
                 l = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
@@ -88,10 +89,10 @@ namespace tas.Lam
 
                 //lock(m_lock)
                 //{
-                    verts.Add(temp2);
+                    verts[i] = temp2;
                 //}
-            }
-            //});
+            //}
+            });
             /*
             for (int i = 0; i < m.Vertices.Count; ++i)
             {

@@ -65,7 +65,12 @@ del *.manifest
 del *.vshost.exe
 del *.vshost.exe.manifest
 copy $(TargetDir)tas.Core.GH.dll $(TargetDir)Core.GH.gha
-del tas.Core.GH.dll</PostBuildEvent>
+del tas.Core.GH.dll
+del Rhino.UI.dll
+del RhinoCommon.dll
+del Grasshopper.dll
+del GH_IO.dll
+del Eto.dll</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

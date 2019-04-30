@@ -119,6 +119,10 @@ namespace tas.Lam.GH
 
 
             Lam.GlulamData data = null;
+
+            data = new GlulamData(crv, w, h, planes.ToArray(), (int)Math.Ceiling(crv.GetLength() / GlulamData.DefaultSampleDistance));
+
+            /*
             if (calculate_data)
                 data = Lam.GlulamData.FromCurveLimits(crv, w, h);
             else
@@ -127,7 +131,9 @@ namespace tas.Lam.GH
             //data.LamWidth = lw > 0.001 ? lw : 20.0;
             //data.NumHeight = h > 0 ? (int)Math.Ceiling(h / lh) : 4;
             //data.NumWidth = w > 0 ? (int)Math.Ceiling(w / lw) : 4;
+            */
             data.Samples = samples > 1 ? samples : 2;
+            
 
             Lam.Glulam blank = Lam.Glulam.CreateGlulam(crv, planes.ToArray(), data);
             blank.RemoveDuplicateFrames();

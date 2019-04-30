@@ -416,6 +416,18 @@ namespace tas.Core
             return new Point3d[] { pt1, interior, pt2 };
         }
 
+        public static double CurvatureFrom3Points(Point3d p0, Point3d p1, Point3d p2)
+        {
+            double a = p0.DistanceTo(p1);
+            double b = p1.DistanceTo(p2);
+            double c = p2.DistanceTo(p0);
+
+            double s = (a + b + c) / 2;
+            double area = Math.Sqrt(s * (s - a) * (s - b) * (s - c));
+
+            return 4 * area / (a * b * c);
+        }
+
         /// <summary>
         /// Test polyline to see if it is clockwise around a guide vector.
         /// </summary>

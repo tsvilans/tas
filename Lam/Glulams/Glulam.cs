@@ -124,7 +124,7 @@ namespace tas.Lam
 
                     foreach (Plane p in planes)
                     {
-                        if (Math.Abs(p.YAxis * crv_plane.ZAxis) > Tolerance)
+                        if (Math.Abs(p.XAxis * crv_plane.ZAxis) > Tolerance)
                         {
                             HasTwist = true;
                         }

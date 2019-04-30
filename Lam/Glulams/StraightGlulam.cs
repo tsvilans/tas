@@ -28,7 +28,7 @@ using Rhino.Geometry;
 
 namespace tas.Lam
 {
-    class StraightGlulam : Glulam
+    public class StraightGlulam : Glulam
     {
         public StraightGlulam(Curve centreline, Plane[] planes, bool with_twist = false) : base()
         {

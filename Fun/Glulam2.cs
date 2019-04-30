@@ -172,6 +172,7 @@ namespace tas.Extra
         Point2d m_crown;
         string m_species;
         string m_tags;
+        string m_grade;
 
         /// <summary>
         /// Interface to the stick's crown center (center of log), relative to the center of the 
@@ -183,21 +184,27 @@ namespace tas.Extra
         /// </summary>
         public string Species { get { return m_species; } set { m_species = value; } }
         /// <summary>
+        /// Interface to the wood grade tag.
+        /// </summary>
+        public string Grade { get { return m_grade; } set { m_grade = value; } }
+        /// <summary>
         /// Interface to arbitrary string tag.
         /// </summary>
         public string Tags { get { return m_tags; } set { m_tags = value; } }
 
-        public Stick(Point2d crown, string species = "SPF", string tags = "")
+        public Stick(Point2d crown, string species = "SPF", string grade = "C20", string tags = "")
         {
             m_crown = crown;
             m_species = species;
             m_tags = tags;
+            m_grade = grade;
         }
 
-        public Stick(string species = "SPF", string tags = "")
+        public Stick(string species = "SPF", string grade = "C20", string tags = "")
         {
             m_crown = Point2d.Origin;
             m_species = species;
+            m_grade = grade;
             m_tags = tags;
         }
     }
@@ -518,6 +525,9 @@ namespace tas.Extra
         {
             if (!crv.IsLinear(GlulamX.Tolerance)) throw new Exception("StraightGlulam :: Input curve must be linear.");
 
+            m_guide = new Line(crv.PointAtStart, crv.PointAtEnd);
+
+            /*
             Polyline polyline;
             if (!crv.TryGetPolyline(out polyline)) throw new Exception("StraightGlulam :: Input curve failed.");
 
@@ -525,6 +535,7 @@ namespace tas.Extra
                 m_guide = polyline.GetSegments()[0];
             else
                 throw new Exception("StraightGlulam :: Input curve was polyline. Not sure what to do.");
+            */
 
             if (yaxis.IsParallelTo(m_guide.Direction) != 0)
                 throw new Exception("StraightGlulam :: Y-axis vector is parallel to guide curve. This does not make sense.");
@@ -743,7 +754,21 @@ namespace tas.Extra
 
         public override Curve OffsetGuide(double x = 0, double y = 0, bool rebuild = false, int rebuild_samples = 100)
         {
-            throw new NotImplementedException();
+            Plane p;
+            m_guide.TryGetPlane(out p);
+
+            var offsets = m_guide.Offset(p, y, GlulamX.Tolerance, CurveOffsetCornerStyle.None);
+            if (offsets.Length != 1)
+                throw new Exception(string.Format("SingleCurvedGlulam :: Offset failed. {0}", offsets.Length));
+
+            var offset = offsets[0];
+
+            if (rebuild)
+                offset = offset.Rebuild(rebuild_samples, offset.Degree, true);
+
+            offset.Transform(Transform.Translation(p.ZAxis * x));
+
+            return offset;
         }
     }
 }
