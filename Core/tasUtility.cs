@@ -478,14 +478,17 @@ namespace tas.Core
         /// <param name="d"></param>
         /// <param name="h"></param>
         /// <returns></returns>
-        public static Polyline OffsetPolyline(Polyline pl, Vector3d normal, double d, double h = 0.0)
+        public static Polyline OffsetPolyline(Polyline pl, Vector3d normal, double d, double h = 0.0, int open_style = 0)
         {
             if (normal.IsZero)
             {
                 Plane fit;
                 Plane.FitPlaneToPoints(pl, out fit);
                 normal = fit.ZAxis;
-                if (normal * Vector3d.ZAxis < 0) normal.Reverse();
+
+                var poly_direction = Vector3d.CrossProduct(pl[2] - pl[1], pl[0] - pl[1]);
+
+                if (normal * poly_direction < 0) normal.Reverse();
             }
 
             var newPoly = new Polyline();
@@ -497,80 +500,45 @@ namespace tas.Core
             double alpha, beta;
             int sign = 1, side = 1;
             Point3d pt;
+            int iPrev, iNext;
+
+            int N = pl.Count;
 
             normal.Unitize();
 
-            bool is_clockwise = IsClockwise(pl, normal);
+            bool is_clockwise = Util.IsClockwise(pl, normal);
 
             if (is_clockwise)
                 side = -1;
 
             if (pl.IsClosed)
             {
-                // Handle closed polyline
-                int iPrev, iNext;
-
-                for (int i = 0; i < pl.Count - 1; ++i)
-                {
-                    iPrev = Modulus(i - 1, pl.Count - 1);
-                    iNext = Modulus(i + 1, pl.Count - 1);
-
-                    v1 = pl[iPrev] - pl[i];
-                    v2 = pl[iNext] - pl[i];
-                    v1.Unitize();
-                    v2.Unitize();
-
-                    if (-v1 * v2 > 0.9999999)
-                    {
-                        v3 = Vector3d.CrossProduct(normal, v1);
-                        v3.Unitize();
-                        pt = pl[i] + v3 * d * side + normal * h;
-
-                    }
-                    else
-                    {
-                        v3 = Vector3d.CrossProduct(normal, v1);
-
-                        alpha = Math.Acos(v1 * v2) / 2;
-                        sign = v2 * v3 > 0 ? 1 : -1;
-
-                        v3 = v1 + v2; v3.Unitize();
-
-                        pt = pl[i] + v3 * (d / Math.Sin(alpha)) * sign * side + normal * h;
-                    }
-
-                    if (pt.IsValid)
-                        newPoly.Add(pt);
-                    else
-                        throw new Exception("Bad point.");
-                }
-
-                newPoly.Add(newPoly[0]);
+                open_style = 0;
+                N -= 1;
             }
-            else
+
+            // Offset open endpoints trim-like
+            switch (open_style)
             {
-                // Handle first point
-                v1 = pl[1] - pl[0]; v1.Unitize();
-                v2 = pl[pl.Count - 1] - pl[0]; v2.Unitize();
+                case (0):
+                    // Handle closed polyline
 
-                alpha = Math.Acos(v1 * v2);
-                beta = alpha - Math.PI / 2;
-
-                newPoly.Add(pl[0] + v2 * (d / Math.Cos(beta)) + normal * h);
-
-                // Handle intermediate points
-                if (pl.Count > 2)
-                {
-                    for (int i = 1; i < pl.Count - 1; ++i)
+                    for (int i = 0; i < N; ++i)
                     {
-                        v1 = pl[i - 1] - pl[i]; v1.Unitize();
-                        v2 = pl[i + 1] - pl[i]; v2.Unitize();
+                        iPrev = Util.Modulus(i - 1, N);
+                        iNext = Util.Modulus(i + 1, N);
 
-                        // Co-linear points
+                        v1 = pl[iPrev] - pl[i];
+                        v2 = pl[iNext] - pl[i];
+                        v1.Unitize();
+                        v2.Unitize();
+
                         if (-v1 * v2 > 0.9999999)
                         {
-                            v3 = Vector3d.CrossProduct(normal, v1); v3.Unitize();
+                            v3 = Vector3d.CrossProduct(normal, v1);
+                            v3.Unitize();
                             pt = pl[i] + v3 * d * side + normal * h;
+
                         }
                         else
                         {
@@ -589,20 +557,121 @@ namespace tas.Core
                         else
                             throw new Exception("Bad point.");
                     }
-                }
 
-                // Handle last point
-                v1 = pl[pl.Count - 2] - pl[pl.Count - 1]; v1.Unitize();
-                v2 = pl[0] - pl[pl.Count - 1]; v2.Unitize();
+                    if (pl.IsClosed)
+                        newPoly.Add(newPoly[0]);
+                    break;
 
-                alpha = Math.Acos(v1 * v2);
-                beta = alpha - Math.PI / 2;
+                // Offset open endpoints perpendicularly
+                case (1):
+                    // Handle first point
+                    v1 = pl[1] - pl[0]; v1.Unitize();
+                    v3 = Vector3d.CrossProduct(normal, v1);
 
-                newPoly.Add(pl[pl.Count - 1] + v2 * (d / Math.Cos(beta)) + normal * h);
+                    newPoly.Add(pl[0] - v3 * side * d + normal * h);
+
+                    // Handle intermediate points
+                    if (N > 2)
+                    {
+                        for (int i = 1; i < N - 1; ++i)
+                        {
+                            v1 = pl[i - 1] - pl[i]; v1.Unitize();
+                            v2 = pl[i + 1] - pl[i]; v2.Unitize();
+
+                            // Co-linear points
+                            if (-v1 * v2 > 0.9999999)
+                            {
+                                v3 = Vector3d.CrossProduct(normal, v1); v3.Unitize();
+                                pt = pl[i] + v3 * d * side + normal * h;
+                            }
+                            else
+                            {
+                                v3 = Vector3d.CrossProduct(normal, v1);
+
+                                alpha = Math.Acos(v1 * v2) / 2;
+                                sign = v2 * v3 > 0 ? 1 : -1;
+
+                                v3 = v1 + v2; v3.Unitize();
+
+                                pt = pl[i] + v3 * (d / Math.Sin(alpha)) * sign * side + normal * h;
+                            }
+
+                            if (pt.IsValid)
+                                newPoly.Add(pt);
+                            else
+                                throw new Exception("Bad point.");
+                        }
+                    }
+
+                    // Handle last point
+
+
+                    v1 = pl[N - 2] - pl[N - 1]; v1.Unitize();
+                    v3 = Vector3d.CrossProduct(normal, v1);
+
+                    newPoly.Add(pl[N - 1] + v3 * side * d + normal * h);
+                    break;
+
+                case (2):
+                    // Handle first point
+                    v1 = pl[1] - pl[0]; v1.Unitize();
+                    v2 = pl[N - 1] - pl[0]; v2.Unitize();
+
+                    alpha = Math.Acos(v1 * v2);
+                    beta = alpha - Math.PI / 2;
+
+                    newPoly.Add(pl[0] + v2 * (d / Math.Cos(beta)) + normal * h);
+
+                    // Handle intermediate points
+                    if (N > 2)
+                    {
+                        for (int i = 1; i < N - 1; ++i)
+                        {
+                            v1 = pl[i - 1] - pl[i]; v1.Unitize();
+                            v2 = pl[i + 1] - pl[i]; v2.Unitize();
+
+                            // Co-linear points
+                            if (-v1 * v2 > 0.9999999)
+                            {
+                                v3 = Vector3d.CrossProduct(normal, v1); v3.Unitize();
+                                pt = pl[i] + v3 * d * side + normal * h;
+                            }
+                            else
+                            {
+                                v3 = Vector3d.CrossProduct(normal, v1);
+
+                                alpha = Math.Acos(v1 * v2) / 2;
+                                sign = v2 * v3 > 0 ? 1 : -1;
+
+                                v3 = v1 + v2; v3.Unitize();
+
+                                pt = pl[i] + v3 * (d / Math.Sin(alpha)) * sign * side + normal * h;
+                            }
+
+                            if (pt.IsValid)
+                                newPoly.Add(pt);
+                            else
+                                throw new Exception("Bad point.");
+                        }
+                    }
+
+                    // Handle last point
+                    v1 = pl[N - 2] - pl[N - 1]; v1.Unitize();
+                    v2 = pl[0] - pl[N - 1]; v2.Unitize();
+
+                    alpha = Math.Acos(v1 * v2);
+                    beta = alpha - Math.PI / 2;
+
+                    newPoly.Add(pl[N - 1] + v2 * (d / Math.Cos(beta)) + normal * h);
+                    break;
+
+                default:
+                    break;
             }
 
             return newPoly;
         }
+
 
         /// <summary>
         /// Create a perpendicular plane on curve at parameter t, such that its Y-axis aligns with guide vector v.
