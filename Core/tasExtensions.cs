@@ -31,6 +31,29 @@ namespace tas.Core
     /// </summary>
     public static class ExtensionMethods
     {
+
+        /// <summary>
+        /// Calculate the normal of a Polyline according to its direction / winding direction.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns>Normal of Polyline.</returns>
+        public static Vector3d CalculateNormal(this Polyline p)
+        {
+            Vector3d normal = Vector3d.Zero;
+            for(int i = 0; i < p.Count-1; ++i)
+            {
+                normal += Vector3d.CrossProduct(new Vector3d(p[i]), new Vector3d(p[i + 1]));
+            }
+            if (!p.IsClosed)
+            {
+                normal += Vector3d.CrossProduct(new Vector3d(p.Last), new Vector3d(p.First));
+            }
+
+            normal.Unitize();
+
+            return normal;
+        }
+
         /// <summary>
         /// Project vector onto plane.
         /// </summary>
