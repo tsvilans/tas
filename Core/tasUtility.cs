@@ -1922,6 +1922,8 @@ namespace tas.Core
             if (index >= 0) return Colors[index];
 
             index = ~index;
+            if (index == 0) return Colors[0];
+            if (index > Colors.Count - 1) return Colors.Last();
 
             double tt = (t - Stops[index - 1]) / (Stops[index] - Stops[index - 1]);
             return Util.Interpolation.Lerp(Colors[index - 1], Colors[index], tt);
