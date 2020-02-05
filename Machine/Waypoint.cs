@@ -25,6 +25,7 @@ namespace tas.Machine
     {
         public Plane Plane;
         public int Type;
+        public double Radius;
 
         public static Waypoint Unset
         {
@@ -34,21 +35,26 @@ namespace tas.Machine
             }
         }
 
-        public bool IsRapid() => (Type & 1) != 0;
-        public bool IsFeed() => (Type & 3) == 0;
-        public bool IsPlunge() => (Type & 2) != 0;
-        public bool IsArc() => (Type & 4) != 0;
+        public bool IsRapid() => (Type & 1) != 0; // if bit 1 is on
+        public bool IsPlunge() => (Type & 2) != 0; // if bit 2 is on
+        public bool IsFeed() => (Type & 3) == 0; // if neither bit 1 or 2 are on
+        public bool IsArc() => (Type & 4) != 0; // if bit 3 is on
 
-        public Waypoint(Plane p, int t = (int)WaypointType.FEED, bool plunging = false)
+        public bool IsClockwise() => (Type & 12) != 0;
+        public bool IsCounterClockwise() => (Type & 12) == 0;
+
+        public Waypoint(Plane p, int t = (int)WaypointType.FEED, bool plunging = false, double r = 0.0)
         {
             Plane = p;
             Type = t;
+            Radius = r;
         }
 
         public Waypoint(Waypoint wp)
         {
             Plane = wp.Plane;
             Type = wp.Type;
+            Radius = wp.Radius;
         }
 
         public static implicit operator Plane(Waypoint wp) => wp.Plane;

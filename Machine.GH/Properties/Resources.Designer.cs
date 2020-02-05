@@ -19,7 +19,7 @@ namespace tas.Machine.GH.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -63,6 +63,46 @@ namespace tas.Machine.GH.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_AreaClearance_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_AreaClearance_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_CreateMachineTool_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_CreateMachineTool_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_CreateToolpath_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_CreateToolpath_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_FinishingFlats_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_FinishingFlats_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap tasTools_icons_FlatsFinish_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tasTools_icons_FlatsFinish_24x24", resourceCulture);
@@ -76,6 +116,16 @@ namespace tas.Machine.GH.Properties {
         internal static System.Drawing.Bitmap tasTools_icons_FlowlineFinish_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tasTools_icons_FlowlineFinish_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_LoadMachineTools_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_LoadMachineTools_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,6 +153,36 @@ namespace tas.Machine.GH.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_PostCMS_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_PostCMS_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_PostGeneric3Axis_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_PostGeneric3Axis_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_PostHaas_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_PostHaas_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap tasTools_icons_Ramp_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tasTools_icons_Ramp_24x24", resourceCulture);
@@ -116,6 +196,26 @@ namespace tas.Machine.GH.Properties {
         internal static System.Drawing.Bitmap tasTools_icons_RobotTargets_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tasTools_icons_RobotTargets_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_SurfaceOffset_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_SurfaceOffset_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasTools_icons_ViewToolpath_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tasTools_icons_ViewToolpath_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

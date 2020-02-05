@@ -107,7 +107,7 @@ namespace tas.Machine.GH.Toolpaths
         {
             get
             {
-                return Properties.Resources.tasTools_icons_Pocket_24x24;
+                return Properties.Resources.tasTools_icons_AreaClearance_24x24;
             }
         }
 

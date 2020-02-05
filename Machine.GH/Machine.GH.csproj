@@ -52,6 +52,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Cmpt_CreateMachineTool.cs" />
+    <Compile Include="Components\Posts\Cmpt_HaasPost.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_AreaClearance2.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_CircularFingerJoint.cs" />
     <Compile Include="Components\Posts\Cmpt_CmsPost.cs" />
@@ -108,7 +110,6 @@
     <ProjectReference Include="..\Core.GH\Core.GH.csproj">
       <Project>{ab10b25c-ff58-412f-9981-24a07c0f2ace}</Project>
       <Name>Core.GH</Name>
-      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Core\Core.csproj">
       <Project>{0ab66830-7875-4c0a-b6ea-a2239c01fbc0}</Project>
@@ -137,9 +138,6 @@
     <None Include="Resources\Icons\tasTools_icons_RobotTargets_24x24.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Icons\icon_orient_targets_component_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Icons\tasTools_icons_OrientTargets_24x24.png" />
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +147,20 @@
     <PackageReference Include="RhinoCommon">
       <Version>6.7.18199.22081</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Icons\tasTools_icons_AreaClearance_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_CreateMachineTool_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_CreateToolpath_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_FinishingFlats_24x24.png" />
+    <None Include="Resources\Icons\tasTools_icons_LoadMachineTools_24x24.png" />
+    <None Include="Resources\Icons\tasTools_icons_PostHaas_24x24.png" />
+    <None Include="Resources\Icons\tasTools_icons_PostCMS_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_PostGeneric3Axis_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_PostHaas-32_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_PostHaas-33_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_SurfaceOffset_24x24.png" />
+    <Content Include="Resources\Icons\tasTools_icons_ViewToolpath_24x24.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

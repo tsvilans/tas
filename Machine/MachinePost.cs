@@ -81,6 +81,67 @@ namespace tas.Machine
         }
     }
 
+    public abstract class MachinePostBase
+    {
+        public string PreComment = "%";
+        public string PostComment = "";
+        public string Name = "MachinePostBase";
+        public string Author = "Author";
+        public string Date = System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
+        public string ProgramTime = "X";
+        public Mesh StockModel = null;
+        public bool AlwaysWriteGCode = false;
+
+        public Point3d WorkOffset = Point3d.Origin;
+
+        public List<Toolpath> Paths = new List<Toolpath>();
+
+        protected readonly Interval[] m_limits;
+        protected readonly char[] m_axis_id;
+        protected readonly int m_dof;
+        protected readonly int m_NO_MOTION;
+
+        public MachinePostBase(int dof)
+        {
+            m_dof = dof;
+            m_limits = new Interval[dof];
+            m_axis_id = new char[dof];
+
+            m_NO_MOTION = 0;
+            for (int i = 1; i <= dof; ++i)
+                m_NO_MOTION = m_NO_MOTION | (1 << i);
+        }
+
+        public abstract void PlaneToCoords(Plane plane, ref double[] coords);
+
+        protected bool IsInMachineLimits(double[] coords)
+        {
+            if (coords.Length != m_dof) throw new Exception("Invalid DOF in IsInMachineLimits()!");
+
+            for (int i = 0; i < m_dof; ++i)
+                if (!m_limits[i].IncludesParameter(coords[i]))
+                    return false;
+            return true;
+        }
+
+        public abstract object Compute();
+        public void AddPath(Toolpath p) => Paths.Add(p);
+        public void AddPaths(ICollection<Toolpath> p) => Paths.AddRange(p);
+        public void ClearPaths() => Paths.Clear();
+        public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
+        public List<string> Errors = new List<string>();
+
+        public void AddTool(MachineTool t)
+        {
+            if (Tools.ContainsKey(t.Name))
+                Tools[t.Name] = t;
+            else
+                Tools.Add(t.Name, t);
+        }
+
+    }
+
+
     /// <summary>
     /// Base class for toolpath post-processor. Inherit from this
     /// to create machine-specific posts.
@@ -102,6 +163,7 @@ namespace tas.Machine
         public abstract object Compute();
         public void AddPath(Toolpath p) => Paths.Add(p);
         public void AddPaths(ICollection<Toolpath> p) => Paths.AddRange(p);
+        public void ClearPaths() => Paths.Clear();
         public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
         public List<string> Errors = new List<string>();
 

@@ -203,14 +203,14 @@ namespace tas.Machine
                 m = Safety as Mesh;
             else if (Safety is Brep)
             {
-                Mesh[] meshes = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.Smooth);
+                Mesh[] meshes = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.QualityRenderMesh);
                 m = new Mesh();
                 foreach (Mesh mesh in meshes)
                     m.Append(mesh);
             }
             else if (Safety is Surface)
             {
-                Mesh[] meshes = Mesh.CreateFromBrep((Safety as Surface).ToBrep(), MeshingParameters.Smooth);
+                Mesh[] meshes = Mesh.CreateFromBrep((Safety as Surface).ToBrep(), MeshingParameters.QualityRenderMesh);
                 m = new Mesh();
                 foreach (Mesh mesh in meshes)
                     m.Append(mesh);

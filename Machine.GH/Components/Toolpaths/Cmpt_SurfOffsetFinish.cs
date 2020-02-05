@@ -110,11 +110,11 @@ namespace tas.Machine.GH.Toolpaths
 
                 if (this._geometry.ObjectType == Rhino.DocObjects.ObjectType.Brep)
                 {
-                    meshes = Mesh.CreateFromBrep(this._geometry as Brep, MeshingParameters.Smooth);
+                    meshes = Mesh.CreateFromBrep(this._geometry as Brep, MeshingParameters.QualityRenderMesh);
                 }
                 else if (this._geometry.ObjectType == Rhino.DocObjects.ObjectType.Surface)
                 {
-                    meshes = Mesh.CreateFromBrep(this._geometry as Brep, MeshingParameters.Smooth);
+                    meshes = Mesh.CreateFromBrep(this._geometry as Brep, MeshingParameters.QualityRenderMesh);
                 }
                 else if (this._geometry.ObjectType == Rhino.DocObjects.ObjectType.Mesh)
                 {
@@ -210,8 +210,8 @@ namespace tas.Machine.GH.Toolpaths
         {
             get
             {
-                //return Properties.Resources.tasTools_icons_FlatsFinish_24x24;
-                return null;
+                return Properties.Resources.tasTools_icons_SurfaceOffset_24x24;
+
             }
         }
 

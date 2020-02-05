@@ -74,9 +74,8 @@ namespace tas.Machine.GH
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
+                return Properties.Resources.tasTools_icons_LoadMachineTools_24x24;
+
             }
         }
 
