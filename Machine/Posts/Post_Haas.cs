@@ -45,9 +45,16 @@ namespace tas.Machine.Posts
         {
             PreComment = "%";
 
-            m_limits[0] = new Interval(0, 1100);
-            m_limits[1] = new Interval(0, 600);
-            m_limits[2] = new Interval(0, 200);
+            m_limits[0] = new Interval(0, 1016);
+            m_limits[1] = new Interval(0, 508);
+            m_limits[2] = new Interval(0, 406);
+
+            // Spindle nose to table (max): 508 mm
+            // Spindle nose to table (min): 102 mm
+
+            // Table
+            //    length 1467 mm
+            //    width 368 mm
 
             m_axis_id[0] = 'X';
             m_axis_id[1] = 'Y';
@@ -90,20 +97,19 @@ namespace tas.Machine.Posts
             int flags = 0;
             bool write_feedrate = true;
 
-
             // Create headers
             Program.Add("O01001"); // Program number / name
 
-            Program.Add($"{PreComment}");
-            Program.Add($"{PreComment} Revision      : 1 ");
-            Program.Add($"{PreComment}");
-            Program.Add($"{PreComment}File name      : {Name} ");
-            Program.Add($"{PreComment}Programmed by  : {Author} ");
-            Program.Add($"{PreComment}Date           : {Date} ");
-            Program.Add($"{PreComment}Program length : {ProgramTime} ");
-            Program.Add($"{PreComment}Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} ");
-            Program.Add($"{PreComment}Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} ");
-            Program.Add($"{PreComment}");
+            Program.Add($"{PreComment}{PostComment}");
+            Program.Add($"{PreComment} Revision      : 1 {PostComment}");
+            Program.Add($"{PreComment}{PostComment}");
+            Program.Add($"{PreComment} File name      : {Name} {PostComment}");
+            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment}");
+            Program.Add($"{PreComment} Date           : {Date} {PostComment}");
+            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}");
+            Program.Add($"{PreComment} Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment}");
+            Program.Add($"{PreComment} Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment}");
+            Program.Add($"{PreComment}{PostComment}");
 
             /* G00 - Rapid mode
              * G17 - XY plane for circular interpolation
@@ -264,14 +270,14 @@ namespace tas.Machine.Posts
                 }
 
 
-                Program.Add($"{PreComment}");
+                Program.Add($"{PreComment}{PostComment}");
                 Program.Add("G53 G49 G0 Z0.");
                 //Program.Add("G53 X0. Y0.");
 
 
                 //Program.Add("G0 Z12");
 
-                Program.Add("");
+                Program.Add($"{PreComment}{PostComment}");
             }
             Program.Add($"G00 Z10.");
 
