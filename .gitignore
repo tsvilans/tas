@@ -1,0 +1,27 @@
+
+# Build files
+.vs
+BuildAll/obj/
+Core.GH/obj/
+Core/obj/
+Fun/obj/
+Lam.GH/obj/
+Lam/obj/
+Machine.GH.Extended/obj/
+Machine.GH/obj/
+Machine/obj/
+Projects/Kelowna/obj/
+*.pdb
+
+# Packages
+packages/
+
+# Dependencies
+bin/Eto.dll
+bin/GH_IO.dll
+bin/Grasshopper.dll
+bin/Kelowna.dll
+bin/Rhino.UI.dll
+bin/RhinoCommon.dll
+bin/tas.Core.GH.dll
+bin/tasFun.dll
