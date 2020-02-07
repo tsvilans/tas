@@ -39,7 +39,7 @@ namespace tas.Machine.GH.Posts
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Gcode", "NC", "Output NC code for CMS machine.", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Targets", "Targets", "Robot targets as list.", GH_ParamAccess.list);
+            //pManager.AddGenericParameter("Targets", "Targets", "Robot targets as list.", GH_ParamAccess.list);
             pManager.AddGenericParameter("Path", "Path", "Output toolpath.", GH_ParamAccess.item);
             pManager.AddTextParameter("debug", "d", "debug info", GH_ParamAccess.item);
         }

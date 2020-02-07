@@ -26,14 +26,16 @@ namespace tas.Machine.GH.Posts
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Paths", "TP", "Toolpaths as a list of OrientedPolyline objects.", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Safety", "S", "Safe zone for rapid movements. If it is a Plane, the tool will retract along its axis to the plane. " +
+            pManager.AddGenericParameter(
+                "Toolpaths", "TP", "Toolpaths as a list.", GH_ParamAccess.list);
+            pManager.AddGenericParameter(
+                "Safety", "S", "Safe zone for rapid movements. If it is a Plane, the tool will retract along its axis to the plane. " +
                 "If it's a Mesh or Brep, the tool will retract along its axis until it hits the geometry.", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Frame", "F", "Optional workframe for all targets.", GH_ParamAccess.item);
+            pManager.AddPlaneParameter(
+                "Frame", "F", "Optional workframe for all targets.", GH_ParamAccess.item);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;
-            //pManager[3].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -46,65 +48,27 @@ namespace tas.Machine.GH.Posts
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<PPolyline> P = new List<PPolyline>();
+            List<Toolpath> tpIn = new List<Toolpath>();
             object safety = null;
 
-            DA.GetDataList("Paths", P);
+            DA.GetDataList("Toolpaths", tpIn);
             DA.GetData("Safety", ref safety);
 
-            // Create and initialize toolpath
-            Toolpath T = new Toolpath();
-            T.Safety = safety;
-            T.PlaneRetractVertical = false;
-            T.SafeZ = 10.0;
-            T.Paths = new List<List<Waypoint>>();
-
-            bool zigzag = false;
-            bool zz = false;
-            bool rev = false;
-
-            // Add individual paths to toolpath, zigzag or reverse if necessary
-            for (int i = 0; i < P.Count; ++i)
-            {
-                List<Waypoint> waypoints = new List<Waypoint>();
-                waypoints.AddRange(P[i].Select(x => new Waypoint(x, (int)WaypointType.FEED)));
-
-                if (zigzag && zz)
-                    waypoints.Reverse();
-                else if (!zz && rev)
-                    waypoints.Reverse();
-
-                T.Paths.Add(waypoints);
-
-                zigzag = !zigzag;
-            }
-
-            //T.CreateRamps(20, 50);
-            T.CreateLeadsAndLinks();
-
-            MachineTool mtool = new MachineTool("EM12", 12.0, 12, 27, 30.0);
-
-            // Set tool data (for reference only)
-            T.Tool = mtool;
-            T.Name = "Test surfacing";
-
-            // Set safeties
-            T.RapidZ = 20.0;
-            T.SafeZ = 5.0;
+            List<Toolpath> TP = tpIn.Select(x => x.Duplicate()).ToList();
 
             // Program initialization
             CMSPost cms = new CMSPost();
             cms.Author = "Tom Svilans";
             cms.Name = "TestPost";
-            cms.AddTool(mtool);
             cms.StockModel = null;
 
-            // Aarhus variables
-            cms.MaterialThickness = 25.0;
-            cms.WorkOffset = new Point3d(0, 0, 0);
+            for (int i = 0; i < TP.Count; ++i)
+            {
+                cms.AddTool(TP[i].Tool);
+                cms.AddPath(TP[i]);
+            }
 
-            // Add toolpaths
-            cms.AddPath(T);
+            //cms.WorkOffset = new Point3d(0, 0, 0);
 
             // Post-process toolpaths
 
