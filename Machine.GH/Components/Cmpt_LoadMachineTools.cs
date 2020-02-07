@@ -74,7 +74,7 @@ namespace tas.Machine.GH
         {
             get
             {
-                return Properties.Resources.tasTools_icons_LoadMachineTools_24x24;
+                return Properties.Resources.tas_icons_LoadMachineTools_24x24;
 
             }
         }

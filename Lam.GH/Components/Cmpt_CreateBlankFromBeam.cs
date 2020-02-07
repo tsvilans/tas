@@ -80,7 +80,7 @@ namespace tas.Lam.GH
             DA.GetData("Extra", ref extra);
 
             if (geo is Brep)
-                mesh_input = Mesh.CreateFromBrep(geo as Brep, MeshingParameters.Smooth).Amalgamate();
+                mesh_input = Mesh.CreateFromBrep(geo as Brep, MeshingParameters.QualityRenderMesh).Amalgamate();
             else if (geo is Mesh)
                 mesh_input = geo as Mesh;
             else
@@ -98,7 +98,7 @@ namespace tas.Lam.GH
         {
             get
             {
-                return Properties.Resources.tasTools_icons_GlulamFromBeam_24x24;
+                return Properties.Resources.tas_icons_GlulamFromBeam_24x24;
             }
         }
 

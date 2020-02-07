@@ -52,7 +52,9 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Cmpt_JoinToolpaths.cs" />
     <Compile Include="Components\Cmpt_CreateMachineTool.cs" />
+    <Compile Include="Components\Cmpt_LeadsLinks.cs" />
     <Compile Include="Components\Posts\Cmpt_HaasPost.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_AreaClearance2.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_CircularFingerJoint.cs" />
@@ -153,6 +155,23 @@
     <Content Include="Resources\Icons\tasTools_icons_CreateMachineTool_24x24.png" />
     <Content Include="Resources\Icons\tasTools_icons_CreateToolpath_24x24.png" />
     <Content Include="Resources\Icons\tasTools_icons_FinishingFlats_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_SurfaceOffset_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_ShowToolpath_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_RobotTargets_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_Ramp_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_PostHaas_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_PostGeneric3Axis_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_PostCMS_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_Pocket_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_OrientTargets_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_LoadMachineTools_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_LeadsLinks_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_FlowlineFinish_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_FlatsFinish_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_FinishingFlats_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_CreateToolpath_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_CreateMachineTool_24x24.png" />
+    <None Include="Resources\Icons\tas_icons_AreaClearance_24x24.png" />
     <None Include="Resources\Icons\tasTools_icons_LoadMachineTools_24x24.png" />
     <None Include="Resources\Icons\tasTools_icons_PostHaas_24x24.png" />
     <None Include="Resources\Icons\tasTools_icons_PostCMS_24x24.png" />

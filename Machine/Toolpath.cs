@@ -71,6 +71,19 @@ namespace tas.Machine
             }
         }
 
+        public void Transform(Transform xform)
+        {
+            for(int i = 0; i < Paths.Count; ++i)
+            {
+                for (int j = 0; j < Paths[i].Count; ++j)
+                {
+                    Waypoint wp = Paths[i][j];
+                    wp.Transform(xform);
+                    Paths[i][j] = wp;
+                }
+            }
+        }
+
         /// <summary>
         /// If true, the tool will retract along the safety plane's
         /// Z-axis vector to the plane. This only works if the Safety is a 
@@ -241,7 +254,7 @@ namespace tas.Machine
             {
                 Plane p = InterpolatePlanes2(A, B, length / total_length);
                 Plane pnorm = new Plane(p);
-                pnorm.Transform(Transform.Rotation(p.ZAxis, normals[i], p.Origin));
+                pnorm.Transform(Rhino.Geometry.Transform.Rotation(p.ZAxis, normals[i], p.Origin));
 
                 double t = Math.Sin(length / total_length * Math.PI);
 

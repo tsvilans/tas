@@ -43,7 +43,7 @@ namespace tas.Machine
         public bool IsClockwise() => (Type & 12) != 0;
         public bool IsCounterClockwise() => (Type & 12) == 0;
 
-        public Waypoint(Plane p, int t = (int)WaypointType.FEED, bool plunging = false, double r = 0.0)
+        public Waypoint(Plane p, int t = (int)WaypointType.FEED, double r = 0.0)
         {
             Plane = p;
             Type = t;
@@ -55,6 +55,19 @@ namespace tas.Machine
             Plane = wp.Plane;
             Type = wp.Type;
             Radius = wp.Radius;
+        }
+
+        public bool Transform(Transform xform)
+        {
+            Plane p = this.Plane;
+            if (!p.Transform(xform))
+            {
+                return false;
+                //throw new System.Exception(string.Format(
+                //    "Failed to transform Waypoint: {0} {1}", p.IsValid, p));
+            }
+            this.Plane = p;
+            return true;
         }
 
         public static implicit operator Plane(Waypoint wp) => wp.Plane;

@@ -228,7 +228,7 @@ namespace tas.Lam.GH
             return GH_GetterResult.cancel;
         }
 
-        protected override Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
+        protected override Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
 
     }
 
@@ -256,7 +256,7 @@ namespace tas.Lam.GH
     {
         public GlulamAssemblyParameter() : base("Assembly parameter", "Assembly", "This is a glulam assembly.", "tasTools", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
         public override System.Guid ComponentGuid => new Guid("{de07b39c-5dca-438f-9b1a-73380442ec21}");
         protected override GH_GetterResult Prompt_Singular(ref GH_Assembly value)
         {
@@ -275,7 +275,7 @@ namespace tas.Lam.GH
     {
         public GlulamWorkpieceParameter() : base("GlulamWorkpiece parameter", "GlulamWorkpiece", "This is a glulam workpiece.", "tasTools", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
         public override System.Guid ComponentGuid => new Guid("{9b760327-3e87-4439-9250-bcaf283ff5c4}");
         protected override GH_GetterResult Prompt_Singular(ref GH_GlulamWorkpiece value)
         {

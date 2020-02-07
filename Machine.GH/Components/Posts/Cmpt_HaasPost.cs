@@ -46,11 +46,13 @@ namespace tas.Machine.GH.Posts
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<Toolpath> TP = new List<Toolpath>();
+            List<Toolpath> tpIn = new List<Toolpath>();
             object safety = null;
 
-            DA.GetDataList("Toolpaths", TP);
+            DA.GetDataList("Toolpaths", tpIn);
             DA.GetData("Safety", ref safety);
+
+            List<Toolpath> TP = tpIn.Select(x => x.Duplicate()).ToList();
 
             /*
             // Create and initialize toolpath
@@ -93,7 +95,7 @@ namespace tas.Machine.GH.Posts
             for (int i = 0; i < TP.Count; ++i)
             {
                 haas.AddTool(TP[i].Tool);
-                TP[i].CreateLeadsAndLinks();
+                //TP[i].CreateLeadsAndLinks();
                 haas.AddPath(TP[i]);
             }
 
@@ -144,7 +146,7 @@ namespace tas.Machine.GH.Posts
         {
             get
             {
-                return Properties.Resources.tasTools_icons_PostHaas_24x24;
+                return Properties.Resources.tas_icons_PostHaas_24x24;
             }
         }
 

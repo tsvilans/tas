@@ -68,7 +68,7 @@ namespace tas.Lam.GH
         {
             get
             {
-                return Properties.Resources.tasTools_icons_Assembly_24x24;
+                return Properties.Resources.tas_icons_Assembly_24x24;
             }
         }
 

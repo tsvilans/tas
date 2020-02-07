@@ -74,7 +74,7 @@ namespace tas.Lam.GH
         {
             get
             {
-                return Properties.Resources.tasTools_icons_OffsetGlulam_24x24;
+                return Properties.Resources.tas_icons_OffsetGlulam_24x24;
             }
         }
 

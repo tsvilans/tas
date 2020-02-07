@@ -151,7 +151,7 @@ namespace tas.Machine.GH.Posts
         {
             get
             {
-                return Properties.Resources.tasTools_icons_PostCMS_24x24;
+                return Properties.Resources.tas_icons_PostCMS_24x24;
             }
         }
 

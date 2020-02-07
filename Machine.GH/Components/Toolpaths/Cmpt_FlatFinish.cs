@@ -42,7 +42,7 @@ namespace tas.Machine.GH.Toolpaths
         {
             get
             {
-                return Properties.Resources.tasTools_icons_FinishingFlats_24x24;
+                return Properties.Resources.tas_icons_FinishingFlats_24x24;
             }
         }
 

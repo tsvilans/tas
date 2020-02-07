@@ -210,7 +210,7 @@ namespace tas.Machine.GH.Toolpaths
         {
             get
             {
-                return Properties.Resources.tasTools_icons_SurfaceOffset_24x24;
+                return Properties.Resources.tas_icons_SurfaceOffset_24x24;
 
             }
         }

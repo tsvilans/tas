@@ -10,9 +10,7 @@ namespace tas.Machine.GH.Components
 {
     public class Cmpt_ShowToolpath : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the Cmpt_ShowToolpath class.
-        /// </summary>
+
         public Cmpt_ShowToolpath()
           : base("Show Toolpath", "Show",
               "Display toolpath.",
@@ -24,51 +22,24 @@ namespace tas.Machine.GH.Components
         List<Line> m_lines = new List<Line>();
         List<int> m_types = new List<int>();
 
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Toolpath", "T", "Toolpath to display.", GH_ParamAccess.list);
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             //pManager.AddCurveParameter("Paths", "P", "Toolpath as Polylines.", GH_ParamAccess.list);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
+
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<object> iObjs = new List<object>();
-            List<Toolpath> m_toolpaths = new List<Toolpath>();
+            List<Toolpath> tpIn = new List<Toolpath>();
 
-            DA.GetDataList("Toolpath", iObjs);
-            if (iObjs == null || iObjs.Count < 1)
-                return;
+            DA.GetDataList("Toolpath", tpIn);
 
-            Toolpath inTP = null;
-            for (int i = 0; i < iObjs.Count; ++i)
-            {
-                if (iObjs[i] is GH_Toolpath)
-                    inTP = (iObjs[i] as GH_Toolpath).Value;
-                else if (iObjs[i] is Toolpath)
-                    inTP = iObjs[i] as Toolpath;
-
-                if (inTP == null)
-                    return;
-
-                Toolpath tp = inTP.Duplicate();
-
-                tp.CreateLeadsAndLinks();
-                m_toolpaths.Add(tp);
-            }
+            List<Toolpath> m_toolpaths = tpIn.Select(x => x.Duplicate()).ToList();
 
             this.Message = string.Format("Got {0} toolpaths.", m_toolpaths.Count);
 
@@ -99,18 +70,6 @@ namespace tas.Machine.GH.Components
                 m_lines.Add(new Line(path[i].Origin, path[i + 1].Origin));
 
 
-            /*
-            List<GH_Curve> plines = new List<GH_Curve>();
-            foreach (Toolpath tp in m_toolpaths)
-            {
-                for (int i = 0; i < tp.Paths.Count; ++i)
-                {
-                    plines.Add(new GH_Curve(new Polyline(tp.Paths[i].Select(x => x.Plane.Origin)).ToNurbsCurve()));
-                }
-            }
-
-            DA.SetDataList("Paths", plines);
-            */
         }
 
         public override void DrawViewportWires(IGH_PreviewArgs args)
@@ -138,20 +97,14 @@ namespace tas.Machine.GH.Components
 
         }
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
-                return Properties.Resources.tasTools_icons_ViewToolpath_24x24;
+                return Properties.Resources.tas_icons_ShowToolpath_24x24;
             }
         }
 
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
         public override Guid ComponentGuid
         {
             get { return new Guid("af624288-def3-4a30-b7d5-7bb3636e1624"); }
