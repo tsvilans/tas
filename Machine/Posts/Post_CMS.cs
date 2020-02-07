@@ -332,9 +332,12 @@ namespace tas.Machine.Posts
                     Program.Add($"M32 M34");
 
                 // Move to first waypoint
-                Waypoint prev = TP.Paths[0][0];
-                if (prev.Type != (int)WaypointType.RAPID)
-                    throw new Exception("First waypoint must be rapid. Check code.");
+                //Waypoint prev = TP.Paths[0][0];
+                //if (prev.Type != (int)WaypointType.RAPID)
+                //    throw new Exception("First waypoint must be rapid. Check code.");
+
+                Waypoint prev = new Waypoint(TP.Paths[0][0]);
+                prev.Type = (int)WaypointType.RAPID;
 
                 // Calculate B and C values
                 PlaneToCoords(prev.Plane, ref pCoords);
