@@ -81,7 +81,11 @@ namespace tas.Machine
         }
     }
 
-    public abstract class MachinePostBase
+    /// <summary>
+    /// Base class for toolpath post-processor. Inherit from this
+    /// to create machine-specific posts.
+    /// </summary>
+    public abstract class MachinePost
     {
         public string PreComment = "%";
         public string PostComment = "";
@@ -101,7 +105,7 @@ namespace tas.Machine
         protected readonly int m_dof;
         protected readonly int m_NO_MOTION;
 
-        public MachinePostBase(int dof)
+        public MachinePost(int dof)
         {
             m_dof = dof;
             m_limits = new Interval[dof];
@@ -142,52 +146,6 @@ namespace tas.Machine
     }
 
 
-    /// <summary>
-    /// Base class for toolpath post-processor. Inherit from this
-    /// to create machine-specific posts.
-    /// </summary>
-    public abstract class MachinePost
-    {
-        // Dummy variables
-        public string Name = "MachinePost";
-        public string Author = "Author";
-        //public string Date = System.DateTime.Now.ToShortDateString();
-        public string Date = System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
-        public string ProgramTime = "X";
-        public Mesh StockModel = null;
 
-        public Point3d WorkOffset = Point3d.Origin;
-
-        public List<Toolpath> Paths = new List<Toolpath>();
-
-        public abstract object Compute();
-        public void AddPath(Toolpath p) => Paths.Add(p);
-        public void AddPaths(ICollection<Toolpath> p) => Paths.AddRange(p);
-        public void ClearPaths() => Paths.Clear();
-        public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
-        public List<string> Errors = new List<string>();
-
-        public void AddTool(MachineTool t)
-        {
-            if (Tools.ContainsKey(t.Name))
-                Tools[t.Name] = t;
-            else
-                Tools.Add(t.Name, t);
-        }
-
-    }
-
-    /// <summary>
-    /// Post to convert to Robots targets and program.
-    /// </summary>
-    public class RobotsPost : MachinePost
-    {
-        public override object Compute()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    
-
+ 
 }

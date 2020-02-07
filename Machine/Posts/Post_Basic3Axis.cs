@@ -31,32 +31,43 @@ namespace tas.Machine.Posts
     /// </summary>
     public class Basic3AxisPost : MachinePost
     {
+        const int DOF = 3;
 
         #region Machine limits
-        const double m_limit_min_x = 0;
-        const double m_limit_max_x = 1100;
-        const double m_limit_min_y = 0;
-        const double m_limit_max_y = 600;
-        const double m_limit_min_z = -100;
-        const double m_limit_max_z = 0;
 
-        public Interval LimitX { get { return new Interval(m_limit_min_x, m_limit_max_x); } }
-        public Interval LimitY { get { return new Interval(m_limit_min_y, m_limit_max_y); } }
-        public Interval LimitZ { get { return new Interval(m_limit_min_z, m_limit_max_z); } }
+        public Interval LimitX { get { return m_limits[0]; } }
+        public Interval LimitY { get { return m_limits[1]; } }
+        public Interval LimitZ { get { return m_limits[2]; } }
         #endregion
 
-        public bool AlwaysWriteGCode = true;
-
-        private bool CheckMachineLimits(double x, double y, double z)
+        public Basic3AxisPost() : base(DOF)
         {
-            return
-              x >= m_limit_min_x &&
-              x <= m_limit_max_x &&
-              y >= m_limit_min_y &&
-              y <= m_limit_max_y &&
-              z >= m_limit_min_z &&
-              z <= m_limit_max_z;
+            PreComment = "(";
+            PostComment = ")";
+
+            m_limits[0] = new Interval(0, 1016);
+            m_limits[1] = new Interval(0, 508);
+            m_limits[2] = new Interval(0, 406);
+
+            // Spindle nose to table (max): 508 mm
+            // Spindle nose to table (min): 102 mm
+
+            // Table
+            //    length 1467 mm
+            //    width 368 mm
+
+            m_axis_id[0] = 'X';
+            m_axis_id[1] = 'Y';
+            m_axis_id[2] = 'Z';
         }
+
+        public override void PlaneToCoords(Plane plane, ref double[] coords)
+        {
+            coords[0] = plane.Origin.X;
+            coords[1] = plane.Origin.Y;
+            coords[2] = plane.Origin.Z;
+        }
+
 
         public override object Compute()
         {
@@ -84,28 +95,48 @@ namespace tas.Machine.Posts
                 bbox = StockModel.GetBoundingBox(true);
 
             // Create headers
-            
-            Program.Add("%");
-            Program.Add($"(Revision      : 1 )");
-            Program.Add("");
-            Program.Add($"(File name      : {Name} )");
-            Program.Add($"(Programmed by  : {Author} )");
-            Program.Add($"(Date           : {Date} )");
-            Program.Add($"(Program length : {ProgramTime} )");
-            Program.Add($"(Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} )");
-            Program.Add($"(Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} )");
-            Program.Add("");
-            
+            Program.Add("O01001;"); // Program number / name
+
+            Program.Add($"{PreComment}{PostComment};");
+            Program.Add($"{PreComment} Revision      : 1 {PostComment};");
+            Program.Add($"{PreComment}{PostComment}");
+            Program.Add($"{PreComment} File name      : {Name} {PostComment};");
+            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment};");
+            Program.Add($"{PreComment} Date           : {Date} {PostComment};");
+            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}");
+            Program.Add($"{PreComment} Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment};");
+            Program.Add($"{PreComment} Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment};");
+            Program.Add($"{PreComment}{PostComment};");
+
+            Program.Add($"{PreComment}Tool #    Offset #    Name    Diameter    Length {PostComment};");
+
+            foreach (var d in Tools)
+            {
+                MachineTool mt = d.Value;
+                Program.Add($"{PreComment} {mt.Number}    {mt.OffsetNumber}    {mt.Name}    {mt.Diameter:0.0}    {mt.Length:0.000} {PostComment};");
+            }
+            Program.Add($"{PreComment}{PostComment};");
+
+
+
             Program.Add("G0 Z12");
 
-            int gValue = int.MaxValue;          // 0
-            double xValue = double.MaxValue;    // 1
-            double yValue = double.MaxValue;    // 2
-            double zValue = double.MaxValue;    // 3
-            double rValue = 0;                  // 4
-            int fValue = int.MaxValue;          // 5
-
+            // Working variables
+            int G_VALUE = -1;
             int flags = 0;
+            bool write_feedrate = true;
+
+            // Initialize coordinates
+            double[] coords = new double[DOF];
+            for (int i = 0; i < DOF; ++i)
+                coords[i] = double.MaxValue;
+
+            double[] pCoords = new double[DOF];
+            for (int i = 0; i < DOF; ++i)
+                pCoords[i] = double.MaxValue;
+
+            int currentFeedrate = 0;
+            int tempFeedrate = int.MaxValue;
 
             for (int i = 0; i < Paths.Count; ++i)
             {
@@ -126,12 +157,8 @@ namespace tas.Machine.Posts
 
                 Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}");
 
-                bool write_feedrate = false;
 
                 // Go through waypoints
-
-                int currentFeedrate = 0;
-                int tempFeedrate = currentFeedrate;
 
                 for (int j = 0; j < TP.Paths.Count; ++j)
                 {
@@ -144,12 +171,10 @@ namespace tas.Machine.Posts
 
                         Waypoint wp = Subpath[k];
 
-                        xValue = wp.Plane.Origin.X;
-                        yValue = wp.Plane.Origin.Y;
-                        zValue = wp.Plane.Origin.Z;
+                        PlaneToCoords(wp.Plane, ref coords);
 
                         // Check limits
-                        if (!CheckMachineLimits(xValue, yValue, zValue))
+                        if (!IsInMachineLimits(coords))
                             Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}");
 
                         // Compose line
@@ -159,29 +184,29 @@ namespace tas.Machine.Posts
                         {
                             flags = flags | 1;
                             if ((wp.Type & 1) == 1)
-                                gValue = 0;
+                                G_VALUE = 0;
                             else if ((wp.Type & 4) == 1)
                                 if ((wp.Type & 12) == 1)
-                                    gValue = 3;
+                                    G_VALUE = 3;
                                 else
-                                    gValue = 2;
+                                    G_VALUE = 2;
                             else
                             {
-                                gValue = 1;
+                                G_VALUE = 1;
                                 write_feedrate = true;
                             }
                         }
 
-                        // Set flags for motion
-                        if (Math.Abs(wp.Plane.Origin.X - prev.Plane.Origin.X) > 0.00001)
-                            flags = flags | (1 << 1);
-                        if (Math.Abs(wp.Plane.Origin.Y - prev.Plane.Origin.Y) > 0.00001)
-                            flags = flags | (1 << 2);
-                        if (Math.Abs(wp.Plane.Origin.Z - prev.Plane.Origin.Z) > 0.00001)
-                            flags = flags | (1 << 3);
+                        #region Parse movement on axes
+                        for (int l = 0; l < m_dof; ++l)
+                        {
+                            if (Math.Abs(coords[l] - pCoords[l]) > 0.00001)
+                                flags = flags | (1 << (l + 1));
+                        }
+                        #endregion
 
                         // If Plunge move, set current feedrate to PlungeRate
-                        if ((wp.Type & 2) != 0)
+                        if (wp.IsPlunge())
                             tempFeedrate = Tools[TP.Tool.Name].PlungeRate;
                         else
                             tempFeedrate = Tools[TP.Tool.Name].FeedRate;
@@ -194,7 +219,7 @@ namespace tas.Machine.Posts
 
 
                         // If it is an arc move, then write R value
-                        if ((wp.Type & 4) == 1)
+                        if (wp.IsArc())
                             flags = flags | (1 << 4);
 
                         if (write_feedrate)
@@ -202,22 +227,27 @@ namespace tas.Machine.Posts
 
 
                         // If there is no motion, skip this waypoint
-                        if ((flags & 14) < 1) continue;
+                        if ((flags & m_NO_MOTION) < 1) continue;
 
 
-                        // Construct line
-                        if ((flags & (1 << 0)) > 0)
-                            Line.Add($"G{gValue}");
-                        if ((flags & (1 << 1)) > 0)
-                            Line.Add($"X{xValue:F3}");
-                        if ((flags & (1 << 2)) > 0)
-                            Line.Add($"Y{yValue:F3}");
-                        if ((flags & (1 << 3)) > 0)
-                            Line.Add($"Z{zValue:F3}");
-                        if ((flags & (1 << 4)) > 0)
-                            Line.Add($"R{rValue:F3}");
-                        if ((flags & (1 << 5)) > 0)
+                        #region Construct NC code
+
+                        if ((flags & 1) > 0)
+                            Line.Add($"G{G_VALUE:00}");
+
+                        for (int l = 0; l < m_dof; ++l)
+                        {
+                            if ((flags & (1 << 1 + l)) > 0)
+                                Line.Add($"{m_axis_id[l]}{coords[l]:F3}");
+                        }
+
+                        if ((flags & (1 << m_dof + 1)) > 0)
+                            Line.Add($"R{wp.Radius:F3}");
+
+                        if ((flags & (1 << m_dof + 2)) > 0)
                             Line.Add($"F{currentFeedrate}");
+
+                        #endregion
 
                         // Add line to program
                         Program.Add(string.Join(" ", Line));

@@ -29,7 +29,7 @@ namespace tas.Machine.Posts
     /// <summary>
     /// Post to convert to G-code for Haas 3-axis mill.
     /// </summary>
-    public class HaasPost : tas.Machine.MachinePostBase
+    public class HaasPost : tas.Machine.MachinePost
     {
 
         const int DOF = 3;
@@ -89,7 +89,7 @@ namespace tas.Machine.Posts
             List<string> Program = new List<string>();
             Errors = new List<string>();
 
-            BoundingBox bbox = BoundingBox.Unset;
+            BoundingBox bbox = BoundingBox.Empty;
             if (StockModel != null)
                 bbox = StockModel.GetBoundingBox(true);
 
@@ -97,6 +97,18 @@ namespace tas.Machine.Posts
             int G_VALUE = -1;
             int flags = 0;
             bool write_feedrate = true;
+
+            // Initialize coordinates
+            double[] coords = new double[DOF];
+            for (int i = 0; i < DOF; ++i)
+                coords[i] = double.MaxValue;
+
+            double[] pCoords = new double[DOF];
+            for (int i = 0; i < DOF; ++i)
+                pCoords[i] = double.MaxValue;
+
+            int currentFeedrate = 0;
+            int tempFeedrate = int.MaxValue;
 
             // Create headers
             Program.Add("O01001;"); // Program number / name
@@ -133,15 +145,6 @@ namespace tas.Machine.Posts
             Program.Add("G00 G17 G40 G49 G80 G90 G98;"); // Safety line
             Program.Add("G00 G53 Z0;"); // Return to machine zero
 
-            // Initialize coordinates
-            double[] coords = new double[DOF];
-            for (int i = 0; i < DOF; ++i)
-                coords[i] = double.MaxValue;
-
-            double[] pCoords = new double[DOF];
-            for (int i = 0; i < DOF; ++i)
-                pCoords[i] = double.MaxValue;
-
             // Loop through Toolpaths
             for (int i = 0; i < Paths.Count; ++i)
             {
@@ -169,8 +172,7 @@ namespace tas.Machine.Posts
                 Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03;");
                 Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08;");
 
-                int currentFeedrate = 0;
-                int tempFeedrate = int.MaxValue;
+
 
                 // Loop through subpaths
                 for (int j = 0; j < TP.Paths.Count; ++j)
