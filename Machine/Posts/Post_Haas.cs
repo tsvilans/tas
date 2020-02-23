@@ -110,28 +110,32 @@ namespace tas.Machine.Posts
             int currentFeedrate = 0;
             int tempFeedrate = int.MaxValue;
 
+            string EOL = " ;";
+
             // Create headers
-            Program.Add("O01001;"); // Program number / name
+            Program.Add("%");
+            //Program.Add("O0001");
+            Program.Add($"O01001 ({Name})"); // Program number / name
 
-            Program.Add($"{PreComment}{PostComment};");
-            Program.Add($"{PreComment} Revision      : 1 {PostComment};");
+            Program.Add($"{PreComment}{PostComment}{EOL}");
+            Program.Add($"{PreComment} Revision      : 1 {PostComment}{EOL}");
             Program.Add($"{PreComment}{PostComment}");
-            Program.Add($"{PreComment} File name      : {Name} {PostComment};");
-            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment};");
-            Program.Add($"{PreComment} Date           : {Date} {PostComment};");
-            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}");
-            Program.Add($"{PreComment} Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment};");
-            Program.Add($"{PreComment} Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment};");
+            Program.Add($"{PreComment} File name      : {Name} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Date           : {Date} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment}{EOL}");
             Program.Add($"{PreComment}{PostComment};");
 
-            Program.Add($"{PreComment}Tool #    Offset #    Name    Diameter    Length {PostComment};");
+            Program.Add($"{PreComment}Tool #    Offset #    Name    Diameter    Length {PostComment}{EOL}");
 
             foreach (var d in Tools)
             {
                 MachineTool mt = d.Value;
-                Program.Add($"{PreComment} {mt.Number}    {mt.OffsetNumber}    {mt.Name}    {mt.Diameter:0.0}    {mt.Length:0.000} {PostComment};");
+                Program.Add($"{PreComment} {mt.Number}    {mt.OffsetNumber}    {mt.Name}    {mt.Diameter:0.0}    {mt.Length:0.000} {PostComment}{EOL}");
             }
-            Program.Add($"{PreComment}{PostComment};");
+            Program.Add($"{PreComment}{PostComment}{EOL}");
 
 
             /* G00 - Rapid mode
@@ -151,13 +155,13 @@ namespace tas.Machine.Posts
 
                 Toolpath TP = Paths[i];
 
-                Program.Add($"{PreComment}{PostComment};");
-                Program.Add($"{PreComment} START Toolpath: {TP.Name} {PostComment};");
-                Program.Add($"{PreComment}{PostComment};");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment} START Toolpath: {TP.Name} {PostComment}{EOL}");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
 
                 // Tool change
                 // TODO: Change so that it only changes the tool if necessary, though the machine should ignore this anyway
-                Program.Add($"T{Tools[TP.Tool.Name].Number} M06;");
+                Program.Add($"T{Tools[TP.Tool.Name].Number} M06{EOL}");
 
                 // Move to first waypoint
                 Waypoint prev = new Waypoint(TP.Paths[0][0]);
@@ -169,8 +173,8 @@ namespace tas.Machine.Posts
                  * G54 - First work offset
                  * S, M03 - Start spindle clockwise
                  */
-                Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03;");
-                Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08;");
+                Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
+                Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08{EOL}");
 
 
 
@@ -275,7 +279,7 @@ namespace tas.Machine.Posts
                         #endregion
 
                         // Add line to program
-                        Program.Add(string.Join(" ", Line) + ";");
+                        Program.Add(string.Join(" ", Line) + EOL);
 
                         // Update previous waypoint
                         prev = new Waypoint(wp);
@@ -283,24 +287,24 @@ namespace tas.Machine.Posts
                 }
 
 
-                Program.Add($"{PreComment}{PostComment};");
-                Program.Add("G53 G49 G0 Z0.;");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"G53 G49 G0 Z0.{EOL}");
                 //Program.Add("G53 X0. Y0.");
 
                 //Program.Add("G0 Z12");
 
-                Program.Add($"{PreComment}{PostComment};");
-                Program.Add($"{PreComment} END Toolpath: {TP.Name} {PostComment};");
-                Program.Add($"{PreComment}{PostComment};");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment} END Toolpath: {TP.Name} {PostComment}{EOL}");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
             }
             //Program.Add($"G00 Z10.");
 
-            Program.Add($"{PreComment} End of program {PostComment};");
-            Program.Add("G53 G49 G0 Z0.;");
-            Program.Add("G0 X0 Y0;");
-            Program.Add("M05;"); // Spindle stop
-            Program.Add("M30;");
-
+            Program.Add($"{PreComment} End of program {PostComment}{EOL}");
+            Program.Add($"G53 G49 G0 Z0.{EOL}");
+            Program.Add($"G0 X0 Y0{EOL}");
+            Program.Add($"M05{EOL}"); // Spindle stop
+            Program.Add($"M30{EOL}");
+            Program.Add("%");
             return Program;
         }
     }
