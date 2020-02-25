@@ -12,6 +12,7 @@ Machine.GH/obj/
 Machine/obj/
 Projects/Kelowna/obj/
 *.pdb
+bin/
 
 # Packages
 packages/
