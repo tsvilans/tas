@@ -122,8 +122,10 @@ namespace tas.Lam
                 Point3d p = new Point3d(m.Vertices[i]);
                 Centreline.ClosestPoint(p, out t);
                 l = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
-                Vector3d xaxis = Vector3d.CrossProduct(cp.ZAxis, Centreline.TangentAt(t));
-                cpp = new Plane(Centreline.PointAt(t), xaxis, cp.ZAxis);
+                //Vector3d xaxis = Vector3d.CrossProduct(cp.ZAxis, Centreline.TangentAt(t));
+                //cpp = new Plane(Centreline.PointAt(t), xaxis, cp.ZAxis);
+
+                cpp = GetPlane(t);
                 p.Transform(Rhino.Geometry.Transform.PlaneToPlane(cpp, Plane.WorldXY));
                 p.Z = l;
 
