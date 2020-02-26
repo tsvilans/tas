@@ -9,7 +9,7 @@ using Rhino.Geometry;
 using tas.Core;
 using tas.Core.Network;
 
-namespace Kelowna
+namespace tas.Projects.Kelowna
 {
     public static class Modelling
     {
