@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\Cmpt_Bitmask.cs" />
+    <Compile Include="Components\Cmpt_ReversePPolyline.cs" />
+    <Compile Include="Components\Cmpt_MergePPolyline.cs" />
     <Compile Include="Components\Cmpt_DePPolyline.cs" />
     <Compile Include="Components\Cmpt_MeshTexCoords.cs" />
     <Compile Include="Components\Cmpt_PPolyline.cs" />

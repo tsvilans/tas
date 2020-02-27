@@ -15,8 +15,8 @@ namespace tas.Core.GH
     public class GH_PPolyline : GH_Goo<PPolyline>, IGH_PreviewData
     {
         public GH_PPolyline() { this.Value = null; }
-        public GH_PPolyline(GH_PPolyline goo) { this.Value = goo.Value; }
-        public GH_PPolyline(PPolyline native) { this.Value = native; }
+        public GH_PPolyline(GH_PPolyline goo) { this.Value = new PPolyline(goo.Value); }
+        public GH_PPolyline(PPolyline native) { this.Value = new PPolyline(native); }
         public override IGH_Goo Duplicate() => new GH_PPolyline(this);
         public override bool IsValid => true;
         public override string TypeName => "OrientedPolyline";
@@ -74,7 +74,12 @@ namespace tas.Core.GH
         {
             if (source is GH_PPolyline)
             {
-                Value = (source as GH_PPolyline).Value;
+                Value = new PPolyline((source as GH_PPolyline).Value);
+                return true;
+            }
+            else if (source is PPolyline)
+            {
+                Value = new PPolyline(source as PPolyline);
                 return true;
             }
             else if (source is GH_Curve)
