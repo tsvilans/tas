@@ -11,9 +11,6 @@ namespace tas.Machine.GH.Toolpaths
 {
     public class Cmpt_FlankMilling : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the Cmpt_FlankMilling class.
-        /// </summary>
         public Cmpt_FlankMilling()
           : base("Finishing - Flank Milling", "Flank",
               "Machine a ruled surface with the side of the tool.",
@@ -21,14 +18,10 @@ namespace tas.Machine.GH.Toolpaths
         {
         }
 
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddBrepParameter("Brep", "B", "Surface as a Brep.", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Side", "S", "Side of the surface to use for flank machining as a bitmask.", GH_ParamAccess.item, 0);
-            pManager.AddIntegerParameter("NumSamples", "N", "Number of samples for the path.", GH_ParamAccess.item, 20);
             pManager.AddNumberParameter("ToolDiameter", "TD", "Tool diameter.", GH_ParamAccess.item, 12.0);
             pManager.AddNumberParameter("PathExtension", "Pe", "Extend the path by an amount.", GH_ParamAccess.item, 10.0);
             pManager.AddNumberParameter("DepthExtension", "De", "Extend the depth of the rules by an amount.", GH_ParamAccess.item, 3.0);
@@ -43,139 +36,256 @@ namespace tas.Machine.GH.Toolpaths
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            Brep iBrep = null;
-            int iSide = 0, iN = 20;
-            double iToolDiameter = 12.0, iPathExt = 10.0, iDepthExt = 3.0, iMaxDepth = 50.0, iStepDown = 8.0;
+            Brep m_brep = null;
+            int m_side = 0;
+            double m_tool_offset = 6.0, m_path_extension = 10.0, m_depth_extension = 3.0, m_max_depth = 50.0, m_stepdown = 8.0;
 
-            DA.GetData("Brep", ref iBrep);
-            DA.GetData("Side", ref iSide);
-            DA.GetData("NumSamples", ref iN);
-            DA.GetData("ToolDiameter", ref iToolDiameter);
-            DA.GetData("PathExtension", ref iPathExt);
-            DA.GetData("DepthExtension", ref iDepthExt);
-            DA.GetData("MaxDepth", ref iMaxDepth);
-            DA.GetData("StepDown", ref iStepDown);
+            DA.GetData("Brep", ref m_brep);
+            DA.GetData("Side", ref m_side);
+            DA.GetData("ToolDiameter", ref m_tool_offset);
+            DA.GetData("PathExtension", ref m_path_extension);
+            DA.GetData("DepthExtension", ref m_depth_extension);
+            DA.GetData("MaxDepth", ref m_max_depth);
+            DA.GetData("StepDown", ref m_stepdown);
+
+            if (m_brep == null) return;
+
+            int D = (m_side & (1 << 0)) > 0 ? 1 : 0;
+            int nD = (m_side & (1 << 0)) > 0 ? 0 : 1;
+
+            int S = (m_side & (1 << 1)) > 0 ? 1 : 0;
+            int nS = (m_side & (1 << 1)) > 0 ? 0 : 1;
 
 
-            int D = (iSide & (1 << 0)) > 0 ? 1 : 0;
-            int nD = (iSide & (1 << 0)) > 0 ? 0 : 1;
+            BrepFace face = m_brep.Faces[0];
 
-            int S = (iSide & (1 << 1)) > 0 ? 1 : 0;
-            int nS = (iSide & (1 << 1)) > 0 ? 0 : 1;
-
-
-            double tMin = iBrep.Faces[0].Domain(nD).Min;
-            double tMax = iBrep.Faces[0].Domain(nD).Max;
-
-            Curve[] cEdges = new Curve[2];
-
-            cEdges[S] = iBrep.Faces[0].IsoCurve(D, tMin);
-            cEdges[nS] = iBrep.Faces[0].IsoCurve(D, tMax);
-
-            double[] len = new double[2];
-            for (int i = 0; i < 2; ++i)
+            // Warn if the surface is not suitable for flank machining
+            if (face.Degree(nD) != 1)
             {
-                len[i] = cEdges[i].GetLength();
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Surface isn't ruled in this direction!");
             }
 
-            List<Point3d>[] subdivs = new List<Point3d>[2];
-            for (int i = 0; i < 2; ++i)
+            // Get appropriate surface edge
+            Curve flank_edge = m_brep.Faces[0].IsoCurve(D, m_brep.Faces[0].Domain(nD)[S]);
+
+
+
+            // Discretize flank edge using angle and length tolerances
+            Polyline flank_pts = flank_edge.ToPolyline(0, 0, 0.01, 0.1, 0, 0.1, 0, 0, true).ToPolyline();
+
+            // If we are on opposite edge, reverse the flank curve for consistent direction
+            if (S > 0)
+                flank_pts.Reverse();
+
+            // Get corresponding edge parameter from discretized curve points
+            int N = flank_pts.Count;
+            double[] tt = new double[N];
+            for (int i = 0; i < N; ++i)
             {
-                subdivs[i] = new List<Point3d>();
-                double[] ts = cEdges[i].DivideByCount(iN - 1, true);
-                subdivs[i].AddRange(ts.Select(x => cEdges[i].PointAt(x)));
+                flank_edge.ClosestPoint(flank_pts[i], out tt[i]);
             }
 
-            List<Line> rules = new List<Line>();
-            List<Vector3d> directions = new List<Vector3d>();
+            // Get all isocurves corresponding to the vertices of the discretized edge curev
+            var rules = tt.Select(x => m_brep.Faces[0].IsoCurve(nD, x));
 
-            for (int i = 0; i < iN; ++i)
-            {
-                rules.Add(new Line(subdivs[0][i], subdivs[1][i]));
-                Vector3d d = new Vector3d(subdivs[0][i] - subdivs[1][i]);
-                d.Unitize();
-                directions.Add(d);
-            }
+            // Get the length of all isocurves
+            var lengths = rules.Select(x => x.GetLength()).ToList();
 
+            List<Vector3d> directions;
 
-            double max = 0;
+            // Make sure to use tangent at right end of the isocurve 
+            // (S == 1 when we are on the opposite side)
+            if (S == 0)
+                directions = rules.Select(x => x.TangentAtStart).ToList();
+            else
+                directions = rules.Select(x => -x.TangentAtEnd).ToList();
 
-            for (int i = 0; i < iN; ++i)
-            {
-                max = Math.Min(Math.Max(max, rules[i].Length + iDepthExt), iMaxDepth);
-            }
+            // Determine maximum depth based on longest isocurve and depth limit
+            double deepest = Math.Min(m_max_depth, lengths.Max());
 
-            int Nsteps = (int)Math.Ceiling(max / iStepDown);
+            // Determine number of passes based on deepest cut and stepdown
+            int passes = (int)Math.Ceiling(deepest / m_stepdown);
+
 
             List<PPolyline> paths = new List<PPolyline>();
-            Point3d cpt;
+
+            // Declare variables for Brep closest point calculation
             ComponentIndex ci;
+            Point3d cpt;
             double s, t;
             Vector3d normal;
 
-            for (int i = 0; i < Nsteps; ++i)
+            // Create paths for each pass
+            for (int i = 0; i <= passes; ++i)
             {
-                PPolyline poly = new PPolyline();
-                for (int j = 0; j < rules.Count; ++j)
+                PPolyline path = new PPolyline();
+                for (int j = 0; j < N; ++j)
                 {
-                    double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth) / Nsteps;
-                    Point3d pt = rules[j].From - directions[j] * l * i;
-                    iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
-                    poly.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
+                    // Find closest normal
+                    m_brep.ClosestPoint(flank_pts[j], out cpt, out ci, out s, out t, 3.0, out normal);
+
+                    // Calculate pass depth
+                    double depth = Math.Min(m_max_depth, 
+                        Math.Min(
+                            lengths[j] + m_depth_extension, 
+                            m_stepdown * i));
+
+                    Point3d origin = flank_pts[j]
+                      + (directions[j] * (Math.Min(m_max_depth, lengths[j] + m_depth_extension) / passes * i)
+                      + (normal * m_tool_offset / 2));
+
+                    path.Add(new Plane(origin, directions[j]));
+
                 }
 
-                if (iPathExt > 0.0)
+                // If the path is extended, add extra planes at the start and end
+                if (m_path_extension > 0.0)
                 {
-                    Vector3d start = new Vector3d(poly.First.Origin - poly[1].Origin);
+                    // Path vector at start
+                    Vector3d start = new Vector3d(path.First.Origin - path[1].Origin);
                     start.Unitize();
 
-                    Vector3d end = new Vector3d(poly.Last.Origin - poly[poly.Count - 2].Origin);
+                    // Path vector at end
+                    Vector3d end = new Vector3d(path.Last.Origin - path[path.Count - 2].Origin);
                     end.Unitize();
 
-                    Plane pStart = poly.First;
-                    Plane pEnd = poly.Last;
-                    pStart.Origin = pStart.Origin + start * iPathExt;
-                    pEnd.Origin = pEnd.Origin + end * iPathExt;
-                    poly.Insert(0, pStart);
-                    poly.Add(pEnd);
+                    Plane pStart = path.First;
+                    Plane pEnd = path.Last;
+
+                    // Shift plane origins by path vectors
+                    pStart.Origin = pStart.Origin + start * m_path_extension;
+                    pEnd.Origin = pEnd.Origin + end * m_path_extension;
+
+                    // Add extension planes to path
+                    path.Insert(0, pStart);
+                    path.Add(pEnd);
                 }
 
-                paths.Add(poly);
+                paths.Add(path);
             }
 
-            #region Last layer
+            /*
+                        #region OLD
+                        int D = (iSide & (1 << 0)) > 0 ? 1 : 0;
+                        int nD = (iSide & (1 << 0)) > 0 ? 0 : 1;
 
-            PPolyline last = new PPolyline();
-            for (int j = 0; j < rules.Count; ++j)
-            {
-                double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth);
-                Point3d pt = rules[j].From - directions[j] * l;
-                iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
-                last.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
-            }
+                        int S = (iSide & (1 << 1)) > 0 ? 1 : 0;
+                        int nS = (iSide & (1 << 1)) > 0 ? 0 : 1;
 
-            if (iPathExt > 0.0)
-            {
-                Vector3d start = new Vector3d(last.First.Origin - last[1].Origin);
-                start.Unitize();
 
-                Vector3d end = new Vector3d(last.Last.Origin - last[last.Count - 2].Origin);
-                end.Unitize();
+                        double tMin = iBrep.Faces[0].Domain(nD).Min;
+                        double tMax = iBrep.Faces[0].Domain(nD).Max;
 
-                Plane pStart = last.First;
-                Plane pEnd = last.Last;
-                pStart.Origin = pStart.Origin + start * iPathExt;
-                pEnd.Origin = pEnd.Origin + end * iPathExt;
-                last.Insert(0, pStart);
-                last.Add(pEnd);
-            }
+                        Curve[] cEdges = new Curve[2];
 
-            last.Add(paths.First().Last);
+                        cEdges[S] = iBrep.Faces[0].IsoCurve(D, tMin);
+                        cEdges[nS] = iBrep.Faces[0].IsoCurve(D, tMax);
 
-            paths.Add(last);
+                        double[] len = new double[2];
+                        for (int i = 0; i < 2; ++i)
+                        {
+                            len[i] = cEdges[i].GetLength();
+                        }
 
-            #endregion
+                        List<Point3d>[] subdivs = new List<Point3d>[2];
+                        for (int i = 0; i < 2; ++i)
+                        {
+                            subdivs[i] = new List<Point3d>();
+                            double[] ts = cEdges[i].DivideByCount(iN - 1, true);
+                            subdivs[i].AddRange(ts.Select(x => cEdges[i].PointAt(x)));
+                        }
 
+                        List<Line> rules = new List<Line>();
+                        List<Vector3d> directions = new List<Vector3d>();
+
+                        for (int i = 0; i < iN; ++i)
+                        {
+                            rules.Add(new Line(subdivs[0][i], subdivs[1][i]));
+                            Vector3d d = new Vector3d(subdivs[0][i] - subdivs[1][i]);
+                            d.Unitize();
+                            directions.Add(d);
+                        }
+
+
+                        double max = 0;
+
+                        for (int i = 0; i < iN; ++i)
+                        {
+                            max = Math.Min(Math.Max(max, rules[i].Length + iDepthExt), iMaxDepth);
+                        }
+
+                        int Nsteps = (int)Math.Ceiling(max / iStepDown);
+
+                        List<PPolyline> paths = new List<PPolyline>();
+                        Point3d cpt;
+                        ComponentIndex ci;
+                        double s, t;
+                        Vector3d normal;
+
+                        for (int i = 0; i < Nsteps; ++i)
+                        {
+                            PPolyline poly = new PPolyline();
+                            for (int j = 0; j < rules.Count; ++j)
+                            {
+                                double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth) / Nsteps;
+                                Point3d pt = rules[j].From - directions[j] * l * i;
+                                iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
+                                poly.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
+                            }
+
+                            if (iPathExt > 0.0)
+                            {
+                                Vector3d start = new Vector3d(poly.First.Origin - poly[1].Origin);
+                                start.Unitize();
+
+                                Vector3d end = new Vector3d(poly.Last.Origin - poly[poly.Count - 2].Origin);
+                                end.Unitize();
+
+                                Plane pStart = poly.First;
+                                Plane pEnd = poly.Last;
+                                pStart.Origin = pStart.Origin + start * iPathExt;
+                                pEnd.Origin = pEnd.Origin + end * iPathExt;
+                                poly.Insert(0, pStart);
+                                poly.Add(pEnd);
+                            }
+
+                            paths.Add(poly);
+                        }
+
+                        #region Last layer
+
+                        PPolyline last = new PPolyline();
+                        for (int j = 0; j < rules.Count; ++j)
+                        {
+                            double l = Math.Min(rules[j].Length + iDepthExt, iMaxDepth);
+                            Point3d pt = rules[j].From - directions[j] * l;
+                            iBrep.ClosestPoint(pt, out cpt, out ci, out s, out t, 3.0, out normal);
+                            last.Add(new Plane(pt + normal * iToolDiameter / 2, Vector3d.CrossProduct(directions[j], normal), normal));
+                        }
+
+                        if (iPathExt > 0.0)
+                        {
+                            Vector3d start = new Vector3d(last.First.Origin - last[1].Origin);
+                            start.Unitize();
+
+                            Vector3d end = new Vector3d(last.Last.Origin - last[last.Count - 2].Origin);
+                            end.Unitize();
+
+                            Plane pStart = last.First;
+                            Plane pEnd = last.Last;
+                            pStart.Origin = pStart.Origin + start * iPathExt;
+                            pEnd.Origin = pEnd.Origin + end * iPathExt;
+                            last.Insert(0, pStart);
+                            last.Add(pEnd);
+                        }
+
+                        last.Add(paths.First().Last);
+
+                        paths.Add(last);
+
+                        #endregion
+                        #endregion
+                        */
 
 
             DA.SetDataList("Paths", paths.Select(x => new GH_PPolyline(x)));
