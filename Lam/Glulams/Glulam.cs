@@ -33,14 +33,14 @@ namespace tas.Lam
 {
     public abstract class Glulam
     {
-        public static double RadiusMultiplier = 200.0; // This is the industry standard formula: lamella thickness cannot exceed 1/200th of the curvature radius.
+        public static double RadiusMultiplier = 200.0; // This is the Eurocode 5 formula: lamella thickness cannot exceed 1/200th of the curvature radius.
         public static int CurvatureSamples = 100; // Number of samples to samples curvature at.
         public static double RadiusTolerance = 0.00001; // For curvature calculations: curvature radius and lamella thickness cannot exceed this
 
 
         #region Static variables and methods
         protected static double Tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-        protected static double OverlapTolerance = 1.0;
+        protected static double OverlapTolerance = 1.0 * Rhino.RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, Rhino.UnitSystem.Millimeters);
         protected static double AngleTolerance = Math.Cos(2);
 
 

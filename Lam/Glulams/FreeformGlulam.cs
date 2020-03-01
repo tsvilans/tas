@@ -366,84 +366,83 @@ namespace tas.Lam
 
         public override Brep GetBoundingBrep(double offset = 0.0)
         {
-            Polyline[] xsections = GetCrossSections(offset);
+            double[] t;
+            Plane[] planes;
 
-            Brep[] lofts = Brep.CreateFromLoft(xsections.Select(x => x.ToNurbsCurve()), Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
+            GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
 
-            Brep brep1 = new Brep();
+            double hwidth = Width() / 2 + offset;
+            double hheight = Height() / 2 + offset;
 
-            for (int j = 0; j < lofts.Length; ++j)
-                //brep1.Join(lofts[j], 0.001, true);
-                brep1.Append(lofts[j]);
-            Brep capped = brep1.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+            int numCorners = 4;
 
-            if (capped != null)
-                return brep1 = capped;
+            Point3d[] corners = new Point3d[numCorners];
+            corners[0] = new Point3d(-hwidth, hheight, 0);
+            corners[1] = new Point3d(hwidth, hheight, 0);
+            corners[2] = new Point3d(hwidth, -hheight, 0);
+            corners[3] = new Point3d(-hwidth, -hheight, 0);
 
-            brep1.Faces.SplitKinkyFaces(0.01, true);
-            return brep1;
-
-            Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
-
-            double Length = CL.GetLength();
-            double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
-            double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
-            double[] DivParams = CL.DivideByCount(Data.Samples, true);
-
-            Curve[][] LoftCurves = new Curve[4][];
-
-            for (int i = 0; i < 4; ++i)
-                LoftCurves[i] = new Curve[DivParams.Length];
-
-            Rhino.Geometry.Transform xform;
-            Line l1 = new Line(new Point3d(-hW, hH, 0), new Point3d(hW, hH, 0));
-            Line l2 = new Line(new Point3d(hW, hH, 0), new Point3d(hW, -hH, 0));
-            Line l3 = new Line(new Point3d(hW, -hH, 0), new Point3d(-hW, -hH, 0));
-            Line l4 = new Line(new Point3d(-hW, -hH, 0), new Point3d(-hW, hH, 0));
-            Line temp;
-
-            for (int i = 0; i < DivParams.Length; ++i)
+            List<Point3d>[] crvPts = new List<Point3d>[numCorners];
+            for (int i = 0; i < numCorners; ++i)
             {
-                Plane p = GetPlane(DivParams[i]);
-                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, p);
-                temp = l1; temp.Transform(xform);
-                LoftCurves[0][i] = temp.ToNurbsCurve();
-                temp = l2; temp.Transform(xform);
-                LoftCurves[1][i] = temp.ToNurbsCurve();
-                temp = l3; temp.Transform(xform);
-                LoftCurves[2][i] = temp.ToNurbsCurve();
-                temp = l4; temp.Transform(xform);
-                LoftCurves[3][i] = temp.ToNurbsCurve();
-
-                //Rectangle3d rec = new Rectangle3d(GetPlane(DivParams[i]),
-                //    new Interval(-hW, hW), new Interval(-hH, hH));
-                //LoftCurves[i] = rec.ToNurbsCurve();
+                crvPts[i] = new List<Point3d>();
             }
 
-            Brep brep = new Brep();
+            Transform xform;
+            Point3d temp;
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < Data.Samples; ++i)
             {
-                Brep[] loft = Brep.CreateFromLoft(LoftCurves[i], Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
-                if (loft == null || loft.Length < 1)
-                    throw new Exception("Loft failed!");
-                    //continue;
-                for (int j = 0; j < loft.Length; ++j)
-                    brep.Append(loft[j]);
+                planes[i] = planes[i].FlipAroundYAxis();
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes[i]);
+
+                for (int j = 0; j < numCorners; ++j)
+                {
+                    temp = new Point3d(corners[j]);
+                    temp.Transform(xform);
+                    crvPts[j].Add(temp);
+                }
             }
 
-            brep.Append(Brep.CreateEdgeSurface(LoftCurves.Select(x => x.First())));
-            brep.Append(Brep.CreateEdgeSurface(LoftCurves.Select(x => x.Last())));
+            Curve[] edges = new Curve[numCorners + 4];
 
-            brep.JoinNakedEdges(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance * 10);
+            for (int i = 0; i < numCorners; ++i)
+            {
+                edges[i] = Curve.CreateInterpolatedCurve(crvPts[i], 3);
+            }
 
-            //Brep bbb = brep.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-            //brep.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
+            edges[4] = new Line(crvPts[3][0], crvPts[0][0]).ToNurbsCurve();
+            edges[5] = new Line(crvPts[2][0], crvPts[1][0]).ToNurbsCurve();
+
+            edges[6] = new Line(crvPts[2][Data.Samples - 1], crvPts[1][Data.Samples - 1]).ToNurbsCurve();
+            edges[7] = new Line(crvPts[3][Data.Samples - 1], crvPts[0][Data.Samples - 1]).ToNurbsCurve();
+
+            Brep[] sides = new Brep[numCorners + 2];
+            int ii = 0;
+            for (int i = 0; i < numCorners; ++i)
+            {
+                ii = (i + 1).Modulus(numCorners);
+                sides[i] = Brep.CreateFromLoft(
+                  new Curve[] { edges[i], edges[ii] },
+                  Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+            }
+
+            sides[numCorners + 0] = Brep.CreateFromLoft(
+              new Curve[] { edges[numCorners + 0], edges[numCorners + 1] },
+              Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+            sides[numCorners + 1] = Brep.CreateFromLoft(
+              new Curve[] { edges[numCorners + 2], edges[numCorners + 3] },
+              Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+            Brep brep = Brep.JoinBreps(
+              sides,
+              Tolerance
+              )[0];
+
             brep.UserDictionary.Set("glulam", GetArchivableDictionary());
 
-            //if (bbb == null)
             return brep;
-            //return bbb;
         }
 
         public override List<Brep> GetLamellaBreps()
