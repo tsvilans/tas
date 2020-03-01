@@ -431,7 +431,7 @@ namespace tas.Extra
         /// <returns></returns>
         public Brep GenerateEndSurface(int side, double offset, double extra_width, double extra_height, bool flip = false)
         {
-            side = Util.Modulus(side, 2);
+            side = side.Modulus(2);
             Plane end_plane = GetFrame(side == 0 ? Guide.Domain.Min : Guide.Domain.Max);
 
             if ((flip && side == 1) || (!flip && side == 0))
@@ -462,7 +462,7 @@ namespace tas.Extra
         /// <returns></returns>
         public Brep GenerateSideSurface(int side, double offset, double width, double extension = 0.0, bool flip = false, int samples = 100)
         {
-            side = Util.Modulus(side, 2);
+            side = side.Modulus(2);
             double w2 = width / 2;
 
             Curve c = Guide.DuplicateCurve();

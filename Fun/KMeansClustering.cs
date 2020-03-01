@@ -26,6 +26,7 @@ using Rhino.Geometry;
 using System.Collections.Concurrent;
 
 using tas.Core;
+using tas.Core.Util;
 
 namespace tas.Extra
 {
@@ -58,7 +59,7 @@ namespace tas.Extra
             Centroids = new List<T>(K);
             Clusters = new List<List<T>>(K);
             List<int> Deltas = new List<int>();
-            var RandomIndices = Util.GenerateRandom(K, 0, Objects.Count - 1);
+            var RandomIndices = Misc.GenerateRandom(K, 0, Objects.Count - 1);
 
             for (int i = 0; i < K; ++i)
             {
@@ -128,7 +129,7 @@ namespace tas.Extra
             Centroids = new List<T>(K);
             Clusters = new List<List<T>>(K);
             List<int> Deltas = new List<int>();
-            var RandomIndices = Util.GenerateRandom(K, 0, Objects.Count - 1);
+            var RandomIndices = Misc.GenerateRandom(K, 0, Objects.Count - 1);
 
             for (int i = 0; i < K; ++i)
             {
@@ -181,7 +182,7 @@ namespace tas.Extra
             Clusters = new List<List<T>>();
             List<int> Deltas = new List<int>();
 
-            var RandomIndices = Util.GenerateRandom(K, 0, Objects.Count - 1);
+            var RandomIndices = Misc.GenerateRandom(K, 0, Objects.Count - 1);
 
             for (int i = 0; i < K; ++i)
             {

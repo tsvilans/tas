@@ -26,6 +26,7 @@ using StudioAvw.Geometry;
 
 using tas.Core;
 using tas.Core.Types;
+using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
 {
@@ -60,7 +61,7 @@ namespace tas.Machine.Toolpaths
                     List<Point3d> points = new List<Point3d>();
                     foreach (Point3d p in poly)
                     {
-                        points.Add(Util.ProjectToPlane(p, Workplane));
+                        points.Add(p.ProjectToPlane(Workplane));
                     }
                     Islands.Add(new PocketIsland(new Polyline(points)));
                 }
@@ -172,14 +173,14 @@ namespace tas.Machine.Toolpaths
             DriveCurves = drive_curves.ToList();
         }
 
-        public Toolpath_Pocket(IEnumerable<Curve> drive_curves, double tolerance)
+        public Toolpath_Pocket(IEnumerable<Curve> drive_curves, double tolerance=0.01)
         {
             Workplane = Plane.WorldXY;
             Layers = new List<PocketLayer>();
             Tolerance = tolerance;
             StartEnd = false;
 
-            DriveCurves = Util.CurvesToPolylines(drive_curves.ToList(), Tolerance);
+            DriveCurves = Misc.CurvesToPolylines(drive_curves.ToList(), Tolerance);
         }
 
         public override void Calculate()
@@ -189,7 +190,11 @@ namespace tas.Machine.Toolpaths
             int N = (int)Math.Ceiling(Math.Min(MaxDepth, Depth) / Tool.StepDown);
             Plane temp = Workplane;
             List<Polyline> OffsetDriveCurves, DriveCurveContours;
-            Polyline3D.Offset(DriveCurves, Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, Tool.ToolDiameter / 2, Workplane, 0.01, out DriveCurveContours, out OffsetDriveCurves);
+            Polyline3D.Offset(
+                DriveCurves, 
+                Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, 
+                Tool.ToolDiameter / 2, Workplane, 0.01, 
+                out DriveCurveContours, out OffsetDriveCurves);
 
             for (int i = 0; i < N; ++i)
             {

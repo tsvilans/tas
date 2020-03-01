@@ -8,6 +8,7 @@ using ClipperLib;
 using StudioAvw.Geometry;
 
 using tas.Core;
+using tas.Core.Util;
 
 namespace tas.Machine.GH.Toolpaths
 {
@@ -146,7 +147,7 @@ namespace tas.Machine.GH.Toolpaths
 
                 List<Polyline> ppaths = new List<Polyline>();
                 //ppaths.AddRange(area);
-                ppaths.AddRange(Util.InsetUntilNone(area, this._step_o, this._workplane));
+                ppaths.AddRange(tas.Core.Util.Misc.InsetUntilNone(area, this._step_o, this._workplane));
 
                 Polyline pl = new Polyline();
 
@@ -165,7 +166,7 @@ namespace tas.Machine.GH.Toolpaths
                             for (int k = 0; k < div; ++k)
                             {
                                 double t = k / (double)(div - 1);
-                                vlist.Add(Util.Interpolation.Lerp(ppaths[i][j], ppaths[i][j + 1], t));
+                                vlist.Add(Interpolation.Lerp(ppaths[i][j], ppaths[i][j + 1], t));
                             }
                         }
 
@@ -194,7 +195,7 @@ namespace tas.Machine.GH.Toolpaths
                         // adjust points based on surface normal (to compensate for endmill radius)
                     }
                     if (this._simplify)
-                        temp_pl = Util.SimplifyPolyline(temp_pl, 0.00001);
+                        temp_pl = temp_pl.SimplifyPolyline(0.00001);
 
                     this._paths.Add(temp_pl);
                 }

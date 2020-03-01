@@ -14,7 +14,7 @@ namespace tas.Lam.GH.Components
         List<Line> m_line_list = new List<Line>();
         List<double> m_length_list = new List<double>();
 
-        tas.Core.Gradient m_grad;
+        tas.Core.Util.Gradient m_grad;
 
         bool m_drawK = false;
         bool m_display_enabled = true;
@@ -36,7 +36,7 @@ namespace tas.Lam.GH.Components
             System.Drawing.Color.FromArgb(64, 128, 255),
             System.Drawing.Color.FromArgb(0, 0, 255)};
 
-                m_grad = new Gradient(stops, colors);
+                m_grad = new tas.Core.Util.Gradient(stops, colors);
             }
         }
 

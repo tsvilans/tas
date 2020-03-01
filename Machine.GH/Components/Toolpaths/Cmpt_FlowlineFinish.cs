@@ -9,7 +9,7 @@ using GH_IO.Serialization;
 using tas.Machine.Toolpaths;
 using tas.Core.GH;
 using tas.Core.Types;
-
+using tas.Core;
 
 namespace tas.Machine.GH.Toolpaths
 {
@@ -103,7 +103,7 @@ namespace tas.Machine.GH.Toolpaths
                     PPolyline zz_path = new PPolyline();
                     for (int j = 0; j < paths.Count; ++j)
                     {
-                        if (tas.Core.Util.Modulus(j, 2) > 0)
+                        if (j.Modulus(2) > 0)
                             paths[j].Reverse();
                         zz_path.AddRange(paths[j]);                        
                     }

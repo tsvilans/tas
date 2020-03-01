@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 
 using Rhino.Geometry;
 using tas.Core;
+using tas.Core.Util;
 
 namespace tas.Lam
 {
@@ -97,18 +98,18 @@ namespace tas.Lam
                         if (res == 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
-                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[0], fa[0], fa[1], fa[2], mu, 0, 0);
+                            angles[i] = Interpolation.HermiteInterpolate(fa[0], fa[0], fa[1], fa[2], mu, 0, 0);
                         }
                         else if (res > 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
-                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu, 0, 0);
+                            angles[i] = Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu, 0, 0);
 
                         }
                         else if (res > 0 && res < max)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
-                            angles[i] = Util.Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu, 0, 0);
+                            angles[i] = Interpolation.HermiteInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu, 0, 0);
                         }
                         else if (res == max)
                         {
@@ -144,18 +145,18 @@ namespace tas.Lam
                         if (res == 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[0]) / (ft[1] - ft[0]);
-                            angles[i] = Util.Interpolation.CubicInterpolate(fa[0], fa[0], fa[1], fa[2], mu);
+                            angles[i] = Interpolation.CubicInterpolate(fa[0], fa[0], fa[1], fa[2], mu);
                         }
                         else if (res > 0 && res < max - 1)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
-                            angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu);
+                            angles[i] = Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 2], mu);
 
                         }
                         else if (res > 0 && res < max)
                         {
                             mu = (t[i] - ft[res]) / (ft[res + 1] - ft[res]);
-                            angles[i] = Util.Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu);
+                            angles[i] = Interpolation.CubicInterpolate(fa[res - 1], fa[res], fa[res + 1], fa[res + 1], mu);
                         }
                         else if (res == max)
                         {
@@ -182,7 +183,7 @@ namespace tas.Lam
                                 mu = 0.5;
                             else
                                 mu = Math.Min(1.0, Math.Max(0, (t[i] - ft[res]) / (ft[res + 1] - ft[res])));
-                            angles[i] = Util.Interpolation.Lerp(fa[res], fa[res + 1], mu);
+                            angles[i] = Interpolation.Lerp(fa[res], fa[res + 1], mu);
                         }
                         else if (res < 0)
                             angles[i] = fa[0];
@@ -570,7 +571,7 @@ namespace tas.Lam
             //double tt = Util.CosineInterpolate(0, 1.0, faround.Item3);
             double tt = faround.Item3;
 
-            plane = Util.Interpolation.InterpolatePlanes2(faround.Item1, faround.Item2, tt);
+            plane = Interpolation.InterpolatePlanes2(faround.Item1, faround.Item2, tt);
             plane.Origin = Centreline.PointAt(t);
             plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
 
@@ -722,7 +723,7 @@ namespace tas.Lam
             for (int i = 0; i < t.Length; ++i)
             {
                 Plane p = GetPlane(t[i]);
-                double l = Util.Ease.QuadOut(Util.Interpolation.Unlerp(tmin, tmax, t[i]));
+                double l = Ease.QuadOut(Interpolation.Unlerp(tmin, tmax, t[i]));
                 pts.Add(p.Origin + p.XAxis * l * x + p.YAxis * l * y);
             }
 

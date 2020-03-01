@@ -57,6 +57,7 @@
     <Compile Include="Network2.cs" />
     <Compile Include="NetworkLegacy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="tasCarve.cs" />
     <Compile Include="tasExtensions.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="tasUtility.cs" />

@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rhino.Geometry;
+using tas.Core;
+using tas.Core.Util;
 
 using Path = System.Collections.Generic.List<tas.Machine.Waypoint>;
 
@@ -238,7 +240,7 @@ namespace tas.Machine
                 counter++;
                 Vector3d toEnd = new Vector3d(B.Plane.Origin - mp.Point);
                 Vector3d n = m.NormalAt(mp);
-                Vector3d v = ProjectToPlane(toEnd, new Plane(mp.Point, n));
+                Vector3d v = toEnd.ProjectToPlane(new Plane(mp.Point, n));
                 v.Unitize();
                 point = mp.Point + v * step;
                 mp = m.ClosestMeshPoint(point, step / 2);
@@ -282,7 +284,7 @@ namespace tas.Machine
             Quaternion qB = Quaternion.Rotation(Plane.WorldXY, B);
 
             Quaternion qC = Slerp(qA, qB, t);
-            Point3d p = InterpolatePoints(A.Origin, B.Origin, t);
+            Point3d p = Interpolation.Lerp(A.Origin, B.Origin, t);
 
             Plane plane;
             qC.GetRotation(out plane);
@@ -345,57 +347,6 @@ namespace tas.Machine
             qC.C = qA.C * ratioA + qC.C * ratioB;
             qC.D = qA.D * ratioA + qC.D * ratioB;
             return qC;
-        }
-
-        /// <summary>
-        /// Simple linear interpolation between two points.
-        /// </summary>
-        /// <param name="A">Point A.</param>
-        /// <param name="B">Point B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        private static Point3d InterpolatePoints(Point3d A, Point3d B, double t)
-        {
-            return A + t * (B - A);
-        }
-
-        /// <summary>
-        /// Simple linear interpolation between two vectors.
-        /// </summary>
-        /// <param name="A">Vector A.</param>
-        /// <param name="B">Vector B.</param>
-        /// <param name="t">t-value.</param>
-        /// <returns></returns>
-        private static Vector3d InterpolateVectors(Vector3d A, Vector3d B, double t)
-        {
-            return A + t * (B - A);
-        }
-
-        /// <summary>
-        /// Project point onto plane.
-        /// </summary>
-        /// <param name="p">Point to project.</param>
-        /// <param name="pl">Plane to project onto.</param>
-        /// <returns>Projected point.</returns>
-        private static Point3d ProjectToPlane(Point3d p, Plane pl)
-        {
-            Vector3d op = new Vector3d(p - pl.Origin);
-            double dot = Vector3d.Multiply(pl.ZAxis, op);
-            Vector3d v = pl.ZAxis * dot;
-            return new Point3d(p - v);
-        }
-
-        /// <summary>
-        /// Project vector onto plane.
-        /// </summary>
-        /// <param name="v">Vector to project.</param>
-        /// <param name="pl">Plane to project onto.</param>
-        /// <returns>Projected vector.</returns>
-        private static Vector3d ProjectToPlane(Vector3d v, Plane pl)
-        {
-            double dot = Vector3d.Multiply(pl.ZAxis, v);
-            Vector3d v2 = pl.ZAxis * dot;
-            return new Vector3d(v - v2);
         }
 
         /// <summary>

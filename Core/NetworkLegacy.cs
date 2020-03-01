@@ -8,6 +8,7 @@ using Rhino.Geometry;
 using Rhino;
 using System.Diagnostics;
 using tas.Core;
+using tas.Core.Util;
 
 namespace tas.Core.Legacy
 {
@@ -856,7 +857,7 @@ namespace tas.Core.Legacy
             }
 
             List<int> SI = new List<int>();
-            Util.SortVectorsAroundPoint(Edges.Select(x => x.Vector).ToList(),
+            Misc.SortVectorsAroundPoint(Edges.Select(x => x.Vector).ToList(),
               Frame.Origin, out SI);
 
             for (int i = 0; i < SI.Count; ++i)

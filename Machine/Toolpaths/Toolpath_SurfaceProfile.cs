@@ -25,6 +25,7 @@ using tas.Core;
 using tas.Core.Types;
 
 using Rhino.Geometry;
+using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
 {
@@ -46,7 +47,7 @@ namespace tas.Machine.Toolpaths
             Tolerance = tolerance;
             StartEnd = false;
             DriveSurface = surface;
-            DriveCurves = Util.CurvesToPolylines(c.ToList(), Tolerance);
+            DriveCurves = Misc.CurvesToPolylines(c.ToList(), Tolerance);
         }
 
         public Toolpath_SurfaceProfile(Curve c, Surface surface, double tolerance) : this(new List<Curve> { c }, surface, tolerance)
@@ -92,7 +93,7 @@ namespace tas.Machine.Toolpaths
                     OnSrf = DriveSurface.PointAt(u, v);
                     nor = DriveSurface.NormalAt(u, v);
 
-                    tan = Util.ProjectToPlane(new Vector3d(P[1] - P[0]), Workplane);
+                    tan = new Vector3d(P[1] - P[0]).ProjectToPlane(Workplane);
                     tan.Unitize();
                     x = Vector3d.CrossProduct(tan, nor);
                     p = new Plane(P[0], x, Vector3d.CrossProduct(nor, x));
@@ -108,8 +109,8 @@ namespace tas.Machine.Toolpaths
                         OnSrf = DriveSurface.PointAt(u, v);
                         nor = DriveSurface.NormalAt(u, v);
 
-                        t1 = Util.ProjectToPlane(new Vector3d(P[i] - P[i + 1]), Workplane);
-                        t2 = Util.ProjectToPlane(new Vector3d(P[i] - P[i - 1]), Workplane);
+                        t1 = new Vector3d(P[i] - P[i + 1]).ProjectToPlane(Workplane);
+                        t2 = new Vector3d(P[i] - P[i - 1]).ProjectToPlane(Workplane);
 
                         t1.Unitize();
                         t2.Unitize();
@@ -130,7 +131,7 @@ namespace tas.Machine.Toolpaths
                     OnSrf = DriveSurface.PointAt(u, v);
                     nor = DriveSurface.NormalAt(u, v);
 
-                    tan = Util.ProjectToPlane(new Vector3d(P[P.Count - 1] - P[P.Count - 2]), Workplane);
+                    tan = new Vector3d(P[P.Count - 1] - P[P.Count - 2]).ProjectToPlane(Workplane);
                     tan.Unitize();
                     x = Vector3d.CrossProduct(tan, nor);
                     p = new Plane(OnSrf, x, Vector3d.CrossProduct(nor, x));
@@ -148,11 +149,11 @@ namespace tas.Machine.Toolpaths
                         OnSrf = DriveSurface.PointAt(u, v);
                         nor = DriveSurface.NormalAt(u, v);
 
-                        next = Util.Modulus(i + 1, N);
-                        prev = Util.Modulus(i - 1, N);
+                        next = (i + 1).Modulus(N);
+                        prev = (i - 1).Modulus(N);
 
-                        t1 = Util.ProjectToPlane(new Vector3d(P[i] - P[next]), Workplane);
-                        t2 = Util.ProjectToPlane(new Vector3d(P[i] - P[prev]), Workplane);
+                        t1 = new Vector3d(P[i] - P[next]).ProjectToPlane(Workplane);
+                        t2 = new Vector3d(P[i] - P[prev]).ProjectToPlane(Workplane);
 
                         t1.Unitize();
                         t2.Unitize();

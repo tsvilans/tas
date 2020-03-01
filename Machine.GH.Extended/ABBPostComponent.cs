@@ -10,6 +10,7 @@ using Robots;
 using tas.Core;
 using tas.Core.GH;
 using tas.Core.Types;
+using tas.Core.Util;
 
 // In order to load the result of this wizard, you will also need to
 // add the output bin/ folder of this project to the list of loaded
@@ -165,7 +166,7 @@ namespace tas.Machine.GH.Extended
             {
                 Mesh m = new Mesh();
 
-                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.Smooth);
+                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.QualityRenderMesh);
                 foreach (Mesh cm in converted)
                 {
                     m.Append(cm);
@@ -321,7 +322,7 @@ namespace tas.Machine.GH.Extended
                     double t = 1.0 / (N - i - 1.0);
                     //double t = (double)i / (N - i - 1);
                     debug += string.Format("Link {0}: {1:0.00}\n", i, t);
-                    Plane p = Util.Interpolation.InterpolatePlanes2(Last, B, t);
+                    Plane p = Interpolation.InterpolatePlanes2(Last, B, t);
 
                     nO = m.ClosestPoint(p.Origin);
 
@@ -374,7 +375,7 @@ namespace tas.Machine.GH.Extended
                     counter++;
                     Vector3d toEnd = new Vector3d(B.Origin - mp.Point);
                     Vector3d n = m.NormalAt(mp);
-                    Vector3d v = Util.ProjectToPlane(toEnd, new Plane(mp.Point, n));
+                    Vector3d v = toEnd.ProjectToPlane(new Plane(mp.Point, n));
                     v.Unitize();
                     point = mp.Point + v * step;
                     mp = m.ClosestMeshPoint(point, step / 2);
@@ -388,13 +389,13 @@ namespace tas.Machine.GH.Extended
 
                 for (int i = 0; i < poly.Count - 1; ++i)
                 {
-                    Plane p = Util.Interpolation.InterpolatePlanes2(A, B, length / total_length);
+                    Plane p = Interpolation.InterpolatePlanes2(A, B, length / total_length);
                     Plane pnorm = new Plane(p);
                     pnorm.Transform(Transform.Rotation(p.ZAxis, normals[i], p.Origin));
 
                     double t = Math.Sin(length / total_length * Math.PI);
 
-                    p = Util.Interpolation.InterpolatePlanes2(p, pnorm, t);
+                    p = Interpolation.InterpolatePlanes2(p, pnorm, t);
 
 
                     p.Origin = poly[i];

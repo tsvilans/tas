@@ -25,17 +25,14 @@ using System.Xml.Linq;
 using Rhino.Geometry;
 using StudioAvw.Geometry;
 
-using CarveSharp;
-
 using tas.Core.Types;
 using System.Drawing;
 
-namespace tas.Core
+namespace tas.Core.Util
 {
     public static class Constants
     {
         public const double Tau = Math.PI * 2.0;
-
     }
 
     public enum Side
@@ -47,285 +44,344 @@ namespace tas.Core
         Front = 16,
         Back = 32
     }
-
-    public static class Util
+    public enum Axis
     {
-        public enum Axis
+        XPos,
+        XNeg,
+        YPos,
+        YNeg,
+        ZPos,
+        ZNeg,
+        Undefined
+    }
+    public static class Ease
+    {
+        public static double QuadOut(double t) =>
+             -1.0 * t * (t - 2);
+
+        public static double QuadIn(double t) =>
+            t * t * t;
+
+        public static double CubicIn(double t) =>
+            t * t * t;
+
+        public static double CubicOut(double t)
         {
-            XPos,
-            XNeg,
-            YPos,
-            YNeg,
-            ZPos,
-            ZNeg,
-            Undefined
+            t--;
+            return t * t * t + 1;
+        }
+    }
+
+    public static class Intersection
+    {
+        public static Point3d PlaneLineIntersection(Line l, Plane p)
+        {
+            double u = (p.Normal * (p.Origin - l.From)) / (p.Normal * (l.To - l.From));
+            return (l.From + l.Direction * u);
         }
 
-        public static class Ease
+    }
+
+    public static class Interpolation
+    {
+        /// <summary>
+        /// from http://paulbourke.net/miscellaneous/interpolation/
+        /// Tension: 1 is high, 0 normal, -1 is low
+        /// Bias: 0 is even,
+        /// positive is towards first segment,
+        /// negative towards the other
+        /// </summary>
+        /// <param name="y0"></param>
+        /// <param name="y1"></param>
+        /// <param name="y2"></param>
+        /// <param name="y3"></param>
+        /// <param name="mu"></param>
+        /// <param name="tension"></param>
+        /// <param name="bias"></param>
+        /// <returns></returns>
+        public static double HermiteInterpolate(double y0, double y1, double y2, double y3, double mu, double tension = 0.0, double bias = 0.0)
         {
-            public static double QuadOut(double t)
-            {
-                return -1.0 * t * (t - 2);
-            }
+            double m0, m1, mu2, mu3;
+            double a0, a1, a2, a3;
 
-            public static double QuadIn(double t)
-            {
-                return t * t * t;
-            }
+            mu2 = mu * mu;
+            mu3 = mu2 * mu;
+            m0 = (y1 - y0) * (1 + bias) * (1 - tension) / 2;
+            m0 += (y2 - y1) * (1 - bias) * (1 - tension) / 2;
+            m1 = (y2 - y1) * (1 + bias) * (1 - tension) / 2;
+            m1 += (y3 - y2) * (1 - bias) * (1 - tension) / 2;
+            a0 = 2 * mu3 - 3 * mu2 + 1;
+            a1 = mu3 - 2 * mu2 + mu;
+            a2 = mu3 - mu2;
+            a3 = -2 * mu3 + 3 * mu2;
 
-            public static double CubicIn(double t)
-            {
-                return t * t * t;
-            }
-
-            public static double CubicOut(double t)
-            {
-                t--;
-                return t * t * t + 1;
-            }
+            return (a0 * y1 + a1 * m0 + a2 * m1 + a3 * y2);
         }
 
-        public static class Interpolation
+        /// <summary>
+        /// from http://paulbourke.net/miscellaneous/interpolation/
+        /// </summary>
+        /// <param name="y0"></param>
+        /// <param name="y1"></param>
+        /// <param name="y2"></param>
+        /// <param name="y3"></param>
+        /// <param name="mu"></param>
+        /// <returns></returns>
+        public static double CubicInterpolate(double y0, double y1, double y2, double y3, double mu)
         {
-            /// <summary>
-            /// from http://paulbourke.net/miscellaneous/interpolation/
-            /// Tension: 1 is high, 0 normal, -1 is low
-            /// Bias: 0 is even,
-            /// positive is towards first segment,
-            /// negative towards the other
-            /// </summary>
-            /// <param name="y0"></param>
-            /// <param name="y1"></param>
-            /// <param name="y2"></param>
-            /// <param name="y3"></param>
-            /// <param name="mu"></param>
-            /// <param name="tension"></param>
-            /// <param name="bias"></param>
-            /// <returns></returns>
-            public static double HermiteInterpolate(double y0, double y1, double y2, double y3, double mu, double tension, double bias)
+            double a0, a1, a2, a3, mu2;
+
+            mu2 = mu * mu;
+            a0 = y3 - y2 - y0 + y1;
+            a1 = y0 - y1 - a0;
+            a2 = y2 - y0;
+            a3 = y1;
+
+            return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
+        }
+
+        /// <summary>
+        /// from http://paulbourke.net/miscellaneous/interpolation/
+        /// </summary>
+        /// <param name="y1"></param>
+        /// <param name="y2"></param>
+        /// <param name="mu"></param>
+        /// <returns></returns>
+        public static double Lerp(double y1, double y2, double mu) =>
+            y1 + (y2 - y1) * mu;
+        //return y1 * (1 - mu) + y2 * mu;
+
+        public static int Lerp(int y1, int y2, double mu) =>
+            (int)(y1 + (y2 - y1) * mu);
+        /*
+        /// <summary>
+        /// Simple lerp between two colors.
+        /// </summary>
+        /// <param name="c1">Color A.</param>
+        /// <param name="c2">Color B.</param>
+        /// <param name="t">t-value.</param>
+        /// <returns>Interpolated color.</returns>
+        public static Color Lerp(Color c1, Color c2, double t)
+        {
+            return Color.FromArgb(
+                Lerp(c1.R, c2.R, t),
+                Lerp(c1.G, c2.G, t),
+                Lerp(c1.B, c2.B, t)
+                );
+        }
+        */
+        /// <summary>
+        /// Simple linear interpolation between two points.
+        /// </summary>
+        /// <param name="pA"></param>
+        /// <param name="pB"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static Point3d Lerp(Point3d pA, Point3d pB, double t)
+        {
+            return pA + (pB - pA) * t;
+        }
+
+        /// <summary>
+        /// Simple linear interpolation between two vectors.
+        /// </summary>
+        /// <param name="vA"></param>
+        /// <param name="vB"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static Vector3d Lerp(Vector3d vA, Vector3d vB, double t) =>
+            vA + t * (vB - vA);
+
+        public static double Unlerp(double a, double b, double c)
+        {
+            if (a > b)
+                return 1.0 - (c - b) / (a - b);
+            return (c - a) / (b - a);
+        }
+
+        /// <summary>
+        /// from http://paulbourke.net/miscellaneous/interpolation/
+        /// </summary>
+        /// <param name="y1"></param>
+        /// <param name="y2"></param>
+        /// <param name="mu"></param>
+        /// <returns></returns>
+        public static double CosineInterpolate(double y1, double y2, double mu) =>
+            Lerp(y1, y2, (1 - Math.Cos(mu * Math.PI)) / 2);
+
+
+        /// <summary>
+        /// Spherical interpolation using quaternions.
+        /// </summary>
+        /// <param name="qA">Quaternion A.</param>
+        /// <param name="qB">Quaternion B.</param>
+        /// <param name="t">t-value.</param>
+        /// <returns></returns>
+        public static Quaternion Slerp(Quaternion qA, Quaternion qB, double t)
+        {
+            if (t == 0) return qA;
+            if (t == 1.0) return qB;
+
+            Quaternion qC = new Quaternion();
+            double cosHT = qA.A * qB.A + qA.B * qB.B + qA.C * qB.C + qA.D * qB.D;
+
+            if (cosHT < 0.0)
             {
-                double m0, m1, mu2, mu3;
-                double a0, a1, a2, a3;
-
-                mu2 = mu * mu;
-                mu3 = mu2 * mu;
-                m0 = (y1 - y0) * (1 + bias) * (1 - tension) / 2;
-                m0 += (y2 - y1) * (1 - bias) * (1 - tension) / 2;
-                m1 = (y2 - y1) * (1 + bias) * (1 - tension) / 2;
-                m1 += (y3 - y2) * (1 - bias) * (1 - tension) / 2;
-                a0 = 2 * mu3 - 3 * mu2 + 1;
-                a1 = mu3 - 2 * mu2 + mu;
-                a2 = mu3 - mu2;
-                a3 = -2 * mu3 + 3 * mu2;
-
-                return (a0 * y1 + a1 * m0 + a2 * m1 + a3 * y2);
+                qC.A = -qB.A;
+                qC.B = -qB.B;
+                qC.C = -qB.C;
+                qC.D = -qB.D;
+                cosHT = -cosHT;
             }
+            else
+                qC = qB;
 
-            /// <summary>
-            /// from http://paulbourke.net/miscellaneous/interpolation/
-            /// </summary>
-            /// <param name="y0"></param>
-            /// <param name="y1"></param>
-            /// <param name="y2"></param>
-            /// <param name="y3"></param>
-            /// <param name="mu"></param>
-            /// <returns></returns>
-            public static double CubicInterpolate(double y0, double y1, double y2, double y3, double mu)
+            if (cosHT >= 1.0)
             {
-                double a0, a1, a2, a3, mu2;
-
-                mu2 = mu * mu;
-                a0 = y3 - y2 - y0 + y1;
-                a1 = y0 - y1 - a0;
-                a2 = y2 - y0;
-                a3 = y1;
-
-                return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
+                qC.A = qA.A;
+                qC.B = qA.B;
+                qC.C = qA.C;
+                qC.D = qA.D;
+                return qC;
             }
+            double HT = Math.Acos(cosHT);
+            double sinHT = Math.Sqrt(1.0 - cosHT * cosHT);
 
-            /// <summary>
-            /// from http://paulbourke.net/miscellaneous/interpolation/
-            /// </summary>
-            /// <param name="y1"></param>
-            /// <param name="y2"></param>
-            /// <param name="mu"></param>
-            /// <returns></returns>
-            public static double LinearInterpolate(double y1, double y2, double mu)
+            if (Math.Abs(sinHT) < 0.001)
             {
-                return y1 * (1 - mu) + y2 * mu;
-            }
-
-            /// <summary>
-            /// from http://paulbourke.net/miscellaneous/interpolation/
-            /// </summary>
-            /// <param name="y1"></param>
-            /// <param name="y2"></param>
-            /// <param name="mu"></param>
-            /// <returns></returns>
-            public static double CosineInterpolate(double y1, double y2, double mu)
-            {
-                double mu2;
-                mu2 = (1 - Math.Cos(mu * Math.PI)) / 2;
-                return (y1 * (1 - mu2) + y2 * mu2);
-            }
-
-            /// <summary>
-            /// Spherical interpolation using quaternions.
-            /// </summary>
-            /// <param name="qA">Quaternion A.</param>
-            /// <param name="qB">Quaternion B.</param>
-            /// <param name="t">t-value.</param>
-            /// <returns></returns>
-            public static Quaternion Slerp(Quaternion qA, Quaternion qB, double t)
-            {
-                if (t == 0) return qA;
-                if (t == 1.0) return qB;
-
-                Quaternion qC = new Quaternion();
-                double cosHT = qA.A * qB.A + qA.B * qB.B + qA.C * qB.C + qA.D * qB.D;
-
-                if (cosHT < 0.0)
-                {
-                    qC.A = -qB.A;
-                    qC.B = -qB.B;
-                    qC.C = -qB.C;
-                    qC.D = -qB.D;
-                    cosHT = -cosHT;
-                }
-                else
-                    qC = qB;
-
-                if (cosHT >= 1.0)
-                {
-                    qC.A = qA.A;
-                    qC.B = qA.B;
-                    qC.C = qA.C;
-                    qC.D = qA.D;
-                    return qC;
-                }
-                double HT = Math.Acos(cosHT);
-                double sinHT = Math.Sqrt(1.0 - cosHT * cosHT);
-
-                if (Math.Abs(sinHT) < 0.001)
-                {
-                    qC.A = 0.5 * (qA.A + qC.A);
-                    qC.B = 0.5 * (qA.B + qC.B);
-                    qC.C = 0.5 * (qA.C + qC.C);
-                    qC.D = 0.5 * (qA.D + qC.D);
-                    return qC;
-                }
-
-                double ratioA = Math.Sin((1 - t) * HT) / sinHT;
-                double ratioB = Math.Sin(t * HT) / sinHT;
-
-                qC.A = qA.A * ratioA + qC.A * ratioB;
-                qC.B = qA.B * ratioA + qC.B * ratioB;
-                qC.C = qA.C * ratioA + qC.C * ratioB;
-                qC.D = qA.D * ratioA + qC.D * ratioB;
+                qC.A = 0.5 * (qA.A + qC.A);
+                qC.B = 0.5 * (qA.B + qC.B);
+                qC.C = 0.5 * (qA.C + qC.C);
+                qC.D = 0.5 * (qA.D + qC.D);
                 return qC;
             }
 
-            public static Vector3d Slerp(Vector3d v1, Vector3d v2, double t)
-            {
-                double dot = v1 * v2;
-                double theta = Math.Acos(dot) * t;
-                Vector3d rel = v2 - v1 * dot;
-                rel.Unitize();
+            double ratioA = Math.Sin((1 - t) * HT) / sinHT;
+            double ratioB = Math.Sin(t * HT) / sinHT;
 
-                return ((v1 * Math.Cos(theta)) + rel * Math.Sin(theta));
-            }
-
-            /// <summary>
-            /// Simple plane interpolation using interpolated vectors. Not ideal. 
-            /// Fails spectacularly in extreme cases.
-            /// </summary>
-            /// <param name="A">Plane A.</param>
-            /// <param name="B">Plane B.</param>
-            /// <param name="t">t-value.</param>
-            /// <returns></returns>
-            public static Plane InterpolatePlanes(Plane A, Plane B, double t)
-            {
-                return new Plane(Lerp(A.Origin, B.Origin, t),
-                                         Lerp(A.XAxis, B.XAxis, t),
-                                         Lerp(A.YAxis, B.YAxis, t));
-            }
-
-            /// <summary>
-            /// Better plane interpolation using quaternions.
-            /// </summary>
-            /// <param name="A">Plane A.</param>
-            /// <param name="B">Plane B.</param>
-            /// <param name="t">t-value.</param>
-            /// <returns></returns>
-            public static Plane InterpolatePlanes2(Plane A, Plane B, double t)
-            {
-                Quaternion qA = Quaternion.Rotation(Plane.WorldXY, A);
-                Quaternion qB = Quaternion.Rotation(Plane.WorldXY, B);
-
-                Quaternion qC = Slerp(qA, qB, t);
-                Point3d p = Lerp(A.Origin, B.Origin, t);
-
-                Plane plane;
-                qC.GetRotation(out plane);
-                plane.Origin = p;
-
-                return plane;
-            }
-
-            /// <summary>
-            /// Simple lerp between two colors.
-            /// </summary>
-            /// <param name="colorA">Color A.</param>
-            /// <param name="colorB">Color B.</param>
-            /// <param name="t">t-value.</param>
-            /// <returns>Interpolated color.</returns>
-            public static Color Lerp(Color colorA, Color colorB, double t)
-            {
-                int r = (int)(colorB.R * t + (colorA.R * (1.0 - t)));
-                int g = (int)(colorB.G * t + (colorA.G * (1.0 - t)));
-                int b = (int)(colorB.B * t + (colorA.B * (1.0 - t)));
-
-                return Color.FromArgb(r, g, b);
-            }
-
-            /// <summary>
-            /// Simple linear interpolation between two points.
-            /// </summary>
-            /// <param name="a"></param>
-            /// <param name="b"></param>
-            /// <param name="t"></param>
-            /// <returns></returns>
-            public static Point3d Lerp(Point3d a, Point3d b, double t)
-            {
-                return a + t * (b - a);
-                //return new Point3d(Lerp(a.X, b.X, t), Lerp(a.Y, b.Y, t), Lerp(a.Z, b.Z, t));
-            }
-
-            /// <summary>
-            /// Simple linear interpolation between two vectors.
-            /// </summary>
-            /// <param name="a"></param>
-            /// <param name="b"></param>
-            /// <param name="t"></param>
-            /// <returns></returns>
-            public static Vector3d Lerp(Vector3d a, Vector3d b, double t)
-            {
-                return a + t * (b - a);
-            }
-
-            public static double Lerp(double a, double b, double t)
-            {
-                return a + (b - a) * t;
-            }
-
-            public static double Unlerp(double a, double b, double c)
-            {
-                if (a > b)
-                    return 1.0 - (c - b) / (a - b);
-                return (c - a) / (b - a);
-            }
+            qC.A = qA.A * ratioA + qC.A * ratioB;
+            qC.B = qA.B * ratioA + qC.B * ratioB;
+            qC.C = qA.C * ratioA + qC.C * ratioB;
+            qC.D = qA.D * ratioA + qC.D * ratioB;
+            return qC;
         }
 
+        public static Vector3d Slerp(Vector3d v1, Vector3d v2, double t)
+        {
+            double dot = v1 * v2;
+            double theta = Math.Acos(dot) * t;
+            Vector3d rel = v2 - v1 * dot;
+            rel.Unitize();
+
+            return ((v1 * Math.Cos(theta)) + rel * Math.Sin(theta));
+        }
+
+        /// <summary>
+        /// Simple plane interpolation using interpolated vectors. Not ideal. 
+        /// Fails spectacularly in extreme cases.
+        /// </summary>
+        /// <param name="A">Plane A.</param>
+        /// <param name="B">Plane B.</param>
+        /// <param name="t">t-value.</param>
+        /// <returns></returns>
+        public static Plane InterpolatePlanes(Plane A, Plane B, double t)
+        {
+            return new Plane(Lerp(A.Origin, B.Origin, t),
+                                     Lerp(A.XAxis, B.XAxis, t),
+                                     Lerp(A.YAxis, B.YAxis, t));
+        }
+
+        /// <summary>
+        /// Better plane interpolation using quaternions.
+        /// </summary>
+        /// <param name="A">Plane A.</param>
+        /// <param name="B">Plane B.</param>
+        /// <param name="t">t-value.</param>
+        /// <returns></returns>
+        public static Plane InterpolatePlanes2(Plane A, Plane B, double t)
+        {
+            Quaternion qA = Quaternion.Rotation(Plane.WorldXY, A);
+            Quaternion qB = Quaternion.Rotation(Plane.WorldXY, B);
+
+            Quaternion qC = Slerp(qA, qB, t);
+            Point3d p = Lerp(A.Origin, B.Origin, t);
+
+            Plane plane;
+            qC.GetRotation(out plane);
+            plane.Origin = p;
+
+            return plane;
+        }
+
+
+    }
+
+    public static class Triangle
+    {
+        /// <summary>
+        /// Calculate the area of a triangle defined by three points.
+        /// </summary>
+        /// <param name="a">Point A</param>
+        /// <param name="b">Point B</param>
+        /// <param name="c">Point C</param>
+        /// <returns>Area of triangle.</returns>
+        public static double Area(Point3d a, Point3d b, Point3d c)
+        {
+            double ba = b.DistanceTo(a);
+            double bc = b.DistanceTo(c);
+
+            double angle = Vector3d.VectorAngle(a - b, c - b);
+
+            return 0.5 * ba * bc * Math.Sin(angle);
+        }
+
+        /// <summary>
+        /// Calculate unit normal of triangle defined by three points.
+        /// </summary>
+        /// <param name="a">Point A</param>
+        /// <param name="b">Point B</param>
+        /// <param name="c">Point C</param>
+        /// <returns>Unit normal of triangle.</returns>
+        public static Vector3d Normal(Point3d a, Point3d b, Point3d c)
+        {
+            Vector3d n = Vector3d.CrossProduct(b - a, c - a);
+            n.Unitize();
+            return n;
+        }
+
+        /// <summary>
+        /// Create point on triangle defined by three points, at coordinates a and b.
+        /// </summary>
+        /// <param name="A">Point A</param>
+        /// <param name="B">Point B</param>
+        /// <param name="C">Point C</param>
+        /// <param name="a">Parameter a</param>
+        /// <param name="b">Parameter b</param>
+        /// <returns>Point on triangle at (a , b).</returns>
+        public static Point3d PointOnTriangle(Point3d A, Point3d B, Point3d C, double a, double b)
+        {
+            double c = 0;
+
+            if (a + b > 1)
+            {
+                a = 1 - a;
+                b = 1 - b;
+            }
+            c = 1 - a - b;
+
+            return new Point3d(
+                (a * A.X) + (b * B.X) + (c * C.X),
+                (a * A.Y) + (b * B.Y) + (c * C.Y),
+                (a * A.Z) + (b * B.Z) + (c * C.Z));
+        }
+
+    }
+
+    public static class Misc
+    {
+
+
+ 
         static Random random = new Random();
 
         #region KELOWNA
@@ -428,29 +484,6 @@ namespace tas.Core
             return 4 * area / (a * b * c);
         }
 
-        /// <summary>
-        /// Test polyline to see if it is clockwise around a guide vector.
-        /// </summary>
-        /// <param name="pl">Polyline to test.</param>
-        /// <param name="vec">Guide vector for establishing directionality.</param>
-        /// <returns>True if polyline is CW around vector, false if not.</returns>
-        public static bool IsClockwise(Polyline pl, Vector3d vec)
-        {
-            double temp = 0.0;
-
-            for (int i = 0; i < pl.SegmentCount - 1; ++i)
-            {
-                var v1 = pl.SegmentAt(i).Direction;
-                var v2 = pl.SegmentAt(i + 1).Direction;
-
-                var cross = Vector3d.CrossProduct(v1, v2);
-                temp += cross * vec;
-            }
-
-            return temp > 0;
-        }
-
-
         public static bool TryGet<T>(Dictionary<string, object> dict, string key, out T val)
         {
             //if (typeof(T).IsValueType)
@@ -504,7 +537,7 @@ namespace tas.Core
 
             normal.Unitize();
 
-            bool is_clockwise = Util.IsClockwise(pl, normal);
+            bool is_clockwise = pl.IsClockwise(normal);
 
             if (is_clockwise)
                 side = -1;
@@ -523,8 +556,8 @@ namespace tas.Core
 
                     for (int i = 0; i < N; ++i)
                     {
-                        iPrev = Util.Modulus(i - 1, N);
-                        iNext = Util.Modulus(i + 1, N);
+                        iPrev = (i-1).Modulus(N);
+                        iNext = (i + 1).Modulus(N);
 
                         v1 = pl[iPrev] - pl[i];
                         v2 = pl[iNext] - pl[i];
@@ -670,7 +703,6 @@ namespace tas.Core
             return newPoly;
         }
 
-
         /// <summary>
         /// Create a perpendicular plane on curve at parameter t, such that its Y-axis aligns with guide vector v.
         /// </summary>
@@ -697,23 +729,12 @@ namespace tas.Core
         /// <returns>Projected point.</returns>
         public static Point3d ProjectToPlane(Point3d p, Plane pl)
         {
+            return p.ProjectToPlane(pl);
+
             Vector3d op = new Vector3d(p - pl.Origin);
             double dot = Vector3d.Multiply(pl.ZAxis, op);
             Vector3d v = pl.ZAxis * dot;
             return new Point3d(p - v);
-        }
-
-        /// <summary>
-        /// Project vector onto plane.
-        /// </summary>
-        /// <param name="v">Vector to project.</param>
-        /// <param name="pl">Plane to project onto.</param>
-        /// <returns>Projected vector.</returns>
-        public static Vector3d ProjectToPlane(Vector3d v, Plane pl)
-        {
-            double dot = Vector3d.Multiply(pl.ZAxis, v);
-            Vector3d v2 = pl.ZAxis * dot;
-            return new Vector3d(v - v2);
         }
 
         /// <summary>
@@ -735,7 +756,8 @@ namespace tas.Core
                 {
                     Curve[] c = jcrvs[i].Offset(p, off, 0.1, CurveOffsetCornerStyle.Sharp);
                     cl.Add(jcrvs[i]);
-                    cl.AddRange(OffsetUntilNone(c, off, p, limit - 1));
+                    if (c.Length > 0)
+                        cl.AddRange(OffsetUntilNone(c, off, p, limit - 1));
                 }
             }
 
@@ -781,8 +803,8 @@ namespace tas.Core
 
                 for (int i = 0; i < pl.Count - 1; ++i)
                 {
-                    iPrev = Modulus(i - 1, pl.Count - 1);
-                    iNext = Modulus(i + 1, pl.Count - 1);
+                    iPrev = (i - 1).Modulus(pl.Count - 1);
+                    iNext = (i + 1).Modulus(pl.Count - 1);
 
                     v1 = pl[iPrev] - pl[i];
                     v2 = pl[iNext] - pl[i];
@@ -868,7 +890,6 @@ namespace tas.Core
 
             return newPoly;
         }
-
 
         /// <summary>
         /// Inset a closed polyline until it can't no more.
@@ -989,38 +1010,6 @@ namespace tas.Core
             //return Clusters;
         }
 
-
-
-        public static bool IsCollinear(Point3d p0, Point3d p1, Point3d p2, double tol = 1e-12)
-        {
-            Vector3d v1 = p0 - p1;
-            Vector3d v2 = p2 - p1;
-            v1.Unitize();
-            v2.Unitize();
-            Vector3d n = Vector3d.CrossProduct(v1, v2);
-            //if ((1 - Math.Abs(Vector3d.Multiply(p0 - p1, p2 - p1)) < tol)) return true;
-            if (n.Length < tol) return true;
-            return false;
-        }
-
-
-        public static double Distance(Point3d a, Point3d b)
-        {
-            double d = (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y) + (a.Z - b.Z) * (a.Z - b.Z);
-            return Math.Sqrt(d);
-        }
-
-        /// <summary>
-        /// Get squared distance between two points. Avoids calculating the square root when not needed.
-        /// </summary>
-        /// <param name="a">Point A.</param>
-        /// <param name="b">Point B.</param>
-        /// <returns>Squared distance between points A and B.</returns>
-        public static double DistanceSq(Point3d a, Point3d b)
-        {
-            return (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y) + (a.Z - b.Z) * (a.Z - b.Z); 
-        }
-
         public static List<Polyline> CurvesToPolylines(IEnumerable<Curve> crvs, double tol, bool reduce = false)
         {
             List<Polyline> polys = new List<Polyline>();
@@ -1083,82 +1072,18 @@ namespace tas.Core
             */
         }
 
-        public static BrepFace BrepFaceFromPoint(Brep brep, Point3d testPoint)
+        public static bool ArePointsCollinear(Point3d p0, Point3d p1, Point3d p2, double tol = 1e-12)
         {
-            BrepFace closest_face = null;
-            if (null != brep && testPoint.IsValid)
-            {
-                double closest_dist = Rhino.RhinoMath.UnsetValue;
-                foreach (BrepFace face in brep.Faces)
-                {
-                    double u, v;
-                    if (face.ClosestPoint(testPoint, out u, out v))
-                    {
-                        Point3d face_point = face.PointAt(u, v);
-                        double face_dist = face_point.DistanceTo(testPoint);
-                        if (!Rhino.RhinoMath.IsValidDouble(closest_dist) || face_dist < closest_dist)
-                        {
-                            closest_dist = face_dist;
-                            closest_face = face;
-                        }
-                    }
-                }
-            }
-            return closest_face;
+            Vector3d v1 = p0 - p1;
+            Vector3d v2 = p2 - p1;
+            v1.Unitize();
+            v2.Unitize();
+            Vector3d n = Vector3d.CrossProduct(v1, v2);
+            //if ((1 - Math.Abs(Vector3d.Multiply(p0 - p1, p2 - p1)) < tol)) return true;
+            if (n.Length < tol) return true;
+            return false;
         }
 
-        public static Vector3d ClosestNormalBrepFromPoint(Brep brep, Point3d testPoint)
-        {
-            double u, v;
-            BrepFace bf = BrepFaceFromPoint(brep, testPoint);
-            bf.ClosestPoint(testPoint, out u, out v);
-            return bf.NormalAt(u, v);
-        }
-
-        public static void SliceBrep(Brep brep, Plane sliceplane, ref List<Curve> curves)
-        {
-            //brep.Faces.StandardizeFaceSurfaces();
-            //BrepSolidOrientation bso = brep.SolidOrientation;
-            
-            Curve[] xCrvs;
-            Point3d[] xPts;
-            bool[] inside;
-            Rhino.Geometry.Intersect.Intersection.BrepPlane(brep, sliceplane, 0.001, out xCrvs, out xPts);
-            if (xCrvs == null)
-                return;
-
-            xCrvs = Rhino.Geometry.Curve.JoinCurves(xCrvs);
-            curves = new List<Curve>();
-            inside = new bool[xCrvs.Length];
-            for (int i = 0; i < xCrvs.Length; ++i)
-            {
-                //int sign = 1;
-                Point3d tpt = xCrvs[i].PointAtNormalizedLength(0.5);
-                Vector3d n = ClosestNormalBrepFromPoint(brep, tpt);
-                n = ProjectToPlane(n, sliceplane);
-                tpt.Transform(Transform.Translation(n * 0.001));
-                PointContainment pcon = xCrvs[i].Contains(tpt, sliceplane, 0.0001);
-                if (pcon == PointContainment.Inside)
-                { 
-                    inside[i] = true;
-                    //sign = -1;
-                }
-                else
-                {
-                    inside[i] = false;
-                    //sign = 1;
-                }
-
-                curves.Add(xCrvs[i]);
-                Curve[] offsets = xCrvs[i].Offset(tpt, sliceplane.ZAxis, 3.0, 0.0001, CurveOffsetCornerStyle.Sharp);
-                //Curve[] offsets = xCrvs[i].Offset(sliceplane, 3.0 * sign, 0.001, CurveOffsetCornerStyle.Sharp);
-                curves.AddRange(offsets);
-            }
-
-            return;
-            
-  
-        }
 
         public static PPolyline CreateRamp(PPolyline poly, Plane pl, double height, double length)//, ref string debug)
         {
@@ -1252,7 +1177,7 @@ namespace tas.Core
             for (int j = 0; j < rpts.Count; ++j)
             {
                 int ind = (j + 1) % rpts.Count;
-                double d = Distance(rpts[j], rpts[ind]);
+                double d = rpts[j].DistanceTo(rpts[ind]); // Distance(rpts[j], rpts[ind]);
                 el.Add(d);
             }
             double L = el.Sum();
@@ -1267,21 +1192,6 @@ namespace tas.Core
             rpts.Reverse();
 
             return new Polyline(rpts);
-        }
-
-        public static Polyline SimplifyPolyline(Polyline poly, double tolerance = 1e-12)
-        {
-            List<Point3d> pts = new List<Point3d>();
-            pts.Add(poly[0]);
-            for (int i = 1; i < poly.Count - 1; ++i)
-            {
-                if (!IsCollinear(poly[i-1], poly[i], poly[i+1], tolerance))
-                {
-                    pts.Add(poly[i]);
-                }
-            }
-            pts.Add(poly[poly.Count - 1]);
-            return new Polyline(pts);
         }
 
         /// <summary>
@@ -1351,6 +1261,7 @@ namespace tas.Core
 
         public static void GetOverlappingDomain(Curve c1, Curve c2, double maxDist, out Interval int1, out Interval int2, int N = 100, double extension = 0.0)
         {
+
             double[] tt1 = c1.DivideByCount(N - 1, true);
             double[] tt2 = c2.DivideByCount(N - 1, true);
 
@@ -1418,9 +1329,14 @@ namespace tas.Core
             int2 = new Interval(t2Min - extension, t2Max + extension);
         }
 
-
+        /// <summary>
+        /// Deprecated.
+        /// </summary>
+        /// <param name="MeterUnit"></param>
+        /// <returns></returns>
         public static double ScaleFromMeter(double MeterUnit = 1.0)
         {
+            return Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
             switch (Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem)
             {
                 case (Rhino.UnitSystem.Meters):
@@ -1465,12 +1381,12 @@ namespace tas.Core
                 var si = Enumerable.Range(0, source.Count).OrderBy(g => rand.NextDouble()).Take(3).ToArray();
                 var ti = Enumerable.Range(0, target.Count).OrderBy(g => rand.NextDouble()).Take(3).ToArray();
 
-                if (IsCollinear(source[si[0]], source[si[1]], source[si[2]]))
+                if (ArePointsCollinear(source[si[0]], source[si[1]], source[si[2]]))
                 {
                     i--;
                     continue;
                 }
-                if (IsCollinear(target[ti[0]], target[ti[1]], target[ti[2]]))
+                if (ArePointsCollinear(target[ti[0]], target[ti[1]], target[ti[2]]))
                 {
                     i--;
                     continue;
@@ -1488,7 +1404,7 @@ namespace tas.Core
                     double closest = double.MaxValue;
                     for (int k = 0; k < target.Count; ++k)
                     {
-                        closest = Math.Min(closest, Distance(temp, target[k]));
+                        closest = Math.Min(closest, temp.DistanceTo(target[k]));
                     }
                     round_fitness += (closest > MaxDist) ? closest * 2.0 : closest;
                 }
@@ -1543,18 +1459,6 @@ namespace tas.Core
         }
 
         /// <summary>
-        /// Modulus which works with negative numbers.
-        /// </summary>
-        /// <param name="x">Input value.</param>
-        /// <param name="m">Domain value.</param>
-        /// <returns></returns>
-        public static int Modulus(int x, int m)
-        {
-            int r = x % m;
-            return r < 0 ? r + m : r;
-        }
-
-        /// <summary>
         /// Extrudes naked edges of mesh downwards onto the input plane and creates a filled polygon on the open face. 
         /// Crude way of closing open meshes (i.e. surfaces).
         /// </summary>
@@ -1573,7 +1477,7 @@ namespace tas.Core
                 Polyline np = new Polyline();
                 foreach (Point3d pt in p)
                 {
-                    np.Add(ProjectToPlane(pt, P));
+                    np.Add(pt.ProjectToPlane(P));
                 }
 
                 Mesh NewMesh = new Mesh();
@@ -1674,68 +1578,7 @@ namespace tas.Core
             return vv;
         }
 
-        public static Point3d PlaneLineIntersection(Line l, Plane p)
-        {
-            double u = (p.Normal * (p.Origin - l.From)) / (p.Normal * (l.To - l.From));
-            return (l.From + l.Direction * u);
-        }
 
-        /// <summary>
-        /// Calculate the area of a triangle defined by three points.
-        /// </summary>
-        /// <param name="a">Point A</param>
-        /// <param name="b">Point B</param>
-        /// <param name="c">Point C</param>
-        /// <returns>Area of triangle.</returns>
-        public static double TriangleArea(Point3d a, Point3d b, Point3d c)
-        {
-            double ba = b.DistanceTo(a);
-            double bc = b.DistanceTo(c);
-
-            double angle = Vector3d.VectorAngle(a - b, c - b);
-
-            return 0.5 * ba * bc * Math.Sin(angle);
-        }
-
-        /// <summary>
-        /// Calculate unit normal of triangle defined by three points.
-        /// </summary>
-        /// <param name="a">Point A</param>
-        /// <param name="b">Point B</param>
-        /// <param name="c">Point C</param>
-        /// <returns>Unit normal of triangle.</returns>
-        public static Vector3d TriangleNormal(Point3d a, Point3d b, Point3d c)
-        {
-            Vector3d n = Vector3d.CrossProduct(b - a, c - a);
-            n.Unitize();
-            return n;
-        }
-
-        /// <summary>
-        /// Create point on triangle defined by three points, at coordinates a and b.
-        /// </summary>
-        /// <param name="A">Point A</param>
-        /// <param name="B">Point B</param>
-        /// <param name="C">Point C</param>
-        /// <param name="a">Parameter a</param>
-        /// <param name="b">Parameter b</param>
-        /// <returns>Point on triangle at (a , b).</returns>
-        public static Point3d PointOnTriangle(Point3d A, Point3d B, Point3d C, double a, double b)
-        {
-            double c = 0;
-
-            if (a + b > 1)
-            {
-                a = 1 - a;
-                b = 1 - b;
-            }
-            c = 1 - a - b;
-
-            return new Point3d(
-                (a * A.X) + (b * B.X) + (c * C.X),
-                (a * A.Y) + (b * B.Y) + (c * C.Y),
-                (a * A.Z) + (b * B.Z) + (c * C.Z));
-        }
 
         /// <summary>
         /// Generate N random integers. Courtsey of http://codereview.stackexchange.com/a/61372
@@ -1746,6 +1589,8 @@ namespace tas.Core
         /// <returns>List of random integers.</returns>
         public static List<int> GenerateRandom(int count, int lower = 0, int upper = int.MaxValue)
         {
+            count = Math.Min(upper - lower, count);
+
             // generate count random values.
             HashSet<int> candidates = new HashSet<int>();
             while (candidates.Count < count)
@@ -1819,90 +1664,7 @@ namespace tas.Core
             return planes;
         }
 
-        #region Carve booleans
 
-        /// <summary>
-        /// Make boolean difference between two meshes using the CarveSharp library.
-        /// </summary>
-        /// <param name="MeshA">Mesh to subtract from.</param>
-        /// <param name="MeshB">Mesh to subtract.</param>
-        /// <returns>Mesh difference between MeshA and MeshB.</returns>
-        public static Mesh Carve(Mesh MeshA, Mesh MeshB, CarveSharp.CarveSharp.CSGOperations Operation)
-        {
-            if (MeshA == null || MeshB == null) return null;
-            MeshA.Weld(3.14);
-            MeshB.Weld(3.14);
-
-            //MeshA.Faces.ConvertQuadsToTriangles();
-            //MeshB.Faces.ConvertQuadsToTriangles();
-
-            var cmA = MeshA.MeshToCarve();
-            var cmB = MeshB.MeshToCarve();
-
-            var tmp = CarveSharp.CarveSharp.PerformCSG(cmA, cmB, Operation);
-
-            return tmp.CarveToMesh();
-        }
-
-        /// <summary>
-        /// Make boolean difference between a mesh and a 
-        /// collection of meshes using the CarveSharp library.
-        /// </summary>
-        /// <param name="MeshA">Mesh to subtract from.</param>
-        /// <param name="Meshes">Meshes to subtract.</param>
-        /// <returns>Mesh difference.</returns>
-        public static Mesh Carve(Mesh MeshA, IEnumerable<Mesh> Meshes, CarveSharp.CarveSharp.CSGOperations Operation)
-        {
-            MeshA.Weld(3.14);
-            MeshA.Faces.ConvertQuadsToTriangles();
-            var tmp = MeshA.MeshToCarve();
-
-            foreach (Mesh m in Meshes)
-            {
-                if (m == null) continue;
-                m.Weld(3.14);
-                m.Faces.ConvertQuadsToTriangles();
-                var mm = m.MeshToCarve();
-                tmp = CarveSharp.CarveSharp.PerformCSG(tmp, mm, Operation);
-            }
-
-            return tmp.CarveToMesh();
-        }
-
-        /// <summary>
-        /// Make boolean difference between two collections 
-        /// of meshes using the CarveSharp library.
-        /// </summary>
-        /// <param name="MeshesA">Meshes A.</param>
-        /// <param name="MeshesB">Meshes B.</param>
-        /// <param name="Operation">Carve operation to perform.</param>
-        /// <returns>Mesh difference.</returns>
-        public static List<Mesh> Carve(IEnumerable<Mesh> MeshesA, IEnumerable<Mesh> MeshesB, CarveSharp.CarveSharp.CSGOperations Operation)
-        {
-            List<Mesh> OutMeshes = new List<Mesh>();
-            foreach (Mesh mA in MeshesA)
-            {
-                if (mA == null) continue;
-                mA.Weld(3.14);
-                //mA.Faces.ConvertQuadsToTriangles();
-                CarveMesh temp = mA.MeshToCarve();
-
-                foreach (Mesh m in MeshesB)
-                {
-                    if (m == null) continue;
-                    m.Weld(3.14);
-                    //m.Faces.ConvertQuadsToTriangles();
-                    var cm = m.MeshToCarve();
-                    temp = CarveSharp.CarveSharp.PerformCSG(temp, cm, Operation);
-                }
-
-                if (temp != null)
-                    OutMeshes.Add(temp.CarveToMesh());
-            }
-            return OutMeshes;
-        }
-
-        #endregion
     }
 
     public class Gradient
@@ -1925,8 +1687,11 @@ namespace tas.Core
             if (index == 0) return Colors[0];
             if (index > Colors.Count - 1) return Colors.Last();
 
-            double tt = (t - Stops[index - 1]) / (Stops[index] - Stops[index - 1]);
-            return Util.Interpolation.Lerp(Colors[index - 1], Colors[index], tt);
+            double tt = Util.Interpolation.Lerp(Stops[index - 1], Stops[index], t);
+            return Color.FromArgb(
+                Util.Interpolation.Lerp(Colors[index - 1].R, Colors[index].R, tt),
+                Util.Interpolation.Lerp(Colors[index - 1].G, Colors[index].G, tt),
+                Util.Interpolation.Lerp(Colors[index - 1].B, Colors[index].B, tt));
         }
     }
 

@@ -11,6 +11,7 @@ using tas.Core.Types;
 using tas.Core.GH;
 using Grasshopper;
 using Grasshopper.Kernel.Data;
+using tas.Core.Util;
 
 namespace tas.Machine.GH
 {
@@ -212,7 +213,7 @@ namespace tas.Machine.GH
                 d2 = pi[i].DistanceTo(p2.Origin);
                 t = d1 / (d1 + d2);
 
-                planes.Add(Util.Interpolation.InterpolatePlanes2(p1, p2, t));
+                planes.Add(Interpolation.InterpolatePlanes2(p1, p2, t));
             }
 
             return planes;

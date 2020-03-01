@@ -9,6 +9,7 @@ using tas.Core;
 using tas.Core.Types;
 using tas.Core.GH;
 using Grasshopper.Kernel.Types;
+using tas.Core.Util;
 
 namespace tas.Machine.GH.Toolpaths
 {
@@ -52,9 +53,9 @@ namespace tas.Machine.GH.Toolpaths
             for (int i = 0; i < iObjs.Count; ++i)
             {
                 if (iObjs[i] is Curve)
-                    ppolys.Add((PPolyline)Util.CurveToPolyline(iObjs[i] as Curve, 1.0));
+                    ppolys.Add((PPolyline)Misc.CurveToPolyline(iObjs[i] as Curve, 1.0));
                 else if (iObjs[i] is GH_Curve)
-                    ppolys.Add((PPolyline)Util.CurveToPolyline((iObjs[i] as GH_Curve).Value, 1.0));
+                    ppolys.Add((PPolyline)Misc.CurveToPolyline((iObjs[i] as GH_Curve).Value, 1.0));
                 else if (iObjs[i] is PPolyline)
                     ppolys.Add(iObjs[i] as PPolyline);
                 else if (iObjs[i] is GH_PPolyline)
@@ -71,7 +72,7 @@ namespace tas.Machine.GH.Toolpaths
             List<PPolyline> ramps = new List<PPolyline>();
             for (int i = 0; i < ppolys.Count; ++i)
             {
-                ramps.Add(Util.CreateRamp(ppolys[i], p, height, length));//, ref debug));
+                ramps.Add(Misc.CreateRamp(ppolys[i], p, height, length));//, ref debug));
             }
 
             DA.SetDataList("PPolyline", ramps.Select(x => new GH_PPolyline(x)));

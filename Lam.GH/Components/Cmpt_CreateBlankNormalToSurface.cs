@@ -76,7 +76,6 @@ namespace tas.Lam.GH
             //double lw = 0, lh = 0;
             double w = 0, h = 0;
             int samples = 0;
-            int flags = 0;
             List<Plane> planes = new List<Plane>();
 
             if (!DA.GetData("Curve", ref crv))
@@ -91,7 +90,7 @@ namespace tas.Lam.GH
             DA.GetData("Samples", ref samples);
             samples = Math.Max(samples, 2);
 
-            Plane[] frames = tas.Core.Util.FramesNormalToSurface(crv, brep);
+            Plane[] frames = tas.Core.Util.Misc.FramesNormalToSurface(crv, brep);
 
             GlulamData data = null;
             if (calculate_data)

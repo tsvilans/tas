@@ -45,7 +45,7 @@ namespace tas.Machine.GH
         {
             ToRob = new Vector3d(p.Origin - Focus);
 
-            ToRobProj = Util.ProjectToPlane(ToRob, p);
+            ToRobProj = ToRob.ProjectToPlane(p);
 
             ToRobProj.Unitize();
             dotx = Vector3d.Multiply(ToRobProj, p.XAxis);

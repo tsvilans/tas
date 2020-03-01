@@ -16,5 +16,5 @@ using Rhino.PlugIns;
 [assembly: ComVisible(false)]
 [assembly: Guid("0234efd9-459b-45ea-a31c-376b17a62706")] // This will also be the Guid of the Rhino plug-in
 
-[assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.1.*")]
 [assembly: AssemblyFileVersion("1.0.0.0")]

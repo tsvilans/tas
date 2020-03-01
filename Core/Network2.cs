@@ -29,7 +29,7 @@ using System.Runtime.Serialization;
 namespace tas.Core.Network
 {
     /// <summary>
-    /// Network v3. using pointers to nodes and edges instead of C-style lists and indices. 
+    /// Network v3. using pointers to nodes and edges instead of lists and indices. 
     /// Vastly simplifies syntax and modifications.
     /// </summary>
     [Serializable]

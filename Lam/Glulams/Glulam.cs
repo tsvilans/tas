@@ -25,6 +25,8 @@ using System.Threading.Tasks;
 
 using Rhino.Geometry;
 using tas.Core;
+using tas.Core.Util;
+
 using Rhino.Collections;
 
 namespace tas.Lam
@@ -216,7 +218,7 @@ namespace tas.Lam
         /// <returns>New Glulam oriented to the brep.</returns>
         static public Glulam CreateGlulamNormalToSurface(Curve curve, Brep brep, int num_samples = 20, GlulamData data = null)
         {
-            Plane[] frames = tas.Core.Util.FramesNormalToSurface(curve, brep, num_samples);
+            Plane[] frames = tas.Core.Util.Misc.FramesNormalToSurface(curve, brep, num_samples);
             return Glulam.CreateGlulam(curve, frames, data);
         }
 
@@ -507,7 +509,7 @@ namespace tas.Lam
 
                 g[longer].Centreline.LengthParameter(tl, out t2);
                 //g[longer].Centreline.ClosestPoint(g[shorter].Centreline.PointAt(t[i]), out t2);
-                Plane p = Util.Interpolation.InterpolatePlanes2(g[shorter].GetPlane(t[i]), g[longer].GetPlane(t2), 0.5);
+                Plane p = Interpolation.InterpolatePlanes2(g[shorter].GetPlane(t[i]), g[longer].GetPlane(t2), 0.5);
 
                 edge_pts[0].Add(p.Origin + p.YAxis * extension);
                 edge_pts[1].Add(p.Origin - p.YAxis * extension);
@@ -1202,7 +1204,7 @@ namespace tas.Lam
 
         public Brep GetEndSurface(int side, double offset, double extra_width, double extra_height, bool flip = false)
         {
-            side = Util.Modulus(side, 2);
+            side = side.Modulus(2);
             Plane endPlane = GetPlane(side == 0 ? Centreline.Domain.Min : Centreline.Domain.Max);
 
             if ((flip && side == 1) || (!flip && side == 0))
@@ -1217,7 +1219,7 @@ namespace tas.Lam
             return Brep.CreateFromCornerPoints(rec.Corner(0), rec.Corner(1), rec.Corner(2), rec.Corner(3), Tolerance);
         }
 
-        public Brep GetGlulamFace(tas.Core.Side side)
+        public Brep GetGlulamFace(tas.Core.Util.Side side)
         {
             Plane[] planes;
             double[] t;
@@ -1289,7 +1291,7 @@ namespace tas.Lam
         {
             // TODO: Create access for Glulam ends, with offset (either straight or along Centreline).
 
-            side = Util.Modulus(side, 2);
+            side = side.Modulus(2);
             double w2 = width / 2;
 
             Curve c = Centreline.DuplicateCurve();

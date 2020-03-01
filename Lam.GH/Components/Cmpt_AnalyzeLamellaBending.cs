@@ -16,7 +16,7 @@ namespace tas.Lam.GH.Components
         List<List<List<double>>> m_k_list = new List<List<List<double>>>();
         List<List<int>> m_color_list = new List<List<int>>();
 
-        tas.Core.Gradient m_grad;
+        tas.Core.Util.Gradient m_grad;
 
         bool m_drawK = false;
         bool m_display_enabled = true;
@@ -38,7 +38,7 @@ namespace tas.Lam.GH.Components
             System.Drawing.Color.FromArgb(255, 128, 0),
             System.Drawing.Color.FromArgb(255, 0, 0)};
 
-                m_grad = new Gradient(stops, colors);
+                m_grad = new tas.Core.Util.Gradient(stops, colors);
             }
         }
 
@@ -116,7 +116,7 @@ namespace tas.Lam.GH.Components
                             CurveListCurrent.Add(pl);
                         }
                         else
-                            CurveListCurrent.Add(tas.Core.Util.CurveToPolyline(c, 0.1));
+                            CurveListCurrent.Add(tas.Core.Util.Misc.CurveToPolyline(c, 0.1));
                     }
                 }
 

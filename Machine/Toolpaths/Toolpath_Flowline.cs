@@ -23,6 +23,7 @@ using System.Linq;
 using Rhino.Geometry;
 
 using tas.Core;
+using tas.Core.Util;
 using tas.Core.Types;
 
 namespace tas.Machine.Toolpaths
@@ -66,7 +67,7 @@ namespace tas.Machine.Toolpaths
             for (int i = 0; i < Uts.Length; ++i)
             {
                 Curve Iso = DriveSurface.IsoCurve(V, Uts[i]);
-                Polyline Pl = Util.CurveToPolyline(Iso, Tolerance);
+                Polyline Pl = Misc.CurveToPolyline(Iso, Tolerance);
                 PPolyline OPl = new PPolyline();
                 Vector3d nor, tan, x;
 

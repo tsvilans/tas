@@ -26,7 +26,7 @@ namespace tas.Lam.Features
             m_length = length;
             m_incline = incline;
             m_extension = extension;
-            m_end = tas.Core.Util.Modulus(end, 2) == 0;
+            m_end = end.Modulus(2) == 0;
 
         }
 

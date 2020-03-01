@@ -37,6 +37,8 @@ namespace tas.Machine.Toolpaths
 {
     public class Toolpath_AreaClearance : ToolpathStrategy
     {
+        private int LOOP_LIMIT = 500;
+
         // stock to leave
         public double RestHorizontal;
         public double RestVertical;
@@ -162,7 +164,7 @@ namespace tas.Machine.Toolpaths
                     }
                     counter++;
                 }
-                while (tree.Total > 0 && counter < 500);
+                while (tree.Total > 0 && counter < LOOP_LIMIT);
 
                 ResultPaths.AddRange(Output);
             }
@@ -342,7 +344,7 @@ namespace tas.Machine.Toolpaths
                     List<Point3d> points = new List<Point3d>();
                     foreach (Point3d p in poly)
                     {
-                        points.Add(Util.ProjectToPlane(p, Workplane));
+                        points.Add(p.ProjectToPlane(Workplane));
                     }
                     Islands.Add(new ACIsland(new Polyline(points)));
                 }

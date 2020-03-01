@@ -8,6 +8,7 @@ using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 using tas.Core;
+using tas.Core.Util;
 using tas.Machine;
 using tas.Machine.GH;
 
@@ -75,7 +76,7 @@ namespace tas.Projects.DMI.GH
                     double tNext = m_times[index];
                     double t = (tSearch - tPrev) / (tNext - tPrev);
 
-                    target = Util.Interpolation.InterpolatePlanes2(m_wp[index - 1].Plane, m_wp[index].Plane, t);
+                    target = Interpolation.InterpolatePlanes2(m_wp[index - 1].Plane, m_wp[index].Plane, t);
                 }
 
                 //----------------------
