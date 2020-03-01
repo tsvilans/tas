@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Assemblies\Assembly_Basic.cs" />
     <Compile Include="Assemblies\Assembly_Bifurcating.cs" />
     <Compile Include="Assemblies\Assembly_Branching.cs" />

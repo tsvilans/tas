@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tas.Lam.GH</RootNamespace>
-    <AssemblyName>tasTools.Lam.GH</AssemblyName>
+    <AssemblyName>tas.Lam.GH</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -43,6 +43,9 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Components\Cmpt_AnalyzeFibreCuttingAngle.cs" />
     <Compile Include="Components\Cmpt_AnalyzeDirectRain.cs" />
     <Compile Include="Components\Cmpt_AnalyzeRibbonEdges.cs" />
@@ -181,8 +184,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
-Erase "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>::Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
+::Erase "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>

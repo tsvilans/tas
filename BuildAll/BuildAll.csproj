@@ -45,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -55,18 +58,25 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>cd $(TargetDir)
+:: Delete unnecessary side files
 del *.pdb
 del *.config
 del *.manifest
 del *.vshost.exe
 del *.vshost.exe.manifest
-copy $(TargetDir)tas.Core.GH.dll $(TargetDir)Core.GH.gha
-del tas.Core.GH.dll
 del Rhino.UI.dll
 del RhinoCommon.dll
 del Grasshopper.dll
 del GH_IO.dll
-del Eto.dll</PostBuildEvent>
+del Eto.dll
+:: Rename GH DLLs to GHA
+copy $(TargetDir)tas.Core.GH.dll $(TargetDir)Core.GH.gha
+del tas.Core.GH.dll
+copy $(TargetDir)tas.Machine.GH.dll $(TargetDir)Machine.GH.gha
+del tas.Machine.GH.dll
+copy $(TargetDir)tas.Lam.GH.dll $(TargetDir)Lam.GH.gha
+del tas.Lam.GH.dll
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

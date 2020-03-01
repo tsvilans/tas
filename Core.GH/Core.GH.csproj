@@ -43,6 +43,9 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Components\Cmpt_Bitmask.cs" />
     <Compile Include="Components\Cmpt_ReversePPolyline.cs" />
     <Compile Include="Components\Cmpt_MergePPolyline.cs" />
