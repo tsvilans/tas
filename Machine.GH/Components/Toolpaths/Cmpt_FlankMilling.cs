@@ -50,9 +50,11 @@ namespace tas.Machine.GH.Toolpaths
 
             if (m_brep == null) return;
 
+            // Find the UV direction
             int D = (m_side & (1 << 0)) > 0 ? 1 : 0;
             int nD = (m_side & (1 << 0)) > 0 ? 0 : 1;
 
+            // Find out if we are on the opposite edges
             int S = (m_side & (1 << 1)) > 0 ? 1 : 0;
             int nS = (m_side & (1 << 1)) > 0 ? 0 : 1;
 
@@ -67,7 +69,6 @@ namespace tas.Machine.GH.Toolpaths
 
             // Get appropriate surface edge
             Curve flank_edge = m_brep.Faces[0].IsoCurve(D, m_brep.Faces[0].Domain(nD)[S]);
-
 
 
             // Discretize flank edge using angle and length tolerances
@@ -110,9 +111,7 @@ namespace tas.Machine.GH.Toolpaths
             List<PPolyline> paths = new List<PPolyline>();
 
             // Declare variables for Brep closest point calculation
-            ComponentIndex ci;
-            Point3d cpt;
-            double s, t;
+            double u, v;
             Vector3d normal;
 
             // Create paths for each pass
@@ -122,7 +121,8 @@ namespace tas.Machine.GH.Toolpaths
                 for (int j = 0; j < N; ++j)
                 {
                     // Find closest normal
-                    m_brep.ClosestPoint(flank_pts[j], out cpt, out ci, out s, out t, 3.0, out normal);
+                    face.ClosestPoint(flank_pts[j], out u, out v);
+                    normal = face.NormalAt(u, v);
 
                     // Calculate pass depth
                     double depth = Math.Min(m_max_depth, 
