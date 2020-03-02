@@ -371,16 +371,17 @@ namespace tas.Lam
 
             GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
 
-            double hwidth = Width() / 2 + offset;
-            double hheight = Height() / 2 + offset;
+            //double hwidth = Width() / 2 + offset;
+            //double hheight = Height() / 2 + offset;
 
             int numCorners = 4;
+            //if (m_section_corners == null || offset > 0.0)
+            GenerateCorners(offset);
 
-            Point3d[] corners = new Point3d[numCorners];
-            corners[0] = new Point3d(-hwidth, hheight, 0);
-            corners[1] = new Point3d(hwidth, hheight, 0);
-            corners[2] = new Point3d(hwidth, -hheight, 0);
-            corners[3] = new Point3d(-hwidth, -hheight, 0);
+            //corners[0] = new Point3d(-hwidth, hheight, 0);
+            //corners[1] = new Point3d(hwidth, hheight, 0);
+            //corners[2] = new Point3d(hwidth, -hheight, 0);
+            //corners[3] = new Point3d(-hwidth, -hheight, 0);
 
             List<Point3d>[] crvPts = new List<Point3d>[numCorners];
             for (int i = 0; i < numCorners; ++i)
@@ -398,7 +399,7 @@ namespace tas.Lam
 
                 for (int j = 0; j < numCorners; ++j)
                 {
-                    temp = new Point3d(corners[j]);
+                    temp = new Point3d(m_section_corners[j]);
                     temp.Transform(xform);
                     crvPts[j].Add(temp);
                 }

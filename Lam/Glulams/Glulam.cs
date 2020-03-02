@@ -541,6 +541,9 @@ namespace tas.Lam
         public Curve Centreline { get; protected set;}
         public GlulamData Data;
 
+        // Protected
+        protected Point3d[] m_section_corners = null; // Cached section corners
+
         protected Glulam()
         {
             ID = Guid.NewGuid();
@@ -1337,6 +1340,67 @@ namespace tas.Lam
             return brep;
         }
 
+        public Point3d[] GenerateCorners(double offset = 0.0)
+        {
+
+
+            double x = Width();
+            double y = Height();
+
+            double x0 = 0, x1 = x, y0 = 0, y1 = y;
+            double hx = x / 2, hy = y / 2;
+
+            int numCorners = 4;
+
+            m_section_corners = new Point3d[numCorners];
+
+            switch (Data.SectionAlignment)
+            {
+                case (GlulamData.CrossSectionPosition.MiddleCentre):
+                    x0 -= hx; y0 -= hy; x1 -= hx; y1 -= hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopLeft):
+                    y0 -= y; y1 -= y;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopCentre):
+                    x0 -= hx; y0 -= y; x1 -= hx; y1 -= y;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopRight):
+                    x0 -= x; y0 -= y; x1 -= x; y1 -= y;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.MiddleLeft):
+                    y0 -= hy; y1 -= hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.MiddleRight):
+                    x0 -= x; y0 -= hy; x1 -= x; y1 -= hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomLeft):
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomCentre):
+                    x0 -= hx; x1 -= hx; 
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomRight):
+                    x0 -= x; x1 -= x; 
+                    break;
+            }
+
+
+            m_section_corners[0] = new Point3d(x0 - offset, y1 + offset, 0);
+            m_section_corners[1] = new Point3d(x1 + offset, y1 + offset, 0);
+            m_section_corners[2] = new Point3d(x1 + offset, y0 - offset, 0);
+            m_section_corners[3] = new Point3d(x0 - offset, y0 - offset, 0);
+
+            return m_section_corners;
+        }
+
         /*
                 public byte[] ToByteArray()
                 {
@@ -1445,6 +1509,19 @@ namespace tas.Lam
             CUBIC = 2
         }
 
+        public enum CrossSectionPosition
+        {
+            TopLeft,
+            TopCentre,
+            TopRight,
+            MiddleLeft,
+            MiddleCentre,
+            MiddleRight,
+            BottomLeft,
+            BottomCentre,
+            BottomRight
+        }
+
         public static double DefaultWidth = 80.0;
         public static double DefaultHeight = 80.0;
         public static double DefaultSampleDistance = 50.0;
@@ -1454,17 +1531,20 @@ namespace tas.Lam
         public double LamWidth, LamHeight;
         public int Samples;
         public Interpolation InterpolationType = Interpolation.LINEAR;
+        public CrossSectionPosition SectionAlignment;
+
 
         public static GlulamData Default
         { get { return new GlulamData(); } }
 
-        public GlulamData(int num_width = 4, int num_height = 4, double lam_width = 20.0, double lam_height = 20.0, int samples = 50)
+        public GlulamData(int num_width = 4, int num_height = 4, double lam_width = 20.0, double lam_height = 20.0, int samples = 50, CrossSectionPosition alignment = CrossSectionPosition.MiddleCentre)
         {
             NumWidth = num_width;
             NumHeight = num_height;
             LamWidth = lam_width;
             LamHeight = lam_height;
             Samples = samples;
+            SectionAlignment = alignment;
         }
 
         /// <summary>
