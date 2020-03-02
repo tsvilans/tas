@@ -1,10 +1,10 @@
-# tas
-A .NET personal toolkit for research and exploration. Uses RhinoCommon for geometric types and provides an interface through Grasshopper components.
+# tas 1.1
+A personal toolkit for research and exploration. Uses RhinoCommon for geometric types and provides an interface through Grasshopper components.
 
 # License
 
 ```
-Copyright 2016-2018 Tom Svilans
+Copyright 2016-2020 Tom Svilans
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,27 +19,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-To re-iterate the above, this code is at risk of random refactoring, modification, overhaul, and general breakage at any given moment in time. It will liberally introduce new dependencies with little documentation, or perform unexpectedly. If it works for you, save it and back it up. This is a personal toolkit and code diary for on-going research, exploration, learning, and other such nonsense, and as such is a pretty raw reflection of my state-of-mind. Use at own risk. 
+Current version: 1.1
 
 # Modules
 
-The toolkit is divided into some separate modules, some of which heavily depend on one-another.
-
 ## Core
 
-This contains class extensions and utility functions which I find myself using over and over again. It defines some new types and extends loads of other ones, and also provides interfaces for converting between some types and others. The GH extended version provides some wrapper classes and components for the Grasshopper plug-in.
+The Core module contains Types, Extension Methods, and Utility classes. Types include a Polyline that uses planes instead of points as vertices (oriented polyline), a Pose which is a position and orientation with a fitness value, and a couple of Network implementations for facilitating graph-based workflows. Extension Methods provide extra methods for RhinoCommon types (Polyline, Vector3d, Point3d, Plane, Mesh, Brep, Curve, etc.). Utility classes provide some new functionality that doesn't quite fit into the extension methods.
+
+The GH extended version provides some wrapper classes and components for the Grasshopper plug-in.
 
 ## Lam
 
-An ecology of classes and types developed for my PhD research into free-form timber and its production. Documentation may one day appear. The GH extension for this provides loads of new Grasshopper components for modelling and analyzing free-form glulam members. Not all of them work as expected; some of them might be broken, I haven't checked recently.
+The Lam module contains classes and types developed for my PhD research into free-form timber structures. The Glulam class allows the definition of straight, single-curved, and double-curved glulam beams; generating their geometry; analyzing curvature and bending limits; calculating required lamella composition; and more. The Workpiece class and Feature class extend the Glulam model into the fabrication of joints.
+
+Once again, the GH extension for this provides new Grasshopper components for modelling and analyzing free-form glulam members. 
 
 ## Machine
 
-A bunch of classes and types to assist with toolpath generation and processing. These are self-rolled imitations of common toolpath strategies (area clearance, pocket, flowline, etc.). These were developed out of necessity, for lack of available toolpath generation tools at the time. They have been a great learning tool and can no doubt be improved. Again, the GH extension provides some new Grasshopper components for generating and modifying toolpaths. There is some initial support for post-processors for some specific machines. This development is on-going and is an in-progress refactor of existing stuff that was used to translate paths into machine code. 
+The Machine module contains classes and types for toolpath generation and CNC machining. Many of these are self-rolled imitations of common toolpath strategies (area clearance, pocket, flowline, etc.) and are mostly experimental. 
+
+Again, the GH extension provides some new Grasshopper components for generating and modifying toolpaths. There is some initial support for post-processors for some specific machines such as the Haas TM-3 3-axis vertical mills and the CMS Antares 5-axis wood processing centre.
 
 ## Fun
 
-This is where some tangential experimentation and learning happens. This module contains implementations of various algorithms that I have come across and have used for certain things. This is a way to document them, keep them around, and try to flesh them out as more generic tools for future use. These include basic pseudo-implementations of Simulated Annealing, K-Means clustering, and Metropolis-Hastings.
+The Fun module contains implementations of algorithms and other experimental work that is highly volatile and unstable. This is meant as a place to store developing ideas and experiments that don't yet have a home in the other modules. These include basic implementations of Simulated Annealing, K-Means clustering, and Metropolis-Hastings; as well as a tentative next version of the Glulam model.
 
 # Acknowledgements
 
@@ -54,7 +58,5 @@ This project uses the following libraries:
 - [Carve](https://github.com/VTREEM/Carve) through the [Carverino](https://github.com/tsvilans/carverino) wrapper.
 
 # Contact
-
-tsvi@kadk.dk
 
 http://tomsvilans.com
