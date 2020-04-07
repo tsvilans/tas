@@ -10,9 +10,9 @@ namespace tas.Lam.GH.Components
     {
 
         public Cmpt_GlulamBisector()
-          : base("Cmpt_GlulamBisector", "Nickname",
+          : base("Glulam Bisector", "GBi",
               "Description",
-              "Category", "Subcategory")
+              "tasLam", "Modify")
         {
         }
 

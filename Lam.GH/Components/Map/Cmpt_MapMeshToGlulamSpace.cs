@@ -29,24 +29,24 @@ using System.Linq;
 
 namespace tas.Lam.GH
 {
-    public class Cmpt_MapPlanesToGlulamSpace : GH_Component
+    public class Cmpt_MapMeshToGlulamSpace : GH_Component
     {
-        public Cmpt_MapPlanesToGlulamSpace()
-          : base("Map Planes To Glulam Space", "MapPl2Glulam",
-              "Maps planes to free-form Glulam space.",
-              "tasLam", "Modify")
+        public Cmpt_MapMeshToGlulamSpace()
+          : base("Map Mesh To Glulam Space", "MapMe2Glulam",
+              "Maps mesh to free-form Glulam space.",
+              "tasLam", "Map")
         {
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Glulam", "G", "Glulam to map to.", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Planes", "P", "Planes to map. ", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Mesh", "M", "Mesh to map.", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddPlaneParameter("Planes", "P", "Mapped planes.", GH_ParamAccess.list);
+            pManager.AddMeshParameter("Mesh", "M", "Mapped mesh.", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -72,32 +72,17 @@ namespace tas.Lam.GH
                 return;
             }
 
-            List<Plane> m_input_planes = new List<Plane>();
+            Mesh m_mesh = null;
 
-            if (!DA.GetDataList("Planes", m_input_planes))
+            if (!DA.GetData("Mesh", ref m_mesh))
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No input points specified.");
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No input mesh specified.");
                 return;
             }
 
-            Plane[] m_output_planes = new Plane[m_input_planes.Count];
+            Mesh m_new_mesh = g.MapToCurveSpace(m_mesh);
 
-            Plane m_plane;
-            Plane m_temp;
-            double t;
-
-            for (int i = 0; i < m_input_planes.Count; ++i)
-            {
-                g.Centreline.ClosestPoint(m_input_planes[i].Origin, out t);
-                m_plane = g.GetPlane(t);
-                m_temp = m_input_planes[i];
-                m_temp.Transform(Transform.PlaneToPlane(m_plane, Plane.WorldXY));
-                m_temp.OriginZ = g.Centreline.GetLength(new Interval(g.Centreline.Domain.Min, t));
-
-                m_output_planes[i] = m_temp;
-            }
-
-            DA.SetDataList("Planes", m_output_planes);
+            DA.SetData("Mesh", m_new_mesh);
         }
 
         protected override System.Drawing.Bitmap Icon
@@ -110,7 +95,7 @@ namespace tas.Lam.GH
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("{e5abbe1d-009d-4963-a31f-46492130921a}"); }
+            get { return new Guid("{e008c016-a5b8-4d23-b55a-5603cde4132b}"); }
         }
     }
 }

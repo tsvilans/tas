@@ -15,7 +15,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_GetPlane()
           : base("Get Glulam Plane", "GPlane",
               "Get Glulam cross-section plane closest to point.",
-              "tasLam", "Modify")
+              "tasLam", "Map")
         {
         }
 

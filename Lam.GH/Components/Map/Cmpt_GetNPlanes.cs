@@ -29,24 +29,24 @@ using System.Linq;
 
 namespace tas.Lam.GH
 {
-    public class Cmpt_MapMeshToGlulamSpace : GH_Component
+    public class Cmpt_GetNPlanes : GH_Component
     {
-        public Cmpt_MapMeshToGlulamSpace()
-          : base("Map Mesh To Glulam Space", "MapMe2Glulam",
-              "Maps mesh to free-form Glulam space.",
-              "tasLam", "Modify")
+        public Cmpt_GetNPlanes()
+          : base("Get N Planes", "GetNPlanes",
+              "Gets cross-sectional planes at N points along a Glulam object.",
+              "tasLam", "Map")
         {
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Glulam", "G", "Glulam to map to.", GH_ParamAccess.item);
-            pManager.AddMeshParameter("Mesh", "M", "Mesh to map.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Glulam", "G", "Input glulam blank to deconstruct.", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("Number", "N", "Number of equally-spaced planes to extract.", GH_ParamAccess.item, 10);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddMeshParameter("Mesh", "M", "Mapped mesh.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Planes", "P", "Extracted Glulam planes.", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -58,6 +58,12 @@ namespace tas.Lam.GH
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No glulam blank connected.");
                 return;
             }
+
+            int N = 10;
+
+            DA.GetData("Number", ref N);
+
+            if (N < 2) N = 2;
 
             Glulam g;
 
@@ -72,17 +78,11 @@ namespace tas.Lam.GH
                 return;
             }
 
-            Mesh m_mesh = null;
+            double[] tt = g.Centreline.DivideByCount(N, true);
 
-            if (!DA.GetData("Mesh", ref m_mesh))
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No input mesh specified.");
-                return;
-            }
+            Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
 
-            Mesh m_new_mesh = g.MapToCurveSpace(m_mesh);
-
-            DA.SetData("Mesh", m_new_mesh);
+            DA.SetDataList("Planes", planes);
         }
 
         protected override System.Drawing.Bitmap Icon
@@ -95,7 +95,7 @@ namespace tas.Lam.GH
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("{e008c016-a5b8-4d23-b55a-5603cde4132b}"); }
+            get { return new Guid("{2509a517-3111-46cf-afeb-a13c40b6a5bf}"); }
         }
     }
 }
