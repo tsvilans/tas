@@ -56,15 +56,23 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Core.csproj">
       <Private>False</Private>
+      <Project>{0AB66830-7875-4C0A-B6EA-A2239C01FBC0}</Project>
+      <Name>Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Core.GH\Core.GH.csproj">
       <Private>False</Private>
+      <Project>{AB10B25C-FF58-412F-9981-24A07C0F2ACE}</Project>
+      <Name>Core.GH</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Machine.GH\Machine.GH.csproj">
       <Private>False</Private>
+      <Project>{0234EFD9-459B-45EA-A31C-376B17A62706}</Project>
+      <Name>Machine.GH</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Machine\Machine.csproj">
       <Private>False</Private>
+      <Project>{F6F874F8-7803-4386-A83A-3C5D06FE3ACC}</Project>
+      <Name>Machine</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

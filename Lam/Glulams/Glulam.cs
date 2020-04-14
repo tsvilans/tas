@@ -1531,7 +1531,7 @@ namespace tas.Lam
         public double LamWidth, LamHeight;
         public int Samples;
         public Interpolation InterpolationType = Interpolation.LINEAR;
-        public CrossSectionPosition SectionAlignment;
+        public CrossSectionPosition SectionAlignment = CrossSectionPosition.MiddleCentre;
 
 
         public static GlulamData Default
