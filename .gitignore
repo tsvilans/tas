@@ -2,6 +2,7 @@
 # Build files
 .vs
 BuildAll/obj/
+Abaqus/obj/
 Core.GH/obj/
 Core/obj/
 Fun/obj/
@@ -10,10 +11,12 @@ Lam/obj/
 Machine.GH.Extended/obj/
 Machine.GH/obj/
 Machine/obj/
+tasSpeckle/obj/
 Projects/Kelowna/obj/
 Projects/DMI/obj/
 *.pdb
 bin/
+include_extended/Triangle.NET
 
 # Packages
 packages/

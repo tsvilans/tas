@@ -50,6 +50,8 @@
     <Compile Include="Components\Analyze\Cmpt_AnalyzeDirectRain.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeRibbonEdges.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeLamellaBending.cs" />
+    <Compile Include="Components\Analyze\Cmpt_DeLam2.cs" />
+    <Compile Include="Components\Create 2.0\Cmpt_CreateGlulam.cs" />
     <Compile Include="Components\Create\Cmpt_BasicAssembly.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankFromBeam.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankNormalToSurface.cs" />

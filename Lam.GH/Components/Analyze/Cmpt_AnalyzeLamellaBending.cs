@@ -4,6 +4,7 @@ using System.Linq;
 using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using Rhino.Display;
 using tas.Core;
 using tas.Lam;
 
@@ -31,12 +32,12 @@ namespace tas.Lam.GH.Components
             if (m_grad == null)
             {
                 List<double> stops = new List<double> { 0.0, 0.25, 0.5, 0.75, 1.0 };
-                List<System.Drawing.Color> colors = new List<System.Drawing.Color>{
-            System.Drawing.Color.FromArgb(0, 255, 0),
-            System.Drawing.Color.FromArgb(128, 255, 0),
-            System.Drawing.Color.FromArgb(255, 255, 0),
-            System.Drawing.Color.FromArgb(255, 128, 0),
-            System.Drawing.Color.FromArgb(255, 0, 0)};
+                List<Color4f> colors = new List<Color4f>{
+                    new Color4f(0, 1.0f, 0, 1.0f),
+                    new Color4f(0.5f, 1.0f, 0, 1.0f),
+                    new Color4f(1.0f, 1.0f, 0, 1.0f),
+                    new Color4f(1.0f, 0.5f, 0, 1.0f),
+                    new Color4f(1.0f, 0.0f, 0, 1.0f)};
 
                 m_grad = new tas.Core.Util.Gradient(stops, colors);
             }
@@ -200,7 +201,6 @@ namespace tas.Lam.GH.Components
         {
             if (m_display_enabled)
             {
-
                 for (int i = 0; i < m_curve_list.Count; ++i)
                 {
                     for (int j = 0; j < m_curve_list[i].Count; ++j)
@@ -210,7 +210,7 @@ namespace tas.Lam.GH.Components
                             double c = Math.Min(1.0, (m_k_list[i][j][k] / m_maxk_list[i]));
                             if (m_drawK) c = m_k_list[i][j][k] > m_maxk_list[i] ? 1.0 : 0.0;
 
-                            args.Display.DrawLine(new Line(m_curve_list[i][j][k], m_curve_list[i][j][k + 1]), m_grad.GetColor(c), 1);
+                            args.Display.DrawLine(m_curve_list[i][j][k], m_curve_list[i][j][k + 1], m_grad.GetColor(c), 1);
                         }
                     }
                 }

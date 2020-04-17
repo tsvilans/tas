@@ -58,8 +58,13 @@
     <Compile Include="Features\Feature_CrossJoint.cs" />
     <Compile Include="Glulams\DoubleCurvedGlulam.cs" />
     <Compile Include="Glulams\FreeformGlulam.cs" />
-    <Compile Include="Glulams\Glulam.cs" />
+    <Compile Include="Glulams\GlulamBase\Glulam.cs" />
+    <Compile Include="Glulams\GlulamBase\Glulam_Xtors.cs" />
+    <Compile Include="Glulams\GlulamData.cs" />
     <Compile Include="Glulams\GlulamFactory.cs" />
+    <Compile Include="Glulams\GlulamOrientation.cs" />
+    <Compile Include="Glulams\GlulamBase\Glulam_GeometryFunctions.cs" />
+    <Compile Include="Glulams\GlulamBase\Glulam_GetFunctions.cs" />
     <Compile Include="Glulams\SingleCurvedGlulam.cs" />
     <Compile Include="Glulams\Stick.cs" />
     <Compile Include="Glulams\StraightGlulam.cs" />

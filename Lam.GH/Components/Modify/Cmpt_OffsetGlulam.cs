@@ -62,10 +62,13 @@ namespace tas.Lam.GH
             Glulam g = ghg.Value;
 
             Curve crv = g.CreateOffsetCurve(x, y);
-            GlulamData data = GlulamData.FromCurveLimits(crv,g.Data.NumWidth * g.Data.LamWidth, g.Data.NumHeight * g.Data.LamHeight, g.GetAllPlanes());
-            data.Samples = g.Data.Samples;
 
-            Glulam g2 = Glulam.CreateGlulam(crv, g.GetAllPlanes(), data);
+
+           // GlulamData data = GlulamData.FromCurveLimits(crv,g.Data.NumWidth * g.Data.LamWidth, g.Data.NumHeight * g.Data.LamHeight, g.GetAllPlanes());
+
+            //data.Samples = g.Data.Samples;
+
+            Glulam g2 = Glulam.CreateGlulam(crv, g.Orientation.Duplicate(), g.Data.Duplicate());
 
             DA.SetData("Glulam", new GH.GH_Glulam(g2));
         }

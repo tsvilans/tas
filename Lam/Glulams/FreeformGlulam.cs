@@ -31,11 +31,17 @@ namespace tas.Lam
 {
     public abstract class FreeformGlulam : Glulam
     {
+        /// <summary>
+        /// Generate a series of planes on the glulam cross-section. TODO: Re-implement as GlulamOrientation function
+        /// </summary>
+        /// <param name="N">Number of planes to extract.</param>
+        /// <param name="extension">Extension of the centreline curve</param>
+        /// <param name="planes">Output cross-section planes.</param>
+        /// <param name="t">Output t-values along centreline curve.</param>
+        /// <param name="interpolation">Type of interpolation to use (default is Linear).</param>
         public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             N = Math.Max(N, 2);
-            if (Frames.Count < 3)
-                interpolation = GlulamData.Interpolation.LINEAR;
 
             planes = new Plane[N];
             Curve CL;
@@ -46,6 +52,17 @@ namespace tas.Lam
 
             t = CL.DivideByCount(N - 1, true);
 
+            GlulamOrientation TempOrientation = Orientation.Duplicate();
+            TempOrientation.Remap(Centreline, CL);
+
+            for (int i = 0; i < N; ++i)
+            {
+                Vector3d v = TempOrientation.GetOrientation(CL, t[i]);
+                planes[i] = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(CL.PointAt(t[i]), CL.TangentAt(t[i]), v);
+            }
+
+            return;
+            /*
             double[] ft = new double[Frames.Count];
             double[] fa = new double[Frames.Count];
 
@@ -71,6 +88,9 @@ namespace tas.Lam
             double mu;
 
             double[] angles = new double[N];
+
+            if (Frames.Count < 3)
+                interpolation = GlulamData.Interpolation.LINEAR;
 
             switch (interpolation)
             {
@@ -199,6 +219,7 @@ namespace tas.Lam
                 temp.Transform(Rhino.Geometry.Transform.Rotation(angles[i], temp.ZAxis, temp.Origin));
                 planes[i] = temp;
             }
+            */
         }
 
         public override Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
@@ -209,7 +230,17 @@ namespace tas.Lam
             
             double[] DivParams;
             Plane[] xPlanes;
-            GenerateCrossSectionPlanes(Data.Samples, offset, out xPlanes, out DivParams, interpolation);
+            // Old way of generating cross-section planes
+            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
+
+            // Experimental new way of generative cross-section planes
+            int N = Math.Max(Data.Samples, 2);
+            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
+
+            xPlanes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAt(x),
+                Centreline.TangentAt(x),
+                Orientation.GetOrientation(Centreline, x))).ToArray();
 
             //double Step = (Centreline.Domain.Max - Centreline.Domain.Min) / Samples;
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
@@ -220,7 +251,7 @@ namespace tas.Lam
             int ii4;
 
             double Length = Centreline.GetLength() + offset * 2;
-            double MaxT = DivParams.Last() - DivParams.First();
+            double MaxT = parameters.Last() - parameters.First();
             double Width = Data.NumWidth * Data.LamWidth / 1000;
             double Height = Data.NumHeight * Data.LamHeight / 1000;
 
@@ -241,7 +272,7 @@ namespace tas.Lam
                 }
 
                 //double DivV = DivParams[i] / MaxT;
-                double DivV = DivParams[i] / MaxT * Length / 1000;
+                double DivV = parameters[i] / MaxT * Length / 1000;
                 m.TextureCoordinates.Add(2 * Width + 2 * Height, DivV);
                 m.TextureCoordinates.Add(0.0, DivV);
 
@@ -321,7 +352,7 @@ namespace tas.Lam
               m.Vertices.Count - 3,
               m.Vertices.Count - 4);
             //m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
-            m.UserDictionary.Set("glulam", GetArchivableDictionary());
+            //m.UserDictionary.Set("glulam", GetArchivableDictionary());
 
             return m;
         }
@@ -366,10 +397,21 @@ namespace tas.Lam
 
         public override Brep GetBoundingBrep(double offset = 0.0)
         {
-            double[] t;
+            //double[] t;
             Plane[] planes;
 
-            GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
+            // Old way of generating cross-section planes
+            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
+
+            // Experimental new way of generative cross-section planes
+            int N = Math.Max(Data.Samples, 2);
+            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
+
+            planes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAt(x),
+                Centreline.TangentAt(x),
+                Orientation.GetOrientation(Centreline, x))).ToArray();
+
 
             //double hwidth = Width() / 2 + offset;
             //double hheight = Height() / 2 + offset;
@@ -441,7 +483,7 @@ namespace tas.Lam
               Tolerance
               )[0];
 
-            brep.UserDictionary.Set("glulam", GetArchivableDictionary());
+            //brep.UserDictionary.Set("glulam", GetArchivableDictionary());
 
             return brep;
         }
@@ -497,18 +539,80 @@ namespace tas.Lam
         public override List<Curve> GetLamellaCurves()
         {
             double[] DivParams;
-            Plane[] xPlanes;
-            GenerateCrossSectionPlanes(Data.Samples, 0, out xPlanes, out DivParams, Data.InterpolationType);
+            Plane[] planes;
+            //GenerateCrossSectionPlanes(Data.Samples, 0, out xPlanes, out DivParams, Data.InterpolationType);
 
-            List<Rhino.Geometry.Curve> crvs = new List<Rhino.Geometry.Curve>();
+            // Old way of generating cross-section planes
+            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
+
+            // Experimental new way of generative cross-section planes
+            int N = Math.Max(Data.Samples, 2);
+            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
+
+            planes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAt(x),
+                Centreline.TangentAt(x),
+                Orientation.GetOrientation(Centreline, x))).ToArray();
+
+            List<Point3d>[] crvPts = new List<Point3d>[Data.Lamellae.Length];
+            for (int i = 0; i < Data.Lamellae.Length; ++i)
+            {
+                crvPts[i] = new List<Point3d>();
+            }
+
+            // ****************
+
+            Transform xform;
+            Point3d temp;
 
             double hWidth = Data.NumWidth * Data.LamWidth / 2;
             double hHeight = Data.NumHeight * Data.LamHeight / 2;
+            double hLw = Data.LamWidth / 2;
+            double hLh = Data.LamHeight / 2;
+
+            List<Point3d> LamellaPoints = new List<Point3d>();
+
+            for (int x = 0; x < Data.Lamellae.GetLength(0); ++x)
+            {
+                for (int y = 0; y < Data.Lamellae.GetLength(1); ++y)
+                {
+                    LamellaPoints.Add(
+                        new Point3d(
+                            -hWidth + hLw + x * Data.LamWidth,
+                            -hHeight + hLh + y * Data.LamHeight,
+                            0));
+                }
+            }
+
+            for (int i = 0; i < Data.Samples; ++i)
+            {
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes[i]);
+
+                for (int j = 0; j < Data.Lamellae.Length; ++j)
+                {
+                    temp = new Point3d(LamellaPoints[j]);
+                    temp.Transform(xform);
+                    crvPts[j].Add(temp);
+                }
+            }
+
+            Curve[] LamellaCentrelines = new Curve[Data.Lamellae.Length];
+
+            for (int i = 0; i < Data.Lamellae.Length; ++i)
+            {
+                LamellaCentrelines[i] = Curve.CreateInterpolatedCurve(crvPts[i], 3);
+            }
+
+            return LamellaCentrelines.ToList();
+            /*
+
+            List<Rhino.Geometry.Curve> crvs = new List<Rhino.Geometry.Curve>();
+
+
             Rhino.Geometry.Plane plane;
             //Centreline.PerpendicularFrameAt(Centreline.Domain.Min, out plane);
 
-            double hLw = Data.LamWidth / 2;
-            double hLh = Data.LamHeight / 2;
+
 
             List<List<List<Rhino.Geometry.Point3d>>> verts;
 
@@ -522,7 +626,6 @@ namespace tas.Lam
                 }
             }
             double t;
-            Tuple<Plane, Plane, double> faround;
             for (int i = 0; i < xPlanes.Length; ++i)
             {
                 plane = xPlanes[i];
@@ -533,7 +636,10 @@ namespace tas.Lam
                 {
                     for (int k = 0; k < Data.NumWidth; ++k)
                     {
-                        Rhino.Geometry.Point3d p = new Rhino.Geometry.Point3d(k * Data.LamWidth - hWidth + hLw, j * Data.LamHeight - hHeight + hLh, 0.0);
+                        Rhino.Geometry.Point3d p = new Rhino.Geometry.Point3d(
+                            k * Data.LamWidth - hWidth + hLw, 
+                            j * Data.LamHeight - hHeight + hLh, 
+                            0.0);
                         p.Transform(xform);
                         verts[j][k].Add(p);
                     }
@@ -549,11 +655,14 @@ namespace tas.Lam
             }
 
             return crvs;
+            */
         }
 
         public override void Transform(Transform x)
         {
             Centreline.Transform(x);
+            Orientation.Transform(x);
+            /*
             for (int i = 0; i < Frames.Count; ++i)
             {
                 Plane p = Frames[i].Item2;
@@ -561,10 +670,14 @@ namespace tas.Lam
 
                 Frames[i] = new Tuple<double, Plane>(Frames[i].Item1, p);
             }
+            */
         }
 
         public override Plane GetPlane(double t)
         {
+            Vector3d v = Orientation.GetOrientation(Centreline, t);
+            return tas.Core.Util.Misc.PlaneFromNormalAndYAxis(Centreline.PointAt(t), Centreline.TangentAt(t), v);
+            /*
             Tuple<Plane, Plane, double> faround = FramesAround(t);
             Plane plane;
 
@@ -576,8 +689,9 @@ namespace tas.Lam
             plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
 
             return plane;
+            */
         }
-
+        /*
         public override Tuple<Plane, Plane, double> FramesAround(double t)
         {
             if (Frames.Count < 1) return null;
@@ -605,7 +719,7 @@ namespace tas.Lam
             tt = (t - Frames[index - 1].Item1) / (Frames[index].Item1 - Frames[index - 1].Item1);
             return new Tuple<Plane, Plane, double>(Frames[index - 1].Item2, Frames[index].Item2, tt);
         }
-
+        */
         public override Glulam Overbend(double t)
         {
             PolyCurve pc = Centreline.DuplicateCurve() as PolyCurve;
@@ -617,7 +731,7 @@ namespace tas.Lam
 
             FreeformGlulam g = this.Duplicate() as FreeformGlulam;
             g.Centreline = pco;
-            g.RecalculateFrames();
+            //g.RecalculateFrames();
 
             return g;
         }
@@ -644,13 +758,13 @@ namespace tas.Lam
             return max_k;
         }
 
-        public override string ToString()
-        {
-            return "FreeformGlulam";
-        }
+        public override string ToString() => "FreeformGlulam";
+        
 
         public override void ReduceTwist(double factor, bool start_with_first = true)
         {
+            throw new Exception("TODO: Move to GlulamOrientation and refactor.");
+            /*
             if (Frames.Count < 2) return;
 
             if (start_with_first)
@@ -675,6 +789,7 @@ namespace tas.Lam
                     Frames[i] = new Tuple<double, Plane>(t, p);
                 }
             }
+            */
         }
 
         public override Mesh MapToCurveSpace(Mesh m)

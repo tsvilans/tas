@@ -64,7 +64,7 @@ namespace tas.Lam.GH
             DA.GetData("Samples", ref samples);
             DA.GetData("Interpolation", ref interpolation);
 
-            GlulamData data = new GlulamData(nw, nh, lw, lh, samples);
+            GlulamData data = new GlulamData(Math.Max(nw, 1), Math.Max(nh, 1), lw, lh, samples);
             data.InterpolationType = (GlulamData.Interpolation)interpolation;
 
             DA.SetData("GlulamData", new GH_GlulamData(data));

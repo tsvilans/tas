@@ -30,6 +30,13 @@ namespace tas.Lam
 {
     public class StraightGlulam : Glulam
     {
+        public StraightGlulam(Curve curve, GlulamOrientation orientation, GlulamData data) : base()
+        {
+            Data = data.Duplicate();
+            Orientation = orientation;
+            Centreline = curve.DuplicateCurve();
+        }
+
         public StraightGlulam(Curve centreline, Plane[] planes, bool with_twist = false) : base()
         {
             if (planes == null || planes.Length < 1)
@@ -42,18 +49,30 @@ namespace tas.Lam
             if (!centreline.IsLinear(Tolerance)) throw new Exception("StraightGlulam only works with a linear centreline!");
             //Line l = new Line(centreline.PointAtStart, centreline.PointAtEnd);
 
+            List<Vector3d> vectors = new List<Vector3d>();
+            List<double> parameters = new List<double>();
+
             if (with_twist)
             {
-                Frames = new List<Tuple<double, Plane>>();
+                //Frames = new List<Tuple<double, Plane>>();
+
+
                 double t;
                 foreach (var plane in planes)
                 {
                     centreline.ClosestPoint(plane.Origin, out t);
+
+                    parameters.Add(t);
+                    vectors.Add(plane.YAxis);
+                    /*
                     var origin = centreline.PointAt(t);
                     var x_axis = Vector3d.CrossProduct(plane.YAxis, centreline.TangentAt(t));
                     var y_axis = Vector3d.CrossProduct(centreline.TangentAt(t), x_axis);
                     Frames.Add(new Tuple<double, Plane>(t, new Plane(origin, x_axis, y_axis)));
+                    */
                 }
+                Orientation = new VectorListOrientation(centreline, parameters, vectors);
+
             }
             else
             {
@@ -61,11 +80,14 @@ namespace tas.Lam
                 var x_axis = Vector3d.CrossProduct(planes[0].YAxis, centreline.TangentAtStart);
                 var y_axis = Vector3d.CrossProduct(centreline.TangentAtStart, x_axis);
 
-                Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, new Plane(origin, x_axis, y_axis)) };
+
+                //Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, new Plane(origin, x_axis, y_axis)) };
+                Orientation = new VectorOrientation(y_axis);
+
             }
 
             Centreline = centreline;
-            RecalculateFrames();
+            //RecalculateFrames();
         }
 
         public StraightGlulam(Curve centreline) : base()
@@ -73,7 +95,9 @@ namespace tas.Lam
             Centreline = centreline;
             Plane p;
             Centreline.PerpendicularFrameAt(Centreline.Domain.Min, out p);
-            Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, p) };
+            Orientation = new VectorOrientation(Vector3d.ZAxis);
+
+            //Frames = new List<Tuple<double, Plane>>() { new Tuple<double, Plane>(centreline.Domain.Min, p) };
         }
 
         public override void GenerateCrossSectionPlanes(int N, double offset, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
@@ -207,7 +231,7 @@ namespace tas.Lam
             m.Compact();
 
             //m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
-            m.UserDictionary.Set("glulam", GetArchivableDictionary());
+            //m.UserDictionary.Set("glulam", GetArchivableDictionary());
             return m;
         }
 
@@ -219,16 +243,18 @@ namespace tas.Lam
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
             double[] DivParams = new double[] { CL.Domain.Min, CL.Domain.Max };
 
+            GenerateCorners(offset);
+
             Curve[][] LoftCurves = new Curve[4][];
 
             for (int i = 0; i < 4; ++i)
                 LoftCurves[i] = new Curve[2];
 
             Rhino.Geometry.Transform xform;
-            Line l1 = new Line(new Point3d(-hW, hH, 0), new Point3d(hW, hH, 0));
-            Line l2 = new Line(new Point3d(hW, hH, 0), new Point3d(hW, -hH, 0));
-            Line l3 = new Line(new Point3d(hW, -hH, 0), new Point3d(-hW, -hH, 0));
-            Line l4 = new Line(new Point3d(-hW, -hH, 0), new Point3d(-hW, hH, 0));
+            Line l1 = new Line(m_section_corners[0], m_section_corners[1]);
+            Line l2 = new Line(m_section_corners[1], m_section_corners[2]);
+            Line l3 = new Line(m_section_corners[2], m_section_corners[3]);
+            Line l4 = new Line(m_section_corners[3], m_section_corners[0]);
             Line temp;
 
             for (int i = 0; i < DivParams.Length; ++i)
@@ -258,8 +284,9 @@ namespace tas.Lam
 
             brep.JoinNakedEdges(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
             brep = brep.CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+
             //brep.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
-            brep.UserDictionary.Set("glulam", GetArchivableDictionary());
+            //brep.UserDictionary.Set("glulam", GetArchivableDictionary());
 
             return brep;
         }
@@ -325,7 +352,12 @@ namespace tas.Lam
 
             double hWidth = Data.NumWidth * Data.LamWidth / 2;
             double hHeight = Data.NumHeight * Data.LamHeight / 2;
-            Plane plane = Frames[0].Item2;
+            Plane plane = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAtStart,
+                Centreline.TangentAtStart,
+                Orientation.GetOrientation(Centreline, Centreline.Domain.Min));
+
+                //Frames[0].Item2;
 
             double hLw = Data.LamWidth / 2;
             double hLh = Data.LamHeight / 2;
@@ -349,24 +381,34 @@ namespace tas.Lam
 
         public override Plane GetPlane(double t)
         {
-            Plane p = Frames[0].Item2;
-            p.Origin = Centreline.PointAt(t);
+            //Plane p = Frames[0].Item2;
+            //p.Origin = Centreline.PointAt(t);
 
-            return p;
+            return tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAt(t),
+                Centreline.TangentAt(t),
+                Orientation.GetOrientation(Centreline, t));
+
+            //return p;
         }
 
+        /*
         public override Tuple<Plane, Plane, double> FramesAround(double t)
         {
             return new Tuple<Plane, Plane, double>(Frames[0].Item2, Frames[0].Item2, 0.0);
         }
+        */
 
         public override void Transform(Transform x)
         {
             Centreline.Transform(x);
+            Orientation.Transform(x);
+            /*
             for (int i = 0; i < Frames.Count; ++i)
             {
                 Frames[i].Item2.Transform(x);
             }
+            */
         }
 
         public override GlulamType Type()
@@ -387,9 +429,11 @@ namespace tas.Lam
         public override Mesh MapToCurveSpace(Mesh m)
         {
             Mesh mesh = m.DuplicateMesh();
-            Plane p = new Plane(Frames.First().Item2);
+            Vector3d v = Orientation.GetOrientation(Centreline, Centreline.Domain.Min);
+            Plane p = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(Centreline.PointAtStart, Centreline.TangentAtStart, v);
 
-            p.Origin = Centreline.PointAtStart;
+            //Plane p = new Plane(Frames.First().Item2);
+            //p.Origin = Centreline.PointAtStart;
 
             mesh.Transform(Rhino.Geometry.Transform.PlaneToPlane(p, Plane.WorldXY));
             return mesh;
@@ -403,7 +447,10 @@ namespace tas.Lam
 
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
         {
-            Plane p = Frames.First().Item2;
+            Vector3d v = Orientation.GetOrientation(Centreline, Centreline.Domain.Min);
+
+            Plane p = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(Centreline.PointAtStart, Centreline.TangentAtStart, v);
+                //Frames.First().Item2;
             //p.Origin = Centreline.PointAtStart;
             Curve copy = Centreline.DuplicateCurve();
             copy.Transform(Rhino.Geometry.Transform.Translation(p.XAxis * x + p.YAxis * y));
@@ -419,9 +466,8 @@ namespace tas.Lam
         {
             Data.LamHeight = height;
             Data.LamWidth = width;
+            Data.Lamellae = new Stick[1, 1];
 
-            Data.NumHeight = 1;
-            Data.NumWidth = 1;
         }
     }
 }

@@ -30,6 +30,14 @@ namespace tas.Lam
 {
     public class DoubleCurvedGlulam : FreeformGlulam
     {
+
+        public DoubleCurvedGlulam(Curve curve, GlulamOrientation orientation, GlulamData data) : base()
+        {
+            Data = data.Duplicate();
+            Orientation = orientation;
+            Centreline = curve.DuplicateCurve();
+        }
+
         public DoubleCurvedGlulam(Curve centreline, Plane[] planes) : base()
         {
             if (planes == null)
@@ -40,28 +48,30 @@ namespace tas.Lam
             }
 
             Centreline = centreline;
-            Frames = new List<Tuple<double, Plane>>();
+            //Frames = new List<Tuple<double, Plane>>();
             double t;
+
+            List<Vector3d> vectors = new List<Vector3d>();
+            List<double> parameters = new List<double>();
 
             for (int i = 0; i < planes.Length; ++i)
             {
                 Centreline.ClosestPoint(planes[i].Origin, out t);
-                Frames.Add(new Tuple<double, Plane>(t, planes[i]));
+                parameters.Add(t);
+                vectors.Add(planes[i].YAxis);
+
+                //Frames.Add(new Tuple<double, Plane>(t, planes[i]));
             }
 
-            SortFrames();
-            RecalculateFrames();
+            Orientation = new VectorListOrientation(Centreline, parameters, vectors);
+
+            //SortFrames();
+            //RecalculateFrames();
         }
 
-        public override GlulamType Type()
-        {
-            return GlulamType.DoubleCurved;
-        }
+        public override GlulamType Type() => GlulamType.DoubleCurved;
 
-        public override string ToString()
-        {
-            return "DoubleCurvedGlulam";
-        }
+        public override string ToString() => "DoubleCurvedGlulam";
 
         public override Mesh MapToCurveSpace(Mesh m)
         {
@@ -138,23 +148,25 @@ namespace tas.Lam
             double lh = Math.Floor((1 / Math.Abs(maxKY)) * Glulam.RadiusMultiplier);
             double lw = Math.Floor((1 / Math.Abs(maxKX)) * Glulam.RadiusMultiplier);
 
-            Data.NumHeight = (int)Math.Ceiling(height / lh);
-            Data.LamHeight = height / Data.LamHeight;
+            int num_height = (int)Math.Ceiling(height / lh);
+            Data.LamHeight = height / num_height;
 
-            Data.NumWidth = (int)Math.Ceiling(width / lw);
-            Data.LamWidth = width / Data.LamHeight;
+            int num_width = (int)Math.Ceiling(width / lw);
+            Data.LamWidth = width / num_width;
 
             if (Data.NumHeight < 2)
             {
-                Data.NumHeight = 2;
+                num_height = 2;
                 Data.LamHeight /= 2;
             }
 
             if (Data.NumWidth < 2)
             {
-                Data.NumWidth = 2;
+                num_width = 2;
                 Data.LamWidth /= 2;
             }
+
+            Data.Lamellae.ResizeArray(num_width, num_height);
         }
         /*
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)

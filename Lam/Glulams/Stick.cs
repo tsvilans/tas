@@ -27,10 +27,19 @@ namespace tas.Lam
 {
     public class Stick
     {
-        public string WoodType;
+        public string Species = "Spruce";
+        public Guid Reference;
 
-        public Stick()
+        public Stick(string species = "Spruce")
         {
+            Species = species;
+            Reference = Guid.Empty;
+        }
+
+        public Stick(Guid reference, string species = "Spruce")
+        {
+            Species = species;
+            Reference = reference;
         }
     }
 }

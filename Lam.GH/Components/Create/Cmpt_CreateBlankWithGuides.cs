@@ -80,7 +80,6 @@ namespace tas.Lam.GH
             //double lw = 0, lh = 0;
             double w = 0, h = 0;
             int samples = 0;
-            int flags = 0;
             List<Plane> planes = new List<Plane>();
 
             if (!DA.GetData("Curve", ref crv))
@@ -136,7 +135,7 @@ namespace tas.Lam.GH
             
 
             Lam.Glulam blank = Lam.Glulam.CreateGlulam(crv, planes.ToArray(), data);
-            blank.RemoveDuplicateFrames();
+            //blank.RemoveDuplicateFrames();
             DA.SetData("Glulam", new GH.GH_Glulam(blank));
         }
 

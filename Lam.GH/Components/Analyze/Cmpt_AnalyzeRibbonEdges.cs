@@ -4,6 +4,8 @@ using System.Linq;
 using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using Rhino.Display;
+
 using tas.Core;
 using tas.Lam;
 
@@ -29,12 +31,12 @@ namespace tas.Lam.GH.Components
             if (m_grad == null)
             {
                 List<double> stops = new List<double> { 0.0, 0.25, 0.5, 0.75, 1.0 };
-                List<System.Drawing.Color> colors = new List<System.Drawing.Color>{
-            System.Drawing.Color.FromArgb(255, 0, 0),
-            System.Drawing.Color.FromArgb(255, 128, 64),
-            System.Drawing.Color.FromArgb(255, 255, 255),
-            System.Drawing.Color.FromArgb(64, 128, 255),
-            System.Drawing.Color.FromArgb(0, 0, 255)};
+                List<Color4f> colors = new List<Color4f>{
+            new Color4f(1.0f, 0, 0, 1.0f),
+            new Color4f(1.0f, 0.5f, 0.25f, 1.0f),
+            new Color4f(1.0f, 1.0f, 1.0f, 1.0f),
+            new Color4f(0.25f, 0.5f, 1.0f, 1.0f),
+            new Color4f(0, 0, 1.0f, 1.0f)};
 
                 m_grad = new tas.Core.Util.Gradient(stops, colors);
             }

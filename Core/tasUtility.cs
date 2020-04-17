@@ -27,6 +27,7 @@ using StudioAvw.Geometry;
 
 using tas.Core.Types;
 using System.Drawing;
+using Rhino.Display;
 
 namespace tas.Core.Util
 {
@@ -377,12 +378,32 @@ namespace tas.Core.Util
 
     }
 
+    public static class Mapping
+    {
+        public static Color4f VectorToColor1(Vector3d v)
+        {
+            return new Color4f((float)(v.X / 2 + 0.5), (float)(v.Y / 2 + 0.5), (float)(v.Z / 2 + 0.5), 1.0f);
+        }
+
+        public static Color4f VectorToColor2(Vector3d v)
+        {
+            if (v.Z >= 0)
+                return new Color4f((float)(v.X / 2 + 0.5), (float)(v.Y / 2 + 0.5), (float)v.Z, 1.0f);
+            return new Color4f((float)(-v.X / 2 + 0.5), (float)(-v.Y / 2 + 0.5), (float)-v.Z, 1.0f);
+        }
+
+
+    }
+
     public static class Misc
     {
-
-
  
         static Random random = new Random();
+
+        public static Plane PlaneFromNormalAndYAxis(Point3d origin, Vector3d normal, Vector3d yaxis)
+        {
+            return new Plane(origin, Vector3d.CrossProduct(yaxis, normal), yaxis);
+        }
 
         #region KELOWNA
         public static Point3d[] CreateArcWithArcLength(Point3d pt, Vector3d v1, Vector3d v2, double arc_length, out double offset, out double radius)
@@ -1670,9 +1691,9 @@ namespace tas.Core.Util
     public class Gradient
     {
         List<double> Stops;
-        List<Color> Colors;
+        List<Rhino.Display.Color4f> Colors;
 
-        public Gradient(List<double> stops, List<Color> colors)
+        public Gradient(List<double> stops, List<Rhino.Display.Color4f> colors)
         {
             Stops = stops;
             Colors = colors;
@@ -1681,17 +1702,20 @@ namespace tas.Core.Util
         public Color GetColor(double t)
         {
             int index = Stops.BinarySearch(t);
-            if (index >= 0) return Colors[index];
+            if (index >= 0) return Colors[index].AsSystemColor();
 
             index = ~index;
-            if (index == 0) return Colors[0];
-            if (index > Colors.Count - 1) return Colors.Last();
+            if (index == 0) return Colors[0].AsSystemColor();
+            if (index > Colors.Count - 1) return Colors.Last().AsSystemColor();
 
             double tt = Util.Interpolation.Lerp(Stops[index - 1], Stops[index], t);
+            return Colors[index - 1].BlendTo((float)tt, Colors[index]).AsSystemColor();
+            /*
             return Color.FromArgb(
                 Util.Interpolation.Lerp(Colors[index - 1].R, Colors[index].R, tt),
                 Util.Interpolation.Lerp(Colors[index - 1].G, Colors[index].G, tt),
                 Util.Interpolation.Lerp(Colors[index - 1].B, Colors[index].B, tt));
+            */
         }
     }
 

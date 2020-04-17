@@ -405,7 +405,8 @@ namespace tas.ESR2
             {
                 if (!LHParam.Locked && !LWParam.Locked)
                 {
-                    GlulamData gdata = GlulamData.FromCurveLimits(g.Centreline, g.GetAllPlanes());
+                    //GlulamData gdata = GlulamData.FromCurveLimits(g.Centreline, g.GetAllPlanes());
+                    GlulamData gdata = GlulamData.Default;
                     LHParam.Value = gdata.LamHeight;
                     LWParam.Value = gdata.LamWidth;
                     return true;

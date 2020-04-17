@@ -6,6 +6,9 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Rhino.Display;
 
+using tas.Core.Util;
+using System.Windows.Forms;
+
 namespace tas.Lam.GH.Components
 {
     public class Cmpt_BidirVector2Color : GH_Component
@@ -15,6 +18,33 @@ namespace tas.Lam.GH.Components
               "Creates a color mapping for a bidirectional vector (same color for vector and its reverse).",
               "tasLam", "Map")
         {
+        }
+
+        int method = 1;
+
+        private void Menu_Method1Clicked(object sender, EventArgs e)
+        {
+            RecordUndoEvent("ChangeV2CMethod");
+            method = 1;
+            ExpireSolution(true);
+        }
+
+        private void Menu_Method2Clicked(object sender, EventArgs e)
+        {
+            RecordUndoEvent("ChangeV2CMethod");
+            method = 2;
+            ExpireSolution(true);
+        }
+
+        protected override void AppendAdditionalComponentMenuItems(ToolStripDropDown menu)
+        {
+            ToolStripMenuItem method1_item = Menu_AppendItem(menu, "Method 1", Menu_Method1Clicked, true, method == 1);
+            method1_item.ToolTipText = "Basic method for converting vector to color, using (0.5, 0.5, 0.5) as the vector origin.";
+
+            ToolStripMenuItem method2_item = Menu_AppendItem(menu, "Method 1", Menu_Method2Clicked, true, method == 2);
+            method2_item.ToolTipText = "Alternate method for converting vector to color.";
+
+            base.AppendAdditionalComponentMenuItems(menu);
         }
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -30,19 +60,22 @@ namespace tas.Lam.GH.Components
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Vector3d m_vec = Vector3d.Unset;
-            float x = 0, y = 0, z = 0;
 
             DA.GetData("Vector", ref m_vec);
             m_vec.Unitize();
 
-            z = (float)m_vec.Z;
-
-            x = z < 0 ? (float)(-m_vec.X / 2 + 0.5) : (float)(m_vec.X / 2 + 0.5); 
-            y = z < 0 ? (float)(-m_vec.Y / 2 + 0.5) : (float)(m_vec.Y / 2 + 0.5);
-
-            Color4f m_col = new Color4f(x, y, Math.Abs(z), 1.0f);
-
-            DA.SetData("Color", m_col.AsSystemColor());
+            switch(method)
+            {
+                case (1):
+                    DA.SetData("Color", Mapping.VectorToColor1(m_vec).AsSystemColor());
+                    break;
+                case (2):
+                    DA.SetData("Color", Mapping.VectorToColor2(m_vec).AsSystemColor());
+                    break;
+                default:
+                    DA.SetData("Color", Mapping.VectorToColor1(m_vec).AsSystemColor());
+                    break;
+            }
         }
 
         protected override System.Drawing.Bitmap Icon

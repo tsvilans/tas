@@ -157,15 +157,15 @@ namespace tas.Lam.GH
             byte[] centrelineBytes = GH_Convert.CommonObjectToByteArray(Value.Centreline);
             writer.SetByteArray("guide", centrelineBytes);
 
-            writer.SetInt32("num_frames", Value.Frames.Count);
+            //writer.SetInt32("num_frames", Value.Frames.Count);
 
-            for (int i = 0; i < Value.Frames.Count; ++i)
-            {
-                Plane p = Value.Frames[i].Item2;
-
-                writer.SetPlane("frames", i, new GH_IO.Types.GH_Plane(
-                    p.OriginX, p.OriginY, p.OriginZ, p.XAxis.X, p.XAxis.Y, p.XAxis.Z, p.YAxis.X, p.YAxis.Y, p.YAxis.Z));
-            }
+            //for (int i = 0; i < Value.Frames.Count; ++i)
+            //{
+            //    Plane p = Value.Frames[i].Item2;
+            //
+            //    writer.SetPlane("frames", i, new GH_IO.Types.GH_Plane(
+            //        p.OriginX, p.OriginY, p.OriginZ, p.XAxis.X, p.XAxis.Y, p.XAxis.Z, p.YAxis.X, p.YAxis.Y, p.YAxis.Z));
+            //}
 
             writer.SetInt32("lcx", Value.Data.NumWidth);
             writer.SetInt32("lcy", Value.Data.NumHeight);
@@ -173,6 +173,7 @@ namespace tas.Lam.GH
             writer.SetDouble("lsy", Value.Data.LamHeight);
             writer.SetInt32("interpolation", (int)Value.Data.InterpolationType);
             writer.SetInt32("samples", Value.Data.Samples);
+
 
             return true;
         }
@@ -182,7 +183,7 @@ namespace tas.Lam.GH
             if (!reader.ItemExists("guide"))
             {
                 Value = null;
-                throw new Exception("Fuckballs didn't work!");
+                throw new Exception("Couldn't retrieve 'guide'.");
                 return true;
             }
 
@@ -190,7 +191,7 @@ namespace tas.Lam.GH
 
             Curve guide = GH_Convert.ByteArrayToCommonObject<Curve>(rawGuide);
             if (guide == null)
-                throw new Exception("For the gracious love of fuck.");
+                throw new Exception("Failed to convert 'guide'.");
 
             int N = reader.GetInt32("num_frames");
             Plane[] frames = new Plane[N];

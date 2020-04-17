@@ -80,7 +80,6 @@ namespace tas.Lam.GH
             Curve crv = null;
             //double lw = 0, lh = 0;
             double w = 0, h = 0;
-            int samples = 0;
             int flags = 0;
             List<Plane> planes = new List<Plane>();
             Plane[] plane_array = null;

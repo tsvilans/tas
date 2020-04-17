@@ -24,6 +24,7 @@ namespace tas.Lam.GH
             ad.Set("volume", g.GetVolume());
             ad.Set("samples", g.Data.Samples);
 
+            /*
             var planes = g.GetAllPlanes();
             ArchivableDictionary pd = new ArchivableDictionary();
 
@@ -33,6 +34,7 @@ namespace tas.Lam.GH
             }
             ad.Set("frames", pd);
 
+            */
             double max_kw = 0.0, max_kh = 0.0;
             ad.Set("max_curvature", g.GetMaxCurvature(ref max_kw, ref max_kh));
             ad.Set("max_curvature_width", max_kw);

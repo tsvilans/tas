@@ -30,6 +30,13 @@ namespace tas.Lam
 {
     public class SingleCurvedGlulam : FreeformGlulam
     {
+        public SingleCurvedGlulam(Curve curve, GlulamOrientation orientation, GlulamData data) : base()
+        {
+            Data = data.Duplicate();
+            Orientation = orientation;
+            Centreline = curve.DuplicateCurve();
+        }
+
         public SingleCurvedGlulam(Curve centreline, Plane[] planes, bool with_twist = false) : base()
         {
             if (planes == null)
@@ -58,28 +65,31 @@ namespace tas.Lam
             }
 
             Centreline = centreline;
-            Frames = new List<Tuple<double, Plane>>();
+            //Frames = new List<Tuple<double, Plane>>();
             double t;
+
+            List<Vector3d> vectors = new List<Vector3d>();
+            List<double> parameters = new List<double>();
 
             for (int i = 0; i < planes.Length; ++i)
             {
                 Centreline.ClosestPoint(planes[i].Origin, out t);
-                Frames.Add(new Tuple<double, Plane>(t, planes[i]));
+
+                parameters.Add(t);
+                vectors.Add(planes[i].YAxis);
+                //Frames.Add(new Tuple<double, Plane>(t, planes[i]));
             }
 
-            SortFrames();
-            RecalculateFrames();
+            Orientation = new VectorListOrientation(centreline, parameters, vectors);
+
+            //SortFrames();
+            //RecalculateFrames();
         }
 
-        public override GlulamType Type()
-        {
-            return GlulamType.SingleCurved;
-        }
+        public override GlulamType Type() => GlulamType.SingleCurved;
+        
 
-        public override string ToString()
-        {
-            return "SingleCurvedGlulam";
-        }
+        public override string ToString() => "SingleCurvedGlulam";
 
         public override bool InKLimitsComponent(out bool width, out bool height)
         {
@@ -157,17 +167,18 @@ namespace tas.Lam
             double lh = Math.Floor((1 / Math.Abs(k)) * Glulam.RadiusMultiplier);
 
             Data.LamWidth = width;
-            Data.NumWidth = 1;
 
 
-            Data.NumHeight = (int)Math.Ceiling(height / lh);
+            int num_height = (int)Math.Ceiling(height / lh);
             Data.LamHeight = height / Data.LamHeight;
 
-            if (Data.NumHeight < 2)
+            if (num_height < 2)
             {
-                Data.NumHeight = 2;
+                num_height = 2;
                 Data.LamHeight /= 2;
             }
+
+            Data.Lamellae.ResizeArray(Data.NumWidth, num_height);
             
         }
         /*
