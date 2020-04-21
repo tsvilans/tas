@@ -36,10 +36,9 @@ namespace tas.Lam.GH
               "tasLam", "Analyze")
         {
         }
-
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Glulam", "G", "Input glulam blank to deconstruct.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Glulam", "G", "Input glulam blank to deconstruct.", GH_ParamAccess.list);
             pManager.AddIntegerParameter("Type", "T", "Type of output: 0 = centreline curves, 1 = Mesh, 2 = Brep.", GH_ParamAccess.item, 0);
 
             pManager[1].Optional = true;
@@ -54,9 +53,9 @@ namespace tas.Lam.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            object obj = null;
+            List<GH_Glulam> inputs = new List<GH_Glulam>();
 
-            if (!DA.GetData("Glulam", ref obj))
+            if (!DA.GetDataList<GH_Glulam>("Glulam",  inputs))
             {
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No glulam blank connected.");
                 return;
@@ -65,81 +64,74 @@ namespace tas.Lam.GH
             int type = 0;
             DA.GetData("Type", ref type);
 
-            Glulam g;
-
-            if (obj is GH_Glulam)
-                g = (obj as GH_Glulam).Value;
-            else
-                g = obj as Glulam;
-
-            if (g == null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid glulam input.");
-                return;
-            }
-
             DataTree<object> output = new DataTree<object>();
             DataTree<string> species = new DataTree<string>();
             DataTree<Guid> ids = new DataTree<Guid>();
 
-            int i = 0;
-            GH_Path path;
-            switch (type)
+            for (int i = 0; i < inputs.Count; ++i)
             {
-                case (1):
-                    var meshes = g.GetLamellaMeshes();
 
-                    for (int x = 0; x < g.Data.NumWidth; ++x)
-                    {
-                        path = new GH_Path(x);
-                        for (int y = 0; y < g.Data.NumHeight; ++y)
-                        {
-                            output.Add(meshes[i], path);
-                            if (g.Data.Lamellae[x, y] != null)
-                            {
-                                species.Add(g.Data.Lamellae[x, y].Species, path);
-                                ids.Add(g.Data.Lamellae[x, y].Reference, path);
-                            }
-                            i++;
-                        }
-                    }
-                    break;
-                case (2):
-                    var breps = g.GetLamellaBreps();
+                Glulam g = inputs[i].Value;
 
-                    for (int x = 0; x < g.Data.NumWidth; ++x)
-                    {
-                        path = new GH_Path(x);
-                        for (int y = 0; y < g.Data.NumHeight; ++y)
-                        {
-                            output.Add(breps[i], path);
-                            if (g.Data.Lamellae[x, y] != null)
-                            {
-                                species.Add(g.Data.Lamellae[x, y].Species, path);
-                                ids.Add(g.Data.Lamellae[x, y].Reference, path);
-                            }
-                            i++;
-                        }
-                    }
-                    break;
-                default:
-                    var crvs = g.GetLamellaCurves();
+                GH_Path path;
+                int j = 0;
+                switch (type)
+                {
+                    case (1):
+                        var meshes = g.GetLamellaMeshes();
 
-                    for (int x = 0; x < g.Data.NumWidth; ++x)
-                    {
-                        path = new GH_Path(x);
-                        for (int y = 0; y < g.Data.NumHeight; ++y)
+                        for (int x = 0; x < g.Data.NumWidth; ++x)
                         {
-                            output.Add(crvs[i], path);
-                            if (g.Data.Lamellae[x, y] != null)
+                            path = new GH_Path(i, x);
+                            for (int y = 0; y < g.Data.NumHeight; ++y)
                             {
-                                species.Add(g.Data.Lamellae[x, y].Species, path);
-                                ids.Add(g.Data.Lamellae[x, y].Reference, path);
+                                output.Add(meshes[j], path);
+                                if (g.Data.Lamellae[x, y] != null)
+                                {
+                                    species.Add(g.Data.Lamellae[x, y].Species, path);
+                                    ids.Add(g.Data.Lamellae[x, y].Reference, path);
+                                }
+                                j++;
                             }
-                            i++;
                         }
-                    }
-                    break;
+                        break;
+                    case (2):
+                        var breps = g.GetLamellaBreps();
+
+                        for (int x = 0; x < g.Data.NumWidth; ++x)
+                        {
+                            path = new GH_Path(i, x);
+                            for (int y = 0; y < g.Data.NumHeight; ++y)
+                            {
+                                output.Add(breps[j], path);
+                                if (g.Data.Lamellae[x, y] != null)
+                                {
+                                    species.Add(g.Data.Lamellae[x, y].Species, path);
+                                    ids.Add(g.Data.Lamellae[x, y].Reference, path);
+                                }
+                                j++;
+                            }
+                        }
+                        break;
+                    default:
+                        var crvs = g.GetLamellaCurves();
+
+                        for (int x = 0; x < g.Data.NumWidth; ++x)
+                        {
+                            path = new GH_Path(i, x);
+                            for (int y = 0; y < g.Data.NumHeight; ++y)
+                            {
+                                output.Add(crvs[j], path);
+                                if (g.Data.Lamellae[x, y] != null)
+                                {
+                                    species.Add(g.Data.Lamellae[x, y].Species, path);
+                                    ids.Add(g.Data.Lamellae[x, y].Reference, path);
+                                }
+                                j++;
+                            }
+                        }
+                        break;
+                }
             }
 
             DA.SetDataTree(0, output);

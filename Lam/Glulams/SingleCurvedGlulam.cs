@@ -87,7 +87,6 @@ namespace tas.Lam
         }
 
         public override GlulamType Type() => GlulamType.SingleCurved;
-        
 
         public override string ToString() => "SingleCurvedGlulam";
 
@@ -181,38 +180,6 @@ namespace tas.Lam
             Data.Lamellae.ResizeArray(Data.NumWidth, num_height);
             
         }
-        /*
-public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
-{
-   List<Point3d> pts = new List<Point3d>();
-   double[] t = Centreline.DivideByCount(this.Data.Samples, true);
 
-   for (int i = 0; i < t.Length; ++i)
-   {
-       Plane p = GetPlane(t[i]);
-       pts.Add(p.Origin + p.XAxis * x + p.YAxis * y);
-   }
-
-   Curve new_curve = Curve.CreateInterpolatedCurve(pts, 3, CurveKnotStyle.Uniform,
-       Centreline.TangentAtStart, Centreline.TangentAtEnd);
-
-
-   if (new_curve == null)
-       throw new Exception("SingleCurvedGlulam::CreateOffsetCurve:: Failed to create interpolated curve!");
-
-   double len = new_curve.GetLength();
-   new_curve.Domain = new Interval(0.0, len);
-
-   if (rebuild)
-       new_curve = new_curve.Rebuild(rebuild_pts, new_curve.Degree, true);
-
-   return new_curve;
-}
-
-public override Curve CreateOffsetCurve(double x, double y, bool offset_start, bool offset_end, bool rebuild = false, int rebuild_pts = 20)
-{
-   throw new NotImplementedException();
-}
-*/
     }
 }

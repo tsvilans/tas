@@ -1,4 +1,5 @@
-﻿/*
+﻿#if OBSOLETE
+/*
  * tasTools
  * A personal PhD research toolkit.
  * Copyright 2017 Tom Svilans
@@ -155,3 +156,4 @@ namespace tas.Lam.GH
         }
     }
 }
+#endif

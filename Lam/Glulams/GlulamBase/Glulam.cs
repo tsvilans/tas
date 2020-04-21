@@ -31,10 +31,10 @@ using Rhino.Collections;
 
 namespace tas.Lam
 {
-    public abstract partial class Glulam
+    public abstract partial class Glulam : BeamBase
     {
-        public static double RadiusMultiplier = 200.0; // This is the Eurocode 5 formula: lamella thickness cannot exceed 1/200th of the curvature radius.
-        public static int CurvatureSamples = 100; // Number of samples to samples curvature at.
+        public static double RadiusMultiplier = 200.0;  // This is the Eurocode 5 formula: lamella thickness cannot exceed 1/200th of the curvature radius.
+        public static int CurvatureSamples = 100;       // Number of samples to samples curvature at.
         public static double RadiusTolerance = 0.00001; // For curvature calculations: curvature radius and lamella thickness cannot exceed this
 
 
@@ -92,14 +92,14 @@ namespace tas.Lam
         #endregion
 
         protected Guid ID;
-        // /*protected*/public List<Tuple<double, Plane>> Frames;
 
-        public Curve Centreline { get; protected set;}
+        //public Curve Centreline { get; protected set;}
         public GlulamData Data;
-        public GlulamOrientation Orientation;
+        //public GlulamOrientation Orientation;
 
         // Protected
         protected Point3d[] m_section_corners = null; // Cached section corners
+        protected Point3d[] m_lamella_centers = null; // Cached centerpoints for lamellae
 
         public abstract void CalculateLamellaSizes(double width, double height);
 
@@ -180,25 +180,6 @@ namespace tas.Lam
             return Centreline.GetLength() * Width() * Height();
         }
 
-        public virtual GlulamType Type() => GlulamType.Straight;
-
-        public virtual Plane GetPlane(double t) => Plane.Unset;
-
-
-        //public Plane[] GetAllPlanes() => Frames.Select(x => x.Item2).ToArray();
-
-        //public void SortFrames() => Frames.Sort((x, y) => x.Item1.CompareTo(y.Item1));
-
-        //public void ValidateFrames() => Frames = Frames.Where(x => x.Item2.IsValid).ToList();
-
-        public Plane GetPlane(Point3d p)
-        {
-            double t;
-            Centreline.ClosestPoint(p, out t);
-            return GetPlane(t);
-        }
-
-
         public override bool Equals(object obj)
         {
             if (obj is Glulam && (obj as Glulam).ID == ID)
@@ -207,6 +188,7 @@ namespace tas.Lam
         }
         public override int GetHashCode() => ID.GetHashCode();
         public override string ToString() => "Glulam";
+        public virtual GlulamType Type() => GlulamType.Straight;
 
 
         /// <summary>
@@ -221,26 +203,11 @@ namespace tas.Lam
         /// </summary>
         public void Reverse()
         {
-            //Point3d[] temp_points = Frames.Select(x => x.Item2.Origin).ToArray();
-
-
             Curve Reversed = Centreline.DuplicateCurve();
             Reversed.Reverse();
 
             Orientation.Remap(Centreline, Reversed);
             Centreline = Reversed;
-
-            /*
-            double t;
-            for (int i = 0; i < Frames.Count; ++i)
-            {
-                Centreline.ClosestPoint(temp_points[i], out t);
-                Plane p = Frames[i].Item2.FlipAroundYAxis();
-                Frames[i] = new Tuple<double, Plane>(t, p);
-            }
-
-            Frames.Reverse();
-            */
         }
 
         /// <summary>
@@ -333,36 +300,6 @@ namespace tas.Lam
             return width && height;
         }
 
-        /*
-        /// <summary>
-        /// Cleans up frame list to get rid of frames that share the same parameter.
-        /// </summary>
-        public void RemoveDuplicateFrames()
-        {
-            if (Frames.Count < 2) return;
-            List<Tuple<double, Plane>> NewFrames = new List<Tuple<double, Plane>>();
-            bool[] Flags = new bool[Frames.Count];
-
-            for (int i = 0; i < Frames.Count - 1; ++i)
-            {
-                if (Flags[i]) continue;
-                for (int j = i + 1; j < Frames.Count; ++j)
-                {
-                    if (Flags[j]) continue;
-                    if (Math.Abs(Frames[i].Item1 - Frames[j].Item1) < 0.001)
-                        Flags[j] = true;
-                }
-            }
-
-            for (int i = 0; i < Flags.Length; ++i)
-            {
-                if (!Flags[i]) NewFrames.Add(Frames[i]);
-            }
-
-            Frames = NewFrames;
-        }
-        */
-
         /// <summary>
         /// Join a glulam onto another one. Returns null if join is not possible.
         /// </summary>
@@ -382,64 +319,18 @@ namespace tas.Lam
             GlulamOrientation NewOrientation = Orientation.Duplicate();
             NewOrientation.Join(glulam.Orientation);
 
-            //List<Plane> NewFrames = new List<Plane>();
-            //NewFrames.AddRange(Frames.Select(x => x.Item2));
-            //NewFrames.AddRange(glulam.Frames.Select(x => x.Item2));
-
             Glulam new_glulam = CreateGlulam(NewCentreline[0], NewOrientation, Data.Duplicate());
 
-            //Glulam new_glulam = CreateGlulam(NewCentreline[0], NewFrames.ToArray());
-
-            //new_glulam.RemoveDuplicateFrames();
-
-            //new_glulam.Data = Data.Duplicate();
             new_glulam.Data.Samples = Data.Samples + glulam.Data.Samples;
 
             return new_glulam;
         }
 
-        /*
-        /// <summary>
-        /// Make sure frames are correctly oriented on the curve (Z-axis tangent to the curve).
-        /// </summary>
-        public void RecalculateFrames()
-        {
-            Point3d pt_on_crv;
-            Vector3d tan, xaxis, yaxis;
-
-            for (int i = 0; i < Frames.Count; ++i)
-            {
-                pt_on_crv = Centreline.PointAt(Frames[i].Item1);
-                tan = Centreline.TangentAt(Frames[i].Item1);
-                xaxis = Vector3d.CrossProduct(Frames[i].Item2.YAxis, tan);
-                yaxis = Vector3d.CrossProduct(tan, xaxis);
-                Frames[i] = new Tuple<double, Plane>(Frames[i].Item1, new Plane(pt_on_crv, xaxis, yaxis));
-            }
-        }
-        */
-        /*
-        /// <summary>
-        /// Get the glulam frames (planes) around curve parameter t. Useful for interpolation or getting intermediate orientations.
-        /// </summary>
-        /// <param name="t">Curve parameter to evaluate.</param>
-        /// <returns>Tuple consisting of the frame before, the frame after, and the normalized parameter between them where t is.</returns>
-        public virtual Tuple<Plane, Plane, double> FramesAround(double t)
-        {
-            return new Tuple<Plane, Plane, double>(Plane.Unset, Plane.Unset, 0.0);
-        }
-        */
         /// <summary>
         /// Duplicate glulam data.
         /// </summary>
         /// <returns></returns>
-        public Glulam Duplicate()
-        {
-            //Curve c = Centreline.Duplicate() as Curve;
-            //Plane[] NewPlanes = Frames.Select(x => x.Item2).ToArray();
-            //GlulamData data = Data;
-
-            return CreateGlulam(Centreline.DuplicateCurve(), Orientation.Duplicate(), Data.Duplicate());
-        }
+        public Glulam Duplicate() => CreateGlulam(Centreline.DuplicateCurve(), Orientation.Duplicate(), Data.Duplicate());
 
         public bool Extend(CurveEnd end, double length)
         {
@@ -464,28 +355,17 @@ namespace tas.Lam
             Curve[] split_curves = Centreline.Split(t);
             if (split_curves == null || split_curves.Length != 2) return null;
 
-            //List<Tuple<double, Plane>> Frames1 = Frames.Where(x => x.Item1 < t).ToList();
-            //List<Tuple<double, Plane>> Frames2 = Frames.Where(x => x.Item1 >= t).ToList();
-
             GlulamData Data1 = Data.Duplicate();
             Data1.Samples = (int)(Data.Samples * percentage);
 
             List<GlulamOrientation> SplitOrientations = Orientation.Split(new double[] { t });
 
             Glulam Blank1 = CreateGlulam(split_curves[0], SplitOrientations[0], Data1);
-            //Glulam Blank1 = CreateGlulam(split_curves[0], new Plane[] { split_plane }, Data1);
-            //Blank1.Frames.AddRange(Frames1);
-            //Blank1.SortFrames();
-            //Blank1.RecalculateFrames();
 
             GlulamData Data2 = Data.Duplicate();
             Data2.Samples = (int)(Data.Samples * (1 - percentage));
 
             Glulam Blank2 = CreateGlulam(split_curves[1], SplitOrientations[1], Data2);
-            //Glulam Blank2 = CreateGlulam(split_curves[1], new Plane[] { split_plane }, Data2);
-            //Blank2.Frames.AddRange(Frames2);
-            //Blank2.SortFrames();
-            //Blank2.RecalculateFrames();
 
             List<Glulam> blanks = new List<Glulam>() { Blank1, Blank2 };
             return blanks;
@@ -493,10 +373,6 @@ namespace tas.Lam
 
         public Glulam Extract(Interval domain, double overlap)
         {
-            //domain = new Interval(
-            //    Math.Max(domain.Min, Centreline.Domain.Min),
-            //    Math.Min(domain.Max, Centreline.Domain.Max));
-
             double l1 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Min));
             double l2 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Max));
             double t1, t2;
@@ -515,12 +391,7 @@ namespace tas.Lam
 
             List<GlulamOrientation> SplitOrientations = Orientation.Split(new double[] { domain.Min, domain.Max });
 
-            //List<Tuple<double, Plane>> NewFrames = Frames.Where(x => domain.IncludesParameter(x.Item1)).ToList();
-            //NewFrames.Insert(0, new Tuple<double, Plane>(domain.Min, this.GetPlane(domain.Min)));
-            //NewFrames.Add(new Tuple<double, Plane>(domain.Max, this.GetPlane(domain.Max)));
-
             Glulam glulam = CreateGlulam(Centreline.Trim(domain), SplitOrientations[1], data);
-            //Glulam glulam = CreateGlulam(Centreline.Trim(domain), NewFrames.Select(x => x.Item2).ToArray(), data);
 
             return glulam;
         }
@@ -558,21 +429,12 @@ namespace tas.Lam
                 split_curves = Centreline.Split(t1);
                 if (split_curves == null || split_curves.Length != 2) return null;
 
-                //List<Tuple<double, Plane>> Frames1 = Frames.Where(x => x.Item1 < t1).ToList();
-
                 var SplitOrientation = Orientation.Split(new double[] { t1 });
 
                 Data1 = Data.Duplicate();
                 Data1.Samples = Math.Max(2, (int)(Data.Samples * percentage));
 
                 Blank1 = CreateGlulam(split_curves[0], SplitOrientation[0], Data1);
-                //Blank1 = CreateGlulam(split_curves[0], new Plane[] { split_plane }, Data1);
-                
-                //Blank1.Frames.AddRange(Frames1);
-                //Blank1.SortFrames();
-                //Blank1.RecalculateFrames();
-
-
             }
             {
                 percentage = (t2 - Centreline.Domain.Min) / (Centreline.Domain.Max - Centreline.Domain.Min);
@@ -580,18 +442,12 @@ namespace tas.Lam
                 split_curves = Centreline.Split(t2);
                 if (split_curves == null || split_curves.Length != 2) return null;
 
-                //List<Tuple<double, Plane>> Frames2 = Frames.Where(x => x.Item1 >= t2).ToList();
-
                 var SplitOrientation = Orientation.Split(new double[] { t2 });
 
                 Data2 = Data.Duplicate();
                 Data2.Samples = Math.Max(2, (int)(Data.Samples * (1 - percentage)));
 
                 Blank2 = CreateGlulam(split_curves[1], SplitOrientation[1], Data2);
-                //Blank2 = CreateGlulam(split_curves[1], new Plane[] { split_plane }, Data2);
-                //Blank2.Frames.AddRange(Frames2);
-                //Blank2.SortFrames();
-                //Blank2.RecalculateFrames();
             }
 
             List<Glulam> blanks = new List<Glulam>() { Blank1, Blank2 };
@@ -606,7 +462,7 @@ namespace tas.Lam
 
             for (int i = 1; i < t.Length - 1; ++i)
             {
-                List<Glulam> splits = Split(t[i], overlap);
+                List<Glulam> splits = temp.Split(t[i], overlap);
 
                 if (splits == null || splits.Count < 2)
                     continue;
@@ -726,8 +582,6 @@ namespace tas.Lam
 
         public Point3d[] GenerateCorners(double offset = 0.0)
         {
-
-
             double x = Width();
             double y = Height();
 
@@ -775,7 +629,6 @@ namespace tas.Lam
                     x0 -= x; x1 -= x; 
                     break;
             }
-
 
             m_section_corners[0] = new Point3d(x0 - offset, y1 + offset, 0);
             m_section_corners[1] = new Point3d(x1 + offset, y1 + offset, 0);

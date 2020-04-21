@@ -58,8 +58,17 @@ namespace tas.Lam.GH
                 return new VectorOrientation(Vector3d.ZAxis);
             if (input.Count == 1)
             {
-
                 object single = input[0];
+                if (single is Vector3d)
+                    return new VectorOrientation((Vector3d)single);
+                if (single is GH_Vector)
+                    return new VectorOrientation((single as GH_Vector).Value);
+                if (single is Plane)
+                    return new VectorOrientation(((Plane)single).YAxis);
+                if (single is GH_Plane)
+                    return new VectorOrientation((single as GH_Plane).Value.YAxis);
+                if (single is GH_Line)
+                    return new VectorOrientation((single as GH_Line).Value.Direction);
                 if (single is Surface)
                     return new SurfaceOrientation((single as Surface).ToBrep());
                 if (single is GH_Surface)

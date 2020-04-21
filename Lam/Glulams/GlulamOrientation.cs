@@ -137,6 +137,9 @@ namespace tas.Lam
         protected List<double> m_parameters;
         protected Curve m_curve;
 
+        public List<Vector3d> Vectors { get { return m_vectors; } }
+        public List<double> Parameters { get { return m_parameters; } }
+
         public VectorListOrientation(Curve curve, List<double> parameters, List<Vector3d> vectors)
         {
             m_curve = curve;
@@ -147,7 +150,7 @@ namespace tas.Lam
 
             for (int i = 0; i < N; ++i)
             {
-                if (vectors[i].IsValid)
+                if (vectors[i].IsValid && !vectors[i].IsZero)
                 {    
                     m_vectors.Add(vectors[i]);
                     m_parameters.Add(parameters[i]);
@@ -178,11 +181,11 @@ namespace tas.Lam
         {
 
             Vector3d vec;
-            if (t < m_parameters.First())
+            if (t <= m_parameters.First())
             {
                 vec = m_vectors.First();
             }
-            else if (t > m_parameters.Last())
+            else if (t >= m_parameters.Last())
             {
                 vec = m_vectors.Last();
             }
@@ -234,8 +237,10 @@ namespace tas.Lam
                 m_parameters[i] = t;
             }
 
-            m_parameters.Reverse();
-            m_vectors.Reverse();
+            Sort();
+
+            //m_parameters.Reverse();
+            //m_vectors.Reverse();
         }
 
         public override GlulamOrientation Duplicate()
@@ -255,6 +260,7 @@ namespace tas.Lam
 
             int prev = 0;
             double prev_param = 0.0;
+            bool flag = false;
 
             List<double> new_parameters;
             List<Vector3d> new_vectors;
@@ -271,9 +277,9 @@ namespace tas.Lam
                     new_vectors = m_vectors.GetRange(prev, res - prev);
 
                     new_parameters.Add(param);
-                    new_vectors.Add(GetOrientation(m_curve, prev_param));
+                    new_vectors.Add(GetOrientation(m_curve, param));
 
-                    if (prev > 0)
+                    if (prev > 0 || flag)
                     {
                         new_parameters.Insert(0, prev_param);
                         new_vectors.Insert(0, GetOrientation(m_curve, prev_param));
@@ -286,6 +292,7 @@ namespace tas.Lam
 
                     prev_param = param;
                     prev = res;
+                    flag = true;
                 }
                 else
                 {
@@ -305,7 +312,7 @@ namespace tas.Lam
             new_vectors = m_vectors.GetRange(prev, m_vectors.Count - prev);
 
             new_parameters.Insert(0, t.Last());
-            new_vectors.Insert(0, Vector3d.Zero);
+            new_vectors.Insert(0, GetOrientation(m_curve, t.Last()));
 
             new_orientations.Add(new VectorListOrientation(
                 m_curve,
@@ -314,6 +321,7 @@ namespace tas.Lam
 
             return new_orientations;
         }
+
 
         public override object GetDriver()
         {

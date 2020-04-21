@@ -76,10 +76,19 @@ namespace tas.Lam.Features
         Glulam m_glulam1;
         Glulam m_glulam2;
 
+        public Glulam Glulam1 { get { return m_glulam1; } }
+        public Glulam Glulam2 { get { return m_glulam2; } }
+
         double m_extension;
         double m_incline;
         double m_length;
         double m_t1, m_t2;
+
+        public double Extension { get { return m_extension; } set { m_extension = value; } }
+        public double Incline { get { return m_incline; } set { m_incline = value; } }
+        public double Length { get { return m_length; } set { m_length = value; } }
+        public double T1 { get { return m_t1; } set { m_t1 = value; } }
+        public double T2 { get { return m_t2; } set { m_t2 = value; } }
 
         public EndLapJoint2(Glulam glulam1, Glulam glulam2, double t1, double t2, double length, double incline, double extension = 5.0)
         {

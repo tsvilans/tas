@@ -40,33 +40,27 @@ namespace tas.Lam
 
         public DoubleCurvedGlulam(Curve centreline, Plane[] planes) : base()
         {
-            if (planes == null)
-            {
-                Plane p;
-                centreline.PerpendicularFrameAt(centreline.Domain.Min, out p);
-                planes = new Plane[] { p };
-            }
-
             Centreline = centreline;
-            //Frames = new List<Tuple<double, Plane>>();
-            double t;
 
-            List<Vector3d> vectors = new List<Vector3d>();
-            List<double> parameters = new List<double>();
-
-            for (int i = 0; i < planes.Length; ++i)
+            if (planes != null)
             {
-                Centreline.ClosestPoint(planes[i].Origin, out t);
-                parameters.Add(t);
-                vectors.Add(planes[i].YAxis);
+                List<Vector3d> vectors = new List<Vector3d>();
+                List<double> parameters = new List<double>();
+                double t;
 
-                //Frames.Add(new Tuple<double, Plane>(t, planes[i]));
+                for (int i = 0; i < planes.Length; ++i)
+                {
+                    Centreline.ClosestPoint(planes[i].Origin, out t);
+                    parameters.Add(t);
+                    vectors.Add(planes[i].YAxis);
+                }
+
+                Orientation = new VectorListOrientation(Centreline, parameters, vectors);
             }
-
-            Orientation = new VectorListOrientation(Centreline, parameters, vectors);
-
-            //SortFrames();
-            //RecalculateFrames();
+            else
+            {
+                Orientation = new KCurveOrientation();
+            }
         }
 
         public override GlulamType Type() => GlulamType.DoubleCurved;
@@ -168,6 +162,7 @@ namespace tas.Lam
 
             Data.Lamellae.ResizeArray(num_width, num_height);
         }
+
         /*
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
         {

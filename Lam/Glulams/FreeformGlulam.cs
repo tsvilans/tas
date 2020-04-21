@@ -412,18 +412,8 @@ namespace tas.Lam
                 Centreline.TangentAt(x),
                 Orientation.GetOrientation(Centreline, x))).ToArray();
 
-
-            //double hwidth = Width() / 2 + offset;
-            //double hheight = Height() / 2 + offset;
-
             int numCorners = 4;
-            //if (m_section_corners == null || offset > 0.0)
             GenerateCorners(offset);
-
-            //corners[0] = new Point3d(-hwidth, hheight, 0);
-            //corners[1] = new Point3d(hwidth, hheight, 0);
-            //corners[2] = new Point3d(hwidth, -hheight, 0);
-            //corners[3] = new Point3d(-hwidth, -hheight, 0);
 
             List<Point3d>[] crvPts = new List<Point3d>[numCorners];
             for (int i = 0; i < numCorners; ++i)
@@ -495,46 +485,101 @@ namespace tas.Lam
             double hH = Data.NumHeight * Data.LamHeight / 2;
             double[] DivParams = Centreline.DivideByCount(Data.Samples, true);
 
-            List<Curve>[,] LoftCurves = new List<Curve>[Data.NumWidth, Data.NumHeight];
-            List<Brep> LamellaBreps = new List<Brep>();
+            Point3d[,,] AllPoints = new Point3d[Data.NumWidth + 1, Data.NumHeight + 1, DivParams.Length];
+            Point3d[,] CornerPoints = new Point3d[Data.NumWidth + 1, Data.NumHeight + 1];
 
-            // initialize curve lists
-            for (int i = 0; i < Data.NumWidth; ++i)
-                for (int j = 0; j < Data.NumHeight; ++j)
-                    LoftCurves[i, j] = new List<Curve>();
+            for (int x = 0; x <= Data.NumWidth; ++x)
+            {
+                for (int y = 0; y <= Data.NumHeight; ++y)
+                {
+                    CornerPoints[x, y] = new Point3d(
+                        -hW + x * Data.LamWidth,
+                        -hH + y * Data.LamHeight,
+                        0);
+                }
+            }
 
+            Transform xform;
+            Point3d temp;
             for (int i = 0; i < DivParams.Length; ++i)
             {
                 Plane p = GetPlane(DivParams[i]);
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, p);
 
-                for (int j = 0; j < Data.NumWidth; ++j)
+                for (int x = 0; x <= Data.NumWidth; ++x)
                 {
-                    for (int k = 0; k < Data.NumHeight; ++k)
+                    for (int y = 0; y <= Data.NumHeight; ++y)
                     {
-                        Rectangle3d rec = new Rectangle3d(p,
-                            new Interval(-hW + j * Data.LamWidth, -hW + (j + 1) * Data.LamWidth),
-                            new Interval(-hH + k * Data.LamHeight, -hH + (k + 1) * Data.LamHeight));
-                        LoftCurves[j, k].Add(rec.ToNurbsCurve());
+                        temp = new Point3d(CornerPoints[x, y]);
+                        temp.Transform(xform);
+                        AllPoints[x, y, i] = temp;
                     }
                 }
             }
 
-            for (int i = 0; i < Data.NumWidth; ++i)
+            Curve[,] EdgeCurves = new Curve[Data.NumWidth + 1, Data.NumHeight + 1];
+            for (int x = 0; x <= Data.NumWidth; ++x)
             {
-                for (int j = 0; j < Data.NumHeight; ++j)
+                for (int y = 0; y <= Data.NumHeight; ++y)
                 {
-                    Brep[] brep = Brep.CreateFromLoft(LoftCurves[i, j], Point3d.Unset, Point3d.Unset, LoftType.Normal, false);
-                    if (brep != null && brep.Length > 0)
-                        LamellaBreps.Add(brep[0].CapPlanarHoles(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance));
+                    Point3d[] pts = new Point3d[DivParams.Length];
+                    for (int z = 0; z < DivParams.Length; ++z)
+                    {
+                        pts[z] = AllPoints[x, y, z];
+                    }
+                    EdgeCurves[x, y] = Curve.CreateInterpolatedCurve(pts, 3);
                 }
             }
+
+            List<Brep> LamellaBreps = new List<Brep>();
+
+            for (int x = 0; x < Data.NumWidth; ++x)
+            {
+                for (int y = 0; y < Data.NumHeight; ++y)
+                {
+                    Curve[] edges = new Curve[8];
+                    edges[4] = new Line(AllPoints[x, y, 0], AllPoints[x + 1, y, 0]).ToNurbsCurve();
+                    edges[5] = new Line(AllPoints[x, y + 1, 0], AllPoints[x + 1, y + 1, 0]).ToNurbsCurve();
+
+                    edges[6] = new Line(AllPoints[x, y, DivParams.Length - 1], AllPoints[x + 1, y, DivParams.Length - 1]).ToNurbsCurve();
+                    edges[7] = new Line(AllPoints[x, y + 1, DivParams.Length - 1], AllPoints[x + 1, y + 1, DivParams.Length - 1]).ToNurbsCurve();
+
+                    Brep[] sides = new Brep[6];
+
+                    sides[0] = Brep.CreateFromLoft(
+                          new Curve[] { EdgeCurves[x,y], EdgeCurves[x + 1, y] },
+                          Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+                    sides[1] = Brep.CreateFromLoft(
+                          new Curve[] { EdgeCurves[x + 1, y], EdgeCurves[x + 1, y + 1] },
+                          Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+                    sides[2] = Brep.CreateFromLoft(
+                      new Curve[] { EdgeCurves[x + 1, y + 1], EdgeCurves[x, y + 1] },
+                      Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+                    sides[3] = Brep.CreateFromLoft(
+                      new Curve[] { EdgeCurves[x, y + 1], EdgeCurves[x, y] },
+                      Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+                    sides[4] = Brep.CreateFromLoft(
+                      new Curve[] { edges[4], edges[5] },
+                      Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+                    sides[5] = Brep.CreateFromLoft(
+                      new Curve[] { edges[6], edges[7] },
+                      Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+                    Brep brep = Brep.JoinBreps(
+                      sides,
+                      Tolerance
+                      )[0];
+
+                    LamellaBreps.Add(brep);
+                }
+            }
+
             return LamellaBreps;
         }
 
-        public override List<Mesh> GetLamellaMeshes()
-        {
-            return base.GetLamellaMeshes();
-        }
+        public override List<Mesh> GetLamellaMeshes() => base.GetLamellaMeshes();
 
         public override List<Curve> GetLamellaCurves()
         {
@@ -658,68 +703,6 @@ namespace tas.Lam
             */
         }
 
-        public override void Transform(Transform x)
-        {
-            Centreline.Transform(x);
-            Orientation.Transform(x);
-            /*
-            for (int i = 0; i < Frames.Count; ++i)
-            {
-                Plane p = Frames[i].Item2;
-                p.Transform(x);
-
-                Frames[i] = new Tuple<double, Plane>(Frames[i].Item1, p);
-            }
-            */
-        }
-
-        public override Plane GetPlane(double t)
-        {
-            Vector3d v = Orientation.GetOrientation(Centreline, t);
-            return tas.Core.Util.Misc.PlaneFromNormalAndYAxis(Centreline.PointAt(t), Centreline.TangentAt(t), v);
-            /*
-            Tuple<Plane, Plane, double> faround = FramesAround(t);
-            Plane plane;
-
-            //double tt = Util.CosineInterpolate(0, 1.0, faround.Item3);
-            double tt = faround.Item3;
-
-            plane = Interpolation.InterpolatePlanes2(faround.Item1, faround.Item2, tt);
-            plane.Origin = Centreline.PointAt(t);
-            plane.Transform(Rhino.Geometry.Transform.Rotation(plane.ZAxis, Centreline.TangentAt(t), plane.Origin));
-
-            return plane;
-            */
-        }
-        /*
-        public override Tuple<Plane, Plane, double> FramesAround(double t)
-        {
-            if (Frames.Count < 1) return null;
-
-            double tt = 0;
-            int index = 1;
-            int last = Frames.Count - 1;
-
-            if (t <= Frames[0].Item1)
-                return new Tuple<Plane, Plane, double>(Frames[0].Item2, Frames[0].Item2, 0.0);
-            else if (t > Frames[last].Item1)
-            {
-                return new Tuple<Plane, Plane, double>(Frames[last].Item2, Frames[last].Item2, 1.0);
-            }
-
-            for (int i = 1; i < Frames.Count; ++i)
-            {
-                if (t > Frames[i].Item1) continue;
-                else
-                {
-                    index = i;
-                    break;
-                }
-            }
-            tt = (t - Frames[index - 1].Item1) / (Frames[index].Item1 - Frames[index - 1].Item1);
-            return new Tuple<Plane, Plane, double>(Frames[index - 1].Item2, Frames[index].Item2, tt);
-        }
-        */
         public override Glulam Overbend(double t)
         {
             PolyCurve pc = Centreline.DuplicateCurve() as PolyCurve;
@@ -731,7 +714,6 @@ namespace tas.Lam
 
             FreeformGlulam g = this.Duplicate() as FreeformGlulam;
             g.Centreline = pco;
-            //g.RecalculateFrames();
 
             return g;
         }
@@ -760,7 +742,11 @@ namespace tas.Lam
 
         public override string ToString() => "FreeformGlulam";
         
-
+        /// <summary>
+        /// Attempt to reduce twist in a Glulam with a variable orientation. TODO: Move to GlulamOrientation.
+        /// </summary>
+        /// <param name="factor"></param>
+        /// <param name="start_with_first"></param>
         public override void ReduceTwist(double factor, bool start_with_first = true)
         {
             throw new Exception("TODO: Move to GlulamOrientation and refactor.");

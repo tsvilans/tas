@@ -48,16 +48,19 @@ namespace tas.Lam
             }
             else if (curve.IsPlanar(Tolerance))
             {
+                /*
                 if (data.NumHeight < 2)
                 {
                     data.Lamellae.ResizeArray(data.NumWidth, 2);
                     data.LamHeight /= 2;
                 }
+                */
 
                 glulam = new SingleCurvedGlulam(curve, orientation, data);
             }
             else
             {
+                /*
                 if (data.NumHeight < 2)
                 {
                     data.Lamellae.ResizeArray(data.NumWidth, 2);
@@ -69,6 +72,7 @@ namespace tas.Lam
                     data.Lamellae.ResizeArray(2, data.NumHeight);
                     data.LamWidth /= 2;
                 }
+                */
 
                 glulam = new DoubleCurvedGlulam(curve, orientation, data);
 
@@ -390,9 +394,9 @@ namespace tas.Lam
             // Now we create the glulam...
 
             //tasTools.Lam.Glulam glulam = tasTools.Lam.Glulam.CreateGlulam(curve, frames.ToArray());
-            Beam temp_beam = new Beam(curve, frames.ToArray());
-            temp_beam.Samples = (int)(curve.GetLength() / GlulamData.DefaultSampleDistance);
-            Curve new_curve = temp_beam.CreateOffsetCurve(offsetX, offsetY, true);
+            Beam temp_beam = new Beam(curve, null, frames.ToArray());
+            int samples = (int)(curve.GetLength() / GlulamData.DefaultSampleDistance);
+            Curve new_curve = temp_beam.CreateOffsetCurve(offsetX, offsetY, samples, true);
             new_curve = new_curve.Extend(CurveEnd.Both, 5.0 + extra, CurveExtensionStyle.Smooth);
 
             GlulamData data = GlulamData.FromCurveLimits(new_curve, frames.ToArray());
@@ -502,7 +506,7 @@ namespace tas.Lam
             else
                 curve = segments[0];
 
-            Beam b = new Beam(curve, new Plane[] { cp });
+            Beam b = new Beam(curve, null, new Plane[] { cp });
 
             //curve = b.CreateOffsetCurve(-x, -y);
             curve = b.CreateOffsetCurve(x, y);

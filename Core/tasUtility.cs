@@ -270,6 +270,8 @@ namespace tas.Core.Util
         public static Vector3d Slerp(Vector3d v1, Vector3d v2, double t)
         {
             double dot = v1 * v2;
+            if (dot >= 1.0) return v1;
+
             double theta = Math.Acos(dot) * t;
             Vector3d rel = v2 - v1 * dot;
             rel.Unitize();
@@ -1708,7 +1710,7 @@ namespace tas.Core.Util
             if (index == 0) return Colors[0].AsSystemColor();
             if (index > Colors.Count - 1) return Colors.Last().AsSystemColor();
 
-            double tt = Util.Interpolation.Lerp(Stops[index - 1], Stops[index], t);
+            double tt = (t - Stops[index - 1]) / (Stops[index] - Stops[index - 1]);
             return Colors[index - 1].BlendTo((float)tt, Colors[index]).AsSystemColor();
             /*
             return Color.FromArgb(

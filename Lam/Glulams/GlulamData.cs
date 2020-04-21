@@ -106,7 +106,7 @@ namespace tas.Lam
 
         public static GlulamData FromCurveLimits(Curve c, double width, double height, Plane[] frames = null)
         {
-            Beam beam = new Lam.Beam(c, frames);
+            Beam beam = new Lam.Beam(c, null, frames);
 
             double[] tt = beam.Centreline.DivideByCount(100, true);
             double maxK = 0.0;
@@ -182,7 +182,7 @@ namespace tas.Lam
                 return new double[] { 0, 0 };
             }
 
-            Beam beam = new Lam.Beam(c, frames);
+            Beam beam = new Lam.Beam(c, null, frames);
             if (k_samples < 3) k_samples = DefaultCurvatureSamples;
 
             double[] tt = beam.Centreline.DivideByCount(k_samples, false);
@@ -270,7 +270,7 @@ namespace tas.Lam
             {
                 for (int j = 0; j < Lamellae.GetLength(1); ++j)
                 {
-                    Lamellae[i, j] = new Stick(species);
+                        Lamellae[i, j] = new Stick(species);
                 }
             }
         }

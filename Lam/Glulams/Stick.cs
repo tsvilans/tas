@@ -38,7 +38,8 @@ namespace tas.Lam
 
         public Stick(Guid reference, string species = "Spruce")
         {
-            Species = species;
+            if(!string.IsNullOrWhiteSpace(species))
+                Species = species;
             Reference = reference;
         }
     }

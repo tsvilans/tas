@@ -23,7 +23,7 @@ namespace tas.Lam.Features
             m_glulamB = glulamB;
             m_offset1 = offset1;
             m_offset2 = offset2;
-            offset_center = 20;
+            offset_center = 10;
         }
 
         public override bool Compute()
@@ -253,17 +253,24 @@ namespace tas.Lam.Features
     public class CrossJoint2 : tas.Lam.FeatureX
     {
         // improved by Tom, Aug. 13, 2018
-        Glulam m_glulamA, m_glulamB;
+        Glulam m_glulam1, m_glulam2;
+        public Glulam Glulam1 { get { return m_glulam1; } }
+        public Glulam Glulam2 { get { return m_glulam2; } }
+
         double m_offset1, m_offset2;
         public double offset_center;
         double m_extension;
+
+        public double Offset1 { get { return m_offset1; } set { m_offset1 = value; } }
+        public double Offset2 { get { return m_offset2; } set { m_offset2 = value; } }
+        public double Extension { get { return m_extension; } set { m_extension = value; } }
 
         public List<object> debug = new List<object>();
 
         public CrossJoint2(Glulam glulamA, Glulam glulamB, double offset1 = 10.0, double offset2 = 10.0, double extension = 5.0)
         {
-            m_glulamA = glulamA;
-            m_glulamB = glulamB;
+            m_glulam1 = glulamA;
+            m_glulam2 = glulamB;
             m_offset1 = offset1;
             m_offset2 = offset2;
             m_extension = extension;
@@ -273,10 +280,10 @@ namespace tas.Lam.Features
         public override bool Compute()
         {
             double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            double widthA = m_glulamA.Width();
-            double heightA = m_glulamA.Height();
-            double widthB = m_glulamB.Width();
-            double heightB = m_glulamB.Height();
+            double widthA = m_glulam1.Width();
+            double heightA = m_glulam1.Height();
+            double widthB = m_glulam2.Width();
+            double heightB = m_glulam2.Height();
             double drill_depth = 200.0;
 
             bool flip = false;
@@ -288,7 +295,7 @@ namespace tas.Lam.Features
             //
 
             Point3d ptA, ptB;
-            m_glulamA.Centreline.ClosestPoints(m_glulamB.Centreline, out ptA, out ptB);
+            m_glulam1.Centreline.ClosestPoints(m_glulam2.Centreline, out ptA, out ptB);
 
             Point3d CP = (ptA + ptB) / 2;
             debug.Add(CP);
@@ -296,8 +303,8 @@ namespace tas.Lam.Features
 
             double cDist = ptA.DistanceTo(ptB) / 2;
 
-            Plane plA = m_glulamA.GetPlane(ptA);
-            Plane plB = m_glulamB.GetPlane(ptB);
+            Plane plA = m_glulam1.GetPlane(ptA);
+            Plane plB = m_glulam2.GetPlane(ptB);
 
             double ofc = offset_center;
             double ofc2 = offset_center / 2;
@@ -330,13 +337,13 @@ namespace tas.Lam.Features
 
             Brep[] arrbrpCenterSides = new Brep[]
               {
-        m_glulamA.GetSideSurface(0, (widthA / 2 - ofc2) * xAFlip, heightB * 3, m_extension, flip),
-        m_glulamA.GetSideSurface(0, -(widthA / 2 - ofc2) * xAFlip, heightB * 3, m_extension, flip)
+        m_glulam1.GetSideSurface(0, (widthA / 2 - ofc2) * xAFlip, heightB * 3, m_extension, flip),
+        m_glulam1.GetSideSurface(0, -(widthA / 2 - ofc2) * xAFlip, heightB * 3, m_extension, flip)
               };
 
             //debug.AddRange(arrbrpCenterSides);
 
-            Brep brpCenterFlat = m_glulamB.GetSideSurface(1, cDist * yAFlip, widthB - ofc, m_extension, flip);
+            Brep brpCenterFlat = m_glulam2.GetSideSurface(1, cDist * yAFlip, widthB - ofc, m_extension, flip);
 
             //debug.Add(brpCenterFlat);
 
@@ -393,7 +400,7 @@ namespace tas.Lam.Features
             // GlulamA Top
             //
 
-            Brep brpGlulamATop = m_glulamA.GetSideSurface(1, (heightA / 2 + m_offset1) * -yAFlip, widthA + m_offset2, m_extension, false);
+            Brep brpGlulamATop = m_glulam1.GetSideSurface(1, (heightA / 2 + m_offset1) * -yAFlip, widthA + m_offset2, m_extension, false);
 
             debug.Add(brpGlulamATop);
 
@@ -402,15 +409,15 @@ namespace tas.Lam.Features
             //
 
             Brep[] arrbrpGlulamASides = new Brep[2];
-            arrbrpGlulamASides[0] = m_glulamA.GetSideSurface(0, (widthA / 2 + m_offset1) * xAFlip, heightA * 2 + m_offset2, m_extension, flip);
-            arrbrpGlulamASides[1] = m_glulamA.GetSideSurface(0, -(widthA / 2 + m_offset1) * xAFlip, heightA * 2 + m_offset2, m_extension, flip);
+            arrbrpGlulamASides[0] = m_glulam1.GetSideSurface(0, (widthA / 2 + m_offset1) * xAFlip, heightA * 2 + m_offset2, m_extension, flip);
+            arrbrpGlulamASides[1] = m_glulam1.GetSideSurface(0, -(widthA / 2 + m_offset1) * xAFlip, heightA * 2 + m_offset2, m_extension, flip);
 
             debug.AddRange(arrbrpGlulamASides);
             //
             // GlulamB Bottom
             //
 
-            Brep brpGlulamBBtm = m_glulamB.GetSideSurface(1, (heightB / 2 + m_offset1) * -yBFlip, widthB + m_offset2, m_extension, false);
+            Brep brpGlulamBBtm = m_glulam2.GetSideSurface(1, (heightB / 2 + m_offset1) * -yBFlip, widthB + m_offset2, m_extension, false);
             debug.Add(brpGlulamBBtm);
 
             //
@@ -418,8 +425,8 @@ namespace tas.Lam.Features
             //
 
             Brep[] arrbrpGlulamBSides = new Brep[2];
-            arrbrpGlulamBSides[0] = m_glulamB.GetSideSurface(0, (widthB / 2 + m_offset1) * xAFlip, heightB * 2 + m_offset2, m_extension, flip);
-            arrbrpGlulamBSides[1] = m_glulamB.GetSideSurface(0, -(widthB / 2 + m_offset1) * xAFlip, heightB * 2 + m_offset2, m_extension, flip);
+            arrbrpGlulamBSides[0] = m_glulam2.GetSideSurface(0, (widthB / 2 + m_offset1) * xAFlip, heightB * 2 + m_offset2, m_extension, flip);
+            arrbrpGlulamBSides[1] = m_glulam2.GetSideSurface(0, -(widthB / 2 + m_offset1) * xAFlip, heightB * 2 + m_offset2, m_extension, flip);
 
             debug.AddRange(arrbrpGlulamBSides);
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if OBSOLETE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,3 +58,4 @@ namespace tas.Lam
 
     }
 }
+#endif
