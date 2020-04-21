@@ -91,7 +91,7 @@ namespace tas.Projects.DMI.GH
 
         Toolpath m_active = null;
 
-        List<Mesh> m_meshes = null;
+        //List<Mesh> m_meshes = null;
 
         List<Waypoint> m_wp = null;
         List<double> m_times = null;

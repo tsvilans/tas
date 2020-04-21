@@ -83,6 +83,7 @@ namespace tas.Lam.Features
         double m_incline;
         double m_length;
         double m_t1, m_t2;
+        double m_drill_depth;
 
         public double Extension { get { return m_extension; } set { m_extension = value; } }
         public double Incline { get { return m_incline; } set { m_incline = value; } }
@@ -90,7 +91,9 @@ namespace tas.Lam.Features
         public double T1 { get { return m_t1; } set { m_t1 = value; } }
         public double T2 { get { return m_t2; } set { m_t2 = value; } }
 
-        public EndLapJoint2(Glulam glulam1, Glulam glulam2, double t1, double t2, double length, double incline, double extension = 5.0)
+        public double DrillDepth { get { return m_drill_depth; } set { m_drill_depth = value; } }
+
+        public EndLapJoint2(Glulam glulam1, Glulam glulam2, double t1, double t2, double length, double incline, double extension = 5.0, double drill_depth = 200.0)
         {
             m_glulam1 = glulam1;
             m_glulam2 = glulam2;
@@ -100,11 +103,11 @@ namespace tas.Lam.Features
             m_length = length;
             m_incline = incline;
             m_extension = extension;
+            m_drill_depth = drill_depth;
         }
 
         public override bool Compute()
         {
-            double drill_depth = 200.0;
             double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
 
             Plane p1 = m_glulam1.GetPlane(m_t1);
@@ -134,6 +137,28 @@ namespace tas.Lam.Features
             m_result = new List<Brep>();
             m_result.Add(brep);
 
+            var drill0 = new DoubleSidedCounterSunkDrill(
+                new Plane(
+                plane.Origin
+                  + plane.YAxis * -m_length / 3.6,
+                  plane.XAxis, plane.YAxis),
+                5.0, DrillDepth, 10.0, 6.0);
+
+            drill0.Compute();
+
+            m_result.AddRange(drill0.GetCuttingGeometry());
+
+            var drill1 = new DoubleSidedCounterSunkDrill(
+                new Plane(plane.Origin
+              + plane.YAxis * m_length / 3.6,
+              plane.XAxis, plane.YAxis),
+                5.0, DrillDepth, 10.0, 6.0);
+
+            drill1.Compute();
+
+            m_result.AddRange(drill1.GetCuttingGeometry());
+
+            /*
             m_result.Add(Brep.CreateFromCylinder(
               new Cylinder(
               new Circle(
@@ -151,6 +176,7 @@ namespace tas.Lam.Features
               plane.XAxis, plane.YAxis),
               12.0), drill_depth),
               false, false));
+            */
 
             return true;
         }

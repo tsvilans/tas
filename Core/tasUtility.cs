@@ -309,8 +309,7 @@ namespace tas.Core.Util
             Quaternion qC = Slerp(qA, qB, t);
             Point3d p = Lerp(A.Origin, B.Origin, t);
 
-            Plane plane;
-            qC.GetRotation(out plane);
+            qC.GetRotation(out Plane plane);
             plane.Origin = p;
 
             return plane;
@@ -363,14 +362,12 @@ namespace tas.Core.Util
         /// <returns>Point on triangle at (a , b).</returns>
         public static Point3d PointOnTriangle(Point3d A, Point3d B, Point3d C, double a, double b)
         {
-            double c = 0;
-
             if (a + b > 1)
             {
                 a = 1 - a;
                 b = 1 - b;
             }
-            c = 1 - a - b;
+            double c = 1 - a - b;
 
             return new Point3d(
                 (a * A.X) + (b * B.X) + (c * C.X),
@@ -394,13 +391,70 @@ namespace tas.Core.Util
             return new Color4f((float)(-v.X / 2 + 0.5), (float)(-v.Y / 2 + 0.5), (float)-v.Z, 1.0f);
         }
 
+        public static Point3d FromBarycentricCoordinates(Point3d pt, Point3d p1, Point3d p2, Point3d p3, Point3d p4)
+        {
+            double x, y, z;
+
+            x = (p1.X - p4.X) * pt.X + (p2.X - p4.X) * pt.Y + (p3.X - p4.X) * pt.Z + p4.X;
+            y = (p1.Y - p4.Y) * pt.X + (p2.Y - p4.Y) * pt.Y + (p3.Y - p4.Y) * pt.Z + p4.Y;
+            z = (p1.Z - p4.Z) * pt.Z + (p2.Z - p4.Z) * pt.Y + (p3.Z - p4.Z) * pt.Z + p4.Z;
+
+            return new Point3d(x, y, z);
+        }
+
+        public static Point3d[] FromBarycentricCoordinates(ICollection<Point3d> pt, Point3d p1, Point3d p2, Point3d p3, Point3d p4)
+        {
+            return pt.Select(x => FromBarycentricCoordinates(x, p1, p2, p3, p4)).ToArray();
+        }
+
+        public static Point3d ToBarycentricCoordinates(Point3d pt, Point3d p1, Point3d p2, Point3d p3, Point3d p4)
+        {
+            return ToBarycentricCoordinates(new Point3d[] { pt }, p1, p2, p3, p4)[0];
+        }
+
+        public static Point3d[] ToBarycentricCoordinates(ICollection<Point3d> pt, Point3d p1, Point3d p2, Point3d p3, Point3d p4)
+        {
+            //Vector3d r1 = p2 - p1;
+            //Vector3d r2 = p3 - p1;
+            //Vector3d r3 = p4 - p1;
+
+            //double J = Vector3d.CrossProduct(r1, r2) * r3;
+
+            Transform xform = Transform.Identity;
+            xform[0, 0] = p1.X - p4.X;
+            xform[0, 1] = p2.X - p4.X;
+            xform[0, 2] = p3.X - p4.X;
+
+            xform[1, 0] = p1.Y - p4.Y;
+            xform[1, 1] = p2.Y - p4.Y;
+            xform[1, 2] = p3.Y - p4.Y;
+
+            xform[2, 0] = p1.Z - p4.Z;
+            xform[2, 1] = p2.Z - p4.Z;
+            xform[2, 2] = p3.Z - p4.Z;
+
+
+            xform.TryGetInverse(out Transform inverse);
+
+            var output = new Point3d[pt.Count];
+
+            int i = 0;
+            foreach (Point3d p in pt)
+            {
+                output[i] = inverse * new Point3d(p - p4);
+                ++i;
+            }
+
+            return output;
+        }
+
 
     }
 
     public static class Misc
     {
  
-        static Random random = new Random();
+        static readonly Random random = new Random();
 
         public static Plane PlaneFromNormalAndYAxis(Point3d origin, Vector3d normal, Vector3d yaxis)
         {
@@ -536,8 +590,7 @@ namespace tas.Core.Util
         {
             if (normal.IsZero)
             {
-                Plane fit;
-                Plane.FitPlaneToPoints(pl, out fit);
+                Plane.FitPlaneToPoints(pl, out Plane fit);
                 normal = fit.ZAxis;
 
                 var poly_direction = Vector3d.CrossProduct(pl[2] - pl[1], pl[0] - pl[1]);
@@ -754,10 +807,12 @@ namespace tas.Core.Util
         {
             return p.ProjectToPlane(pl);
 
+            /*
             Vector3d op = new Vector3d(p - pl.Origin);
             double dot = Vector3d.Multiply(pl.ZAxis, op);
             Vector3d v = pl.ZAxis * dot;
             return new Point3d(p - v);
+            */
         }
 
         /// <summary>
@@ -812,8 +867,7 @@ namespace tas.Core.Util
             double alpha, beta;
             Point3d pt;
 
-            Plane fitPlane;
-            Plane.FitPlaneToPoints(pl, out fitPlane);
+            Plane.FitPlaneToPoints(pl, out Plane fitPlane);
             normal = fitPlane.ZAxis;
             if (normal * Vector3d.ZAxis < 0)
                 normal.Reverse();
@@ -925,14 +979,15 @@ namespace tas.Core.Util
         {
             List<Polyline> pls = new List<Polyline>();
             if (!pl.IsClosed) return pls;
-            List<Polyline> offC, offH;
-            List<Polyline> tpl = new List<Polyline>();
-            tpl.Add(pl);
+            List<Polyline> tpl = new List<Polyline>
+            {
+                pl
+            };
 
             while (tpl.Count > 0)
             {
                 Polyline3D.Offset(tpl, Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, d, p,
-                  0.01, out offC, out offH);
+                  0.01, out List<Polyline> offC, out List<Polyline> offH);
                 pls.AddRange(offH);
                 tpl = offH;
             }
@@ -942,7 +997,6 @@ namespace tas.Core.Util
         public static List<Polyline> InsetUntilNone(List<Polyline> pl, double d, Plane p)
         {
             List<Polyline> pls = new List<Polyline>();
-            List<Polyline> offC, offH;
             List<Polyline> tpl = new List<Polyline>();
 
             for (int i = 0; i < pl.Count; ++i)
@@ -954,7 +1008,7 @@ namespace tas.Core.Util
             while (tpl.Count > 0)
             {
                 Polyline3D.Offset(tpl, Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, d, p,
-                  0.01, out offC, out offH);
+                  0.01, out _, out List<Polyline> offH);
                 pls.AddRange(offH);
                 tpl = offH;
             }
@@ -964,7 +1018,6 @@ namespace tas.Core.Util
         public static void InsetUntilNoneClustersRecursive(Polyline Poly, double Distance, Plane P, ref List<List<Polyline>> Clusters, int Index)
         {
             List<Polyline> OffsetPolylines = new List<Polyline>();
-            List<Polyline> Contours, Holes;
 
             if (!Poly.IsClosed) return;
             OffsetPolylines.Add(Poly);
@@ -975,7 +1028,7 @@ namespace tas.Core.Util
                 Polyline3D.Offset(OffsetPolylines, Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter,
                     Distance, P,
                     Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance,
-                    out Contours, out Holes);
+                    out _, out List<Polyline> Holes);
 
                 if (Holes.Count > 1)
                 {
@@ -1041,8 +1094,7 @@ namespace tas.Core.Util
             {
                 if (c == null) continue;
 
-                Polyline pl;
-                if (c.IsPolyline() && c.TryGetPolyline(out pl))
+                if (c.IsPolyline() && c.TryGetPolyline(out Polyline pl))
                 {
                     polys.Add(pl);
                 }
@@ -1057,8 +1109,7 @@ namespace tas.Core.Util
         public static Polyline CurveToPolyline(Curve crv, double tol, bool reduce = false)
         {
             PolylineCurve pc = crv.ToPolyline(0, 0, 0, 0, 0, tol, 0, 0, true);
-            Polyline pl;
-            pc.TryGetPolyline(out pl);
+            pc.TryGetPolyline(out Polyline pl);
             if (reduce) pl.ReduceSegments(tol);
             if (pl.IsClosedWithinTolerance(tol))
                 pl.Last = pl.First;
@@ -1352,30 +1403,6 @@ namespace tas.Core.Util
             int2 = new Interval(t2Min - extension, t2Max + extension);
         }
 
-        /// <summary>
-        /// Deprecated.
-        /// </summary>
-        /// <param name="MeterUnit"></param>
-        /// <returns></returns>
-        public static double ScaleFromMeter(double MeterUnit = 1.0)
-        {
-            return Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
-            switch (Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem)
-            {
-                case (Rhino.UnitSystem.Meters):
-                    return MeterUnit * 1.0;
-                case (Rhino.UnitSystem.Centimeters):
-                    return MeterUnit * 100.0;
-                case (Rhino.UnitSystem.Millimeters):
-                    return MeterUnit * 1000.0;
-                case (Rhino.UnitSystem.Inches):
-                    return MeterUnit * 39.3701;
-                case (Rhino.UnitSystem.Feet):
-                    return MeterUnit * 3.28084;
-                default:
-                    return 1.0;
-            }
-        }
 
         /// <summary>
         /// Attempts to align two sets of keypoints in a RANSAC-like fashion.

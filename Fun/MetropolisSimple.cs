@@ -117,7 +117,7 @@ namespace tas.Extra
 
             bool rejected = true;
             bool breaker = false;
-            double ratio = 1.0;
+            //double ratio = 1.0;
 
             for (int i = 0; i < N; ++i)
             {

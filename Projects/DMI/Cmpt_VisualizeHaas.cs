@@ -137,14 +137,15 @@ namespace tas.Projects.DMI.GH
               m_point.Y,
               m_point.Z + m_machine_tool.Length};
 
+            /*
             bool is_good;
-
             for (int i = 0; i < 3; ++i)
                 if (!m_limits[i].IncludesParameter(coords[i]))
                 {
                     is_good = false;
                 }
             is_good = true;
+            */
 
             if (!IsInMachineLimits(coords))
                 this.Message = "Out of bounds!";

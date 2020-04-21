@@ -55,6 +55,7 @@
     <Compile Include="Beam.cs" />
     <Compile Include="BeamBase.cs" />
     <Compile Include="Features\FeatureLoader.cs" />
+    <Compile Include="Features\Feature_Drillings.cs" />
     <Compile Include="Features\Feature_EndLapJoint.cs" />
     <Compile Include="Features\Feature_CrossJoint.cs" />
     <Compile Include="Glulams\DoubleCurvedGlulam.cs" />
@@ -82,7 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="RhinoCommon">
-      <Version>6.7.18199.22081</Version>
+      <Version>6.24.20079.23341</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

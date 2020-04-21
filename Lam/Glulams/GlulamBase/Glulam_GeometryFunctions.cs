@@ -72,11 +72,6 @@ namespace tas.Lam
 
         public abstract void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
 
-        public virtual void Transform(Transform x)
-        {
-            return;
-        }
-
 
     }
 }

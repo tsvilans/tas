@@ -149,7 +149,6 @@ namespace tas.Lam
     {
         Glulam[] Branches;
         public Ray3d[] Ends;
-        public Guid Id;
 
         static public double OverlapTolerance = 0.01;
         static public double Tolerance = 0.01;

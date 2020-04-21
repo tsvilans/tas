@@ -146,7 +146,7 @@ namespace tas.ESR2
             {
                 Value = Proposed;
             }
-            catch (ParamLockedException pe)
+            catch (ParamLockedException)
             {
                 return false;
             }
@@ -233,7 +233,7 @@ namespace tas.ESR2
             {
                 Value = Proposed;
             }
-            catch (ParamLockedException pe)
+            catch (ParamLockedException)
             {
                 return false;
             }

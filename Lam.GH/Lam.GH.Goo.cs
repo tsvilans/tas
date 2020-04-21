@@ -184,7 +184,6 @@ namespace tas.Lam.GH
             {
                 Value = null;
                 throw new Exception("Couldn't retrieve 'guide'.");
-                return true;
             }
 
             byte[] rawGuide = reader.GetByteArray("guide");

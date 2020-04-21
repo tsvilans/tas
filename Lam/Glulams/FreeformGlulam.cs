@@ -228,7 +228,7 @@ namespace tas.Lam
 
             //Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
             
-            double[] DivParams;
+            //double[] DivParams;
             Plane[] xPlanes;
             // Old way of generating cross-section planes
             //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
@@ -436,7 +436,7 @@ namespace tas.Lam
                     crvPts[j].Add(temp);
                 }
             }
-
+            
             Curve[] edges = new Curve[numCorners + 4];
 
             for (int i = 0; i < numCorners; ++i)
@@ -583,7 +583,7 @@ namespace tas.Lam
 
         public override List<Curve> GetLamellaCurves()
         {
-            double[] DivParams;
+            //double[] DivParams;
             Plane[] planes;
             //GenerateCrossSectionPlanes(Data.Samples, 0, out xPlanes, out DivParams, Data.InterpolationType);
 

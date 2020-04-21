@@ -260,14 +260,16 @@ namespace tas.Lam.Features
         double m_offset1, m_offset2;
         public double offset_center;
         double m_extension;
+        double m_drill_depth;
 
         public double Offset1 { get { return m_offset1; } set { m_offset1 = value; } }
         public double Offset2 { get { return m_offset2; } set { m_offset2 = value; } }
         public double Extension { get { return m_extension; } set { m_extension = value; } }
+        public double DrillDepth { get { return m_drill_depth; } set { m_drill_depth = value; } }
 
         public List<object> debug = new List<object>();
 
-        public CrossJoint2(Glulam glulamA, Glulam glulamB, double offset1 = 10.0, double offset2 = 10.0, double extension = 5.0)
+        public CrossJoint2(Glulam glulamA, Glulam glulamB, double offset1 = 10.0, double offset2 = 10.0, double extension = 5.0, double drill_depth = 100.0)
         {
             m_glulam1 = glulamA;
             m_glulam2 = glulamB;
@@ -275,6 +277,8 @@ namespace tas.Lam.Features
             m_offset2 = offset2;
             m_extension = extension;
             offset_center = 10;
+
+            m_drill_depth = drill_depth;
         }
 
         public override bool Compute()
@@ -284,7 +288,6 @@ namespace tas.Lam.Features
             double heightA = m_glulam1.Height();
             double widthB = m_glulam2.Width();
             double heightB = m_glulam2.Height();
-            double drill_depth = 200.0;
 
             bool flip = false;
 
@@ -563,13 +566,13 @@ namespace tas.Lam.Features
                 m_result.AddRange(temp);
             }
 
-            m_result.Add(Brep.CreateFromCylinder(
-              new Cylinder(
-              new Circle(
-              new Plane(cPlane.Origin - cPlane.ZAxis * drill_depth / 2,
-              cPlane.XAxis, cPlane.YAxis)
-              , 6.0),
-              drill_depth), false, false));
+            var drill0 = new DoubleSidedCounterSunkDrill(
+                cPlane,
+                5.0, m_drill_depth, 10.0, 6.0);
+
+            drill0.Compute();
+
+            m_result.AddRange(drill0.GetCuttingGeometry());
 
             return true;
         }

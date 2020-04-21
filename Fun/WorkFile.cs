@@ -77,110 +77,95 @@ namespace tas.ESR2
             // Setup layers
             Layer lRoot = new Layer();
             lRoot.Name = "tas";
-            file.Layers.Add(lRoot);
-            file.Polish();
-            lRoot = file.Layers.Last();
+            file.AllLayers.Add(lRoot);
+            lRoot = file.AllLayers.Last();
 
             Layer lNC = new Layer();
             lNC.Name = "NC";
             lNC.IsVisible = false;
             lNC.IsLocked = true;
-            file.Layers.Add(lNC);
-            file.Polish();
-            lNC = file.Layers.Last();
+            file.AllLayers.Add(lNC);
+            lNC = file.AllLayers.Last();
             lNC.ParentLayerId = lRoot.Id;
 
             Layer lBL = new Layer();
             lBL.Name = "BL";
             lBL.IsLocked = true;
-            file.Layers.Add(lBL);
-            file.Polish();
-            lBL = file.Layers.Last();
+            file.AllLayers.Add(lBL);
+            lBL = file.AllLayers.Last();
             lBL.ParentLayerId = lRoot.Id;
 
             Layer lBE = new Layer();
             lBE.Name = "BE";
             lBE.IsLocked = true;
-            file.Layers.Add(lBE);
-            file.Polish();
-            lBE = file.Layers.Last();
+            file.AllLayers.Add(lBE);
+            lBE = file.AllLayers.Last();
             lBE.ParentLayerId = lRoot.Id;
 
             Layer lBL_Centreline = new Layer();
             lBL_Centreline.Name = "BL_Centreline";
-            lBL_Centreline.LayerIndex = 1;
+            lBL_Centreline.Index = 1;
             lBL_Centreline.Color = Color.FromArgb(0, 0, 255);
             lBL_Centreline.ParentLayerId = lBL.Id;
-            file.Layers.Add(lBL_Centreline);
-            file.Polish();
-            lBL_Centreline = file.Layers.Last();
+            file.AllLayers.Add(lBL_Centreline);
+            lBL_Centreline = file.AllLayers.Last();
 
             Layer lBL_Geometry = new Layer();
             lBL_Geometry.Name = "BL_Geometry";
             lBL_Geometry.Color = Color.FromArgb(125, 200, 125);
             lBL_Geometry.ParentLayerId = lBL.Id;
-            file.Layers.Add(lBL_Geometry);
-            file.Polish();
-            lBL_Geometry = file.Layers.Last();
+            file.AllLayers.Add(lBL_Geometry);
+            lBL_Geometry = file.AllLayers.Last();
 
             Layer lBL_Safety = new Layer();
             lBL_Safety.Name = "BL_Safety";
             lBL_Safety.IsVisible = false;
             lBL_Safety.Color = Color.FromArgb(200, 200, 200);
             lBL_Safety.ParentLayerId = lBL.Id;
-            file.Layers.Add(lBL_Safety);
-            file.Polish();
-            lBL_Safety = file.Layers.Last();
+            file.AllLayers.Add(lBL_Safety);
+            lBL_Safety = file.AllLayers.Last();
 
             Layer lBE_Geometry = new Layer();
             lBE_Geometry.Name = "BE_Geometry";
             lBE_Geometry.Color = Color.FromArgb(100, 100, 100);
             lBE_Geometry.ParentLayerId = lBE.Id;
-            file.Layers.Add(lBE_Geometry);
-            file.Polish();
-            lBE_Geometry = file.Layers.Last();
+            file.AllLayers.Add(lBE_Geometry);
+            lBE_Geometry = file.AllLayers.Last();
 
             Layer lNC_Surface = new Layer();
             lNC_Surface.Name = "NC_Surface";
             lNC_Surface.Color = Color.FromArgb(255, 0, 255);
             lNC_Surface.ParentLayerId = lNC.Id;
-            file.Layers.Add(lNC_Surface);
-            file.Polish();
-            lNC_Surface = file.Layers.Last();
+            file.AllLayers.Add(lNC_Surface);
+            lNC_Surface = file.AllLayers.Last();
 
             Layer lNC_Normals = new Layer();
             lNC_Normals.Name = "NC_SurfaceNormals";
             lNC_Normals.Color = Color.FromArgb(255, 0, 150);
             lNC_Normals.ParentLayerId = lNC.Id;
-            file.Layers.Add(lNC_Normals);
-            file.Polish();
-            lNC_Normals = file.Layers.Last();
+            file.AllLayers.Add(lNC_Normals);
+            lNC_Normals = file.AllLayers.Last();
 
             Layer lNC_GlueFace = new Layer();
             lNC_GlueFace.Name = "NC_GlueFace";
             lNC_GlueFace.Color = Color.FromArgb(255, 0, 255);
             lNC_GlueFace.ParentLayerId = lNC.Id;
-            file.Layers.Add(lNC_GlueFace);
-            file.Polish();
-            lNC_GlueFace = file.Layers.Last();
+            file.AllLayers.Add(lNC_GlueFace);
+            lNC_GlueFace = file.AllLayers.Last();
 
             Layer lNC_Joints = new Layer();
             lNC_Joints.Name = "NC_Joints";
             lNC_Joints.Color = Color.FromArgb(255, 0, 255);
             lNC_Joints.ParentLayerId = lNC.Id;
-            file.Layers.Add(lNC_Joints);
-            file.Polish();
-            lNC_Joints = file.Layers.Last();
+            file.AllLayers.Add(lNC_Joints);
+            lNC_Joints = file.AllLayers.Last();
 
             Layer lNC_Drill = new Layer();
             lNC_Drill.Name = "NC_Drill";
             lNC_Drill.Color = Color.FromArgb(255, 0, 0);
             lNC_Drill.ParentLayerId = lNC.Id;
-            file.Layers.Add(lNC_Drill);
-            file.Polish();
-            lNC_Drill = file.Layers.Last();
-
-            file.Polish();
+            file.AllLayers.Add(lNC_Drill);
+            lNC_Drill = file.AllLayers.Last();
 
             // Add objects
 
@@ -188,11 +173,11 @@ namespace tas.ESR2
 
             oa = new ObjectAttributes();
 
-            oa.LayerIndex = lBL_Centreline.LayerIndex;
+            oa.LayerIndex = lBL_Centreline.Index;
             oa.Name = "Glulam_Centreline";
             file.Objects.AddCurve(g.Centreline, oa);
 
-            oa.LayerIndex = lBL_Geometry.LayerIndex;
+            oa.LayerIndex = lBL_Geometry.Index;
             oa.UserDictionary.Set("LamWidth", g.Data.LamWidth);
             oa.UserDictionary.Set("LamHeight", g.Data.LamHeight);
             oa.UserDictionary.Set("NumWidth", g.Data.NumWidth);
@@ -201,12 +186,12 @@ namespace tas.ESR2
             oa.Name = "Glulam_BoundingMesh";
             Guid blank_id = file.Objects.AddBrep(g.GetBoundingBrep(), oa);
 
-            oa.LayerIndex = lBE_Geometry.LayerIndex;
+            oa.LayerIndex = lBE_Geometry.Index;
             oa.UserDictionary.Clear();
             oa.Name = "Beam_Geometry";
             file.Objects.AddBrep(beam, oa);
 
-            oa.LayerIndex = lBL_Safety.LayerIndex;
+            oa.LayerIndex = lBL_Safety.Index;
             oa.Name = "Glulam_Safety";
 
             Brep blank_safety = g.GetBoundingBrep(50.0);
@@ -216,11 +201,11 @@ namespace tas.ESR2
 
             for (int i = 0; i < Cuts_Surface.Count; ++i)
             {
-                oa.LayerIndex = lNC_Surface.LayerIndex;
+                oa.LayerIndex = lNC_Surface.Index;
                 oa.Name = string.Format("Machining_Surface_{0:00}", i);
                 file.Objects.AddBrep(Cuts_Surface[i], oa);
 
-                oa.LayerIndex = lNC_Normals.LayerIndex;
+                oa.LayerIndex = lNC_Normals.Index;
                 oa.Name = string.Format("Machining_Surface_Normal_{0:00}", i);
                 BrepFace bf = Cuts_Surface[i].Faces[0];
                 Vector3d normal = bf.NormalAt(bf.Domain(0).Mid, bf.Domain(1).Mid);
@@ -232,11 +217,11 @@ namespace tas.ESR2
 
             for (int i = 0; i < Cuts_GlueSurface.Count; ++i)
             {
-                oa.LayerIndex = lNC_Surface.LayerIndex;
+                oa.LayerIndex = lNC_Surface.Index;
                 oa.Name = string.Format("Glue_Surface_{0:00}", i);
                 file.Objects.AddBrep(Cuts_GlueSurface[i], oa);
 
-                oa.LayerIndex = lNC_Normals.LayerIndex;
+                oa.LayerIndex = lNC_Normals.Index;
                 oa.Name = string.Format("Glue_Surface_Normal_{0:00}", i);
                 BrepFace bf = Cuts_GlueSurface[i].Faces[0];
                 Vector3d normal = bf.NormalAt(bf.Domain(0).Mid, bf.Domain(1).Mid);
@@ -248,11 +233,11 @@ namespace tas.ESR2
 
             for (int i = 0; i < Cuts_Joint.Count; ++i)
             {
-                oa.LayerIndex = lNC_Joints.LayerIndex;
+                oa.LayerIndex = lNC_Joints.Index;
                 oa.Name = string.Format("Joint_Surface_{0:00}", i);
                 file.Objects.AddBrep(Cuts_Joint[i], oa);
 
-                oa.LayerIndex = lNC_Normals.LayerIndex;
+                oa.LayerIndex = lNC_Normals.Index;
                 oa.Name = string.Format("Joint_Surface_Normal_{0:00}", i);
                 BrepFace bf = Cuts_Joint[i].Faces[0];
                 Vector3d normal = bf.NormalAt(bf.Domain(0).Mid, bf.Domain(1).Mid);
@@ -264,7 +249,7 @@ namespace tas.ESR2
 
             for (int i = 0; i < Drills_Joint.Count; ++i)
             {
-                oa.LayerIndex = lNC_Drill.LayerIndex;
+                oa.LayerIndex = lNC_Drill.Index;
                 oa.Name = string.Format("Joint_Drill_{0:00}", i);
 
                 Vector3d dir = Drills_Joint[i].Direction;

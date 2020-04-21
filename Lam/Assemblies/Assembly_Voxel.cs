@@ -39,7 +39,7 @@ namespace tas.Lam
     /// </summary>
     public class VoxelAssembly : Assembly
     {
-        List<Glulam> Blanks;
+        // List<Glulam> Blanks;
 
         private List<List<List<bool>>> VoxelGrid;
         private double VoxX, VoxY, VoxZ;

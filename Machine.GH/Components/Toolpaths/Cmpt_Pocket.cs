@@ -29,13 +29,12 @@ namespace tas.Machine.GH.Toolpaths
 
         Plane _workplane;
         List<Curve> _curves;
-        Curve _curve;
 
         ToolSettings Tool = new ToolSettings();
         tasTP_ToolSettings_Form form;
 
         double _depth;
-        bool _calc = false;
+        //bool _calc = false;
 
         string _debug = "";
         List<PPolyline> _paths;
@@ -85,7 +84,6 @@ namespace tas.Machine.GH.Toolpaths
                 // get inputs
                 this._workplane = new Plane();
                 DA.GetData("Workplane", ref this._workplane);
-                this._curve = null;
                 _curves = new List<Curve>();
 
                 if (DA.GetDataList("Curves", this._curves))
