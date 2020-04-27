@@ -82,7 +82,7 @@ namespace tas.Lam.GH.Components
         {
             get
             {
-                return null;
+                return Properties.Resources.tas_icons_Vector2Color_24x24;
             }
         }
 

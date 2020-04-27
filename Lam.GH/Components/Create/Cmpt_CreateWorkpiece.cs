@@ -27,7 +27,7 @@ namespace tas.Lam.GH
     public class Cmpt_CreateWorkpiece : GH_Component
     {
         public Cmpt_CreateWorkpiece()
-          : base("Create Glulam Workpiece", "Workpiece",
+          : base("Workpiece", "Workpiece",
               "Create glulam workpiece.",
               "tasLam", "Create")
         {

@@ -57,7 +57,7 @@ namespace tas.Lam.GH.Components
         {
             get
             {
-                return null;
+                return Properties.Resources.tas_icons_GlulamFrame_24x24;
             }
         }
 

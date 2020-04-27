@@ -113,6 +113,16 @@ namespace tas.Lam.GH.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap tas_icons_FindConnections_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tas_icons_FindConnections_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap tas_icons_FreeformGlulam_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tas_icons_FreeformGlulam_24x24", resourceCulture);
@@ -126,6 +136,36 @@ namespace tas.Lam.GH.Properties {
         internal static System.Drawing.Bitmap tas_icons_GetGlulamSrf_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tas_icons_GetGlulamSrf_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tas_icons_GlulamData_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tas_icons_GlulamData_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tas_icons_GlulamEdges_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tas_icons_GlulamEdges_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tas_icons_GlulamFrame_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tas_icons_GlulamFrame_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -166,6 +206,16 @@ namespace tas.Lam.GH.Properties {
         internal static System.Drawing.Bitmap tas_icons_StraightGlulam_24x24 {
             get {
                 object obj = ResourceManager.GetObject("tas_icons_StraightGlulam_24x24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tas_icons_Vector2Color_24x24 {
+            get {
+                object obj = ResourceManager.GetObject("tas_icons_Vector2Color_24x24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

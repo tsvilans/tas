@@ -240,7 +240,7 @@ namespace tas.Lam.GH
         public GlulamDataParamater(GH_InstanceDescription tag) : base(tag) { }
 
         //public override GH_Exposure Exposure => GH_Exposure.secondary;
-        //protected override System.Drawing.Bitmap Icon => Properties.Resources.tasTools_icons_FreeformGlulam_24x24;
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_GlulamData_24x24;
 
         public override System.Guid ComponentGuid => new Guid("{e05cc9e7-6f2e-4341-80f2-af6921699c9b}");
         protected override GH_GetterResult Prompt_Singular(ref GH_GlulamData value)
@@ -256,7 +256,7 @@ namespace tas.Lam.GH
     {
         public GlulamAssemblyParameter() : base("Assembly parameter", "Assembly", "This is a glulam assembly.", "tasLam", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_Assembly_24x24;
         public override System.Guid ComponentGuid => new Guid("{de07b39c-5dca-438f-9b1a-73380442ec21}");
         protected override GH_GetterResult Prompt_Singular(ref GH_Assembly value)
         {
@@ -273,9 +273,9 @@ namespace tas.Lam.GH
 
     public class GlulamWorkpieceParameter : GH_PersistentParam<GH_GlulamWorkpiece>
     {
-        public GlulamWorkpieceParameter() : base("GlulamWorkpiece parameter", "GlulamWorkpiece", "This is a glulam workpiece.", "tasLam", "Parameters") { }
+        public GlulamWorkpieceParameter() : base("Workpiece parameter", "Workpiece", "This is a glulam workpiece.", "tasLam", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_Workpiece_24x24;
         public override System.Guid ComponentGuid => new Guid("{9b760327-3e87-4439-9250-bcaf283ff5c4}");
         protected override GH_GetterResult Prompt_Singular(ref GH_GlulamWorkpiece value)
         {

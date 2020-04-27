@@ -1815,6 +1815,9 @@ namespace tas.Core.Util
                 tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
             var splits = Brep.CreateBooleanSplit(new Brep[] { brep }, cutters, tolerance);
 
+            if (splits == null || splits.Length < 1)
+                return brep;
+
             return GetBiggestVolume(splits);
         }
 

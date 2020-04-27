@@ -72,15 +72,10 @@ namespace tas.Lam.GH
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
+                return Properties.Resources.tas_icons_InflateGlulam_24x24;
             }
         }
 
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
         public override Guid ComponentGuid
         {
             get { return new Guid("ecbb4b98-949a-4b63-8246-4c94b3482939"); }

@@ -13,7 +13,7 @@ namespace tas.Lam.GH.Components
         /// Initializes a new instance of the Cmpt_GetPlane class.
         /// </summary>
         public Cmpt_MeshTexCoords()
-          : base("Get Mesh Texture Coordaintes", "MTex",
+          : base("Get Mesh Texture Coordinates", "MTex",
               "Encode Mesh texture coordinates.",
               "tasCore", "Utility")
         {

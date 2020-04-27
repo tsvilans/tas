@@ -182,6 +182,21 @@
   <ItemGroup>
     <None Include="Resources\Icons\tas_icons_Workpiece_24x24.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_FindConnections_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_GlulamData_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_GlulamFrame_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_Vector2Color_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_GlulamEdges_24x24.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
