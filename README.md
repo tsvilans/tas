@@ -1,4 +1,4 @@
-# tas 1.1
+# tas 1.2
 A personal toolkit for research and exploration. Uses RhinoCommon for geometric types and provides an interface through Grasshopper components.
 
 # License
@@ -56,6 +56,7 @@ This project has received funding from the European Union’s Horizon 2020 resea
 This project uses the following libraries:
 - [Clipper](http://www.angusj.com/delphi/clipper.php)
 - [Carve](https://github.com/VTREEM/Carve) through the [Carverino](https://github.com/tsvilans/carverino) wrapper.
+- [Triangle .NET](https://archive.codeplex.com/?p=triangle)
 
 # Contact
 
