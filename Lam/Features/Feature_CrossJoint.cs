@@ -29,10 +29,10 @@ namespace tas.Lam.Features
         public override bool Compute()
         {
             double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            double widthA = m_glulamA.Width();
-            double heightA = m_glulamA.Height();
-            double widthB = m_glulamB.Width();
-            double heightB = m_glulamB.Height();
+            double widthA = m_glulamA.Width;
+            double heightA = m_glulamA.Height;
+            double widthB = m_glulamB.Width;
+            double heightB = m_glulamB.Height;
 
             m_result = new List<Brep>();
 
@@ -284,10 +284,10 @@ namespace tas.Lam.Features
         public override bool Compute()
         {
             double tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            double widthA = m_glulam1.Width();
-            double heightA = m_glulam1.Height();
-            double widthB = m_glulam2.Width();
-            double heightB = m_glulam2.Height();
+            double widthA = m_glulam1.Width;
+            double heightA = m_glulam1.Height;
+            double widthB = m_glulam2.Width;
+            double heightB = m_glulam2.Height;
 
             bool flip = false;
 

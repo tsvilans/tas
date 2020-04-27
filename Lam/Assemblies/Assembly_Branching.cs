@@ -36,7 +36,7 @@ namespace tas.Lam
         {
             MainTrunk = blank;
         }
-        public override Assembly Duplicate()
+        public override GlulamAssembly Duplicate()
         {
             throw new NotImplementedException();
         }

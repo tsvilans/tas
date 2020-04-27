@@ -12,7 +12,7 @@ namespace tas.Machine.GH.Toolpaths
         public Cmpt_FlatFinish()
           : base("Finishing - Flats", "Flats",
               "Finish strategy for flat areas.",
-              "tasTools", "Toolpaths")
+              "tasMachine", "Toolpaths")
         {
         }
 

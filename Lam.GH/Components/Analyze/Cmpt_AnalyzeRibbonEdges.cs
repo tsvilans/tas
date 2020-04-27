@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if OBSOLETE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper;
@@ -221,3 +223,5 @@ namespace tas.Lam.GH.Components
         }
     }
 }
+
+#endif

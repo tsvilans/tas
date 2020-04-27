@@ -32,7 +32,7 @@ namespace tas.Lam.GH
         public Cmpt_CreateGlulam()
           : base("Glulam", "Glulam",
               "Create glulam.",
-              "tasLam", "Create 2.0")
+              "tasLam", "Create")
         {
         }
 
@@ -59,6 +59,8 @@ namespace tas.Lam.GH
             if (input.Count == 1)
             {
                 object single = input[0];
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, single.ToString());
+
                 if (single is Vector3d)
                     return new VectorOrientation((Vector3d)single);
                 if (single is GH_Vector)
@@ -154,7 +156,9 @@ namespace tas.Lam.GH
         protected GlulamData ParseGlulamData(object input)
         {
             if (input == null)
+            {
                 return GlulamData.Default;
+            }
             if (input is GlulamData)
                 return (input as GlulamData).Duplicate();
             else if (input is GH_GlulamData)
@@ -181,7 +185,7 @@ namespace tas.Lam.GH
             AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, orientation.ToString());
 
             GlulamData data = ParseGlulamData(r_data);
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, data.ToString());
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, GlulamDataToString(data));
 
             data.Samples = (int)Math.Ceiling(crv.GetLength() / GlulamData.DefaultSampleDistance);
 
@@ -189,6 +193,11 @@ namespace tas.Lam.GH
 
 
             DA.SetData("Glulam", new GH_Glulam(glulam));
+        }
+
+        protected string GlulamDataToString(GlulamData data)
+        {
+            return $"GlulamData [ lw {data.LamWidth} lh {data.LamHeight} nw {data.NumHeight} nh {data.NumHeight} s {data.Samples} sa {data.SectionAlignment} ]";
         }
 
         protected override System.Drawing.Bitmap Icon

@@ -14,7 +14,7 @@ namespace tas.Core.Legacy
 {
 
 
-    public class NetworkLegacy
+    public class Network
     {
         public enum BranchCondition
         {
@@ -27,31 +27,31 @@ namespace tas.Core.Legacy
         public static double MeshMaxDistance = 100.0;
         public static bool EnforceContinuityInPairs = true;
         public static double NodeMergeDistance = 5.0;
-        public List<NodeLegacy> Nodes;
-        public List<EdgeLegacy> Edges;
+        public List<Node> Nodes;
+        public List<Edge> Edges;
         public List<Chain> Chains;
 
         #region Constructors
 
-        public NetworkLegacy()
+        public Network()
         {
-            Nodes = new List<NodeLegacy>();
-            Edges = new List<EdgeLegacy>();
+            Nodes = new List<Node>();
+            Edges = new List<Edge>();
             Chains = new List<Chain>();
         }
 
-        public NetworkLegacy(Mesh m, bool Branching = false) : this()
+        public Network(Mesh m, bool Branching = false) : this()
         {
 
             for (int i = 0; i < m.TopologyVertices.Count; ++i)
             {
-                NodeLegacy n;
+                Node n;
                 if (Branching && m.TopologyVertices.ConnectedTopologyVertices(i).Length == 3)
                     n = new BranchingNode();
                 else if (m.TopologyVertices.ConnectedTopologyVertices(i).Length == 1)
                     n = new FootNode();
                 else
-                    n = new NodeLegacy();
+                    n = new Node();
 
                 MeshPoint mp = m.ClosestMeshPoint(m.TopologyVertices[i], MeshMaxDistance);
                 n.Frame = new Plane(mp.Point, m.NormalAt(mp));
@@ -60,17 +60,17 @@ namespace tas.Core.Legacy
 
             for (int i = 0; i < m.TopologyEdges.Count; ++i)
             {
-                EdgeLegacy e = new EdgeLegacy();
+                Edge e = new Edge();
                 e.Ends = m.TopologyEdges.GetTopologyVertices(i);
                 Edges.Add(e);
             }
 
-            Edges = new HashSet<EdgeLegacy>(Edges).ToList();
+            Edges = new HashSet<Edge>(Edges).ToList();
             BuildNodeData(false, false);
             BuildBranchingData();
         }
 
-        public NetworkLegacy(List<Line> NetworkLines, Mesh M = null, bool Branching = false) : this()
+        public Network(List<Line> NetworkLines, Mesh M = null, bool Branching = false) : this()
         {
             // Init variables
             Point3d[] RawPoints = new Point3d[NetworkLines.Count * 2];
@@ -111,7 +111,7 @@ namespace tas.Core.Legacy
 
                     // Construct node for each point, using Mesh for
                     // node frame construction
-                    NodeLegacy n = new NodeLegacy();
+                    Node n = new Node();
                     //n.Frame = new Plane(p, M.NormalAt(mp));
                     n.Frame = new Plane(p, Vector3d.ZAxis);
                     Nodes.Add(n);
@@ -153,7 +153,7 @@ namespace tas.Core.Legacy
 
                 Line l = new Line(Points[a], Points[b]);
                 NewLines.Add(l);
-                EdgeLegacy e = new EdgeLegacy();
+                Edge e = new Edge();
                 e.Ends = new IndexPair(a, b);
                 e.Curve = l.ToNurbsCurve();
                 Edges.Add(e);
@@ -169,7 +169,7 @@ namespace tas.Core.Legacy
                     if (M.Normals == null || M.Normals.Count < 1)
                         M.Normals.ComputeNormals();
 
-                    foreach (NodeLegacy n in Nodes)
+                    foreach (Node n in Nodes)
                     {
                         MeshPoint mp = M.ClosestMeshPoint(n.Frame.Origin, MeshMaxDistance);
                         if (mp == null) continue;
@@ -295,7 +295,7 @@ namespace tas.Core.Legacy
             return true;
         }
 
-        public static NetworkLegacy Load(string Path)
+        public static Network Load(string Path)
         {
             if (!System.IO.File.Exists(Path))
                 throw new Exception("Network::Load: File does not exist!");
@@ -308,7 +308,7 @@ namespace tas.Core.Legacy
             if (root.Name != "network")
                 throw new Exception("Network::Load: Not a valid Network file.");
 
-            NetworkLegacy net = new NetworkLegacy();
+            Network net = new Network();
 
             XElement nodes = root.Element("nodes");
             if (nodes != null)
@@ -319,7 +319,7 @@ namespace tas.Core.Legacy
                     if (node.Name != "node")
                         continue;
 
-                    NodeLegacy n;
+                    Node n;
 
                     string type = node.Attribute("type").Value;
                     if (type == "FootNode")
@@ -344,7 +344,7 @@ namespace tas.Core.Legacy
                         }
                     }
                     else
-                        n = new NodeLegacy();
+                        n = new Node();
 
 
                     XElement node_edges = node.Element("node_edges");
@@ -387,7 +387,7 @@ namespace tas.Core.Legacy
                     int i = Convert.ToInt32(edge.Attribute("end1").Value);
                     int j = Convert.ToInt32(edge.Attribute("end2").Value);
 
-                    EdgeLegacy e = new EdgeLegacy();
+                    Edge e = new Edge();
                     e.Ends = new IndexPair(i, j);
 
                     net.Edges.Add(e);
@@ -419,15 +419,15 @@ namespace tas.Core.Legacy
         /// <summary>
         /// EdgeComparer class for Network
         /// </summary>
-        private class EdgeLegacyComparer : IEqualityComparer<EdgeLegacy>
+        private class EdgeLegacyComparer : IEqualityComparer<Edge>
         {
-            public bool Equals(EdgeLegacy a, EdgeLegacy b)
+            public bool Equals(Edge a, Edge b)
             {
                 return ((a.Ends.I == b.Ends.I && a.Ends.J == b.Ends.J) ||
                   (a.Ends.I == b.Ends.J && a.Ends.J == b.Ends.I));
             }
 
-            public int GetHashCode(EdgeLegacy a)
+            public int GetHashCode(Edge a)
             {
                 return (a.Ends.I ^ a.Ends.J * a.Ends.I - a.Ends.J) / (a.Ends.I + 1);
             }
@@ -510,7 +510,7 @@ namespace tas.Core.Legacy
 
             if (CalcFrames)
             {
-                foreach (NodeLegacy n in Nodes)
+                foreach (Node n in Nodes)
                 {
                     n.CalculateAverageFrame();
                 }
@@ -518,7 +518,7 @@ namespace tas.Core.Legacy
 
             if (ProjectVectors)
             {
-                foreach (NodeLegacy n in Nodes)
+                foreach (Node n in Nodes)
                 {
                     if (n is FootNode) continue;
                     n.ProjectEdgeVectors();
@@ -527,7 +527,7 @@ namespace tas.Core.Legacy
 
             if (EnforceContinuityInPairs)
             {
-                foreach (NodeLegacy n in Nodes)
+                foreach (Node n in Nodes)
                 {
                     if (n.Edges.Count == 2)
                     {
@@ -586,10 +586,10 @@ namespace tas.Core.Legacy
         {
             Random rand = new Random();
             List<int> forward = new List<int>();
-            NodeLegacy n;
+            Node n;
 
             int ei = i;
-            EdgeLegacy crawler = Edges[ei];
+            Edge crawler = Edges[ei];
             int vi = crawler.Ends.J; // node index
 
             bool ok = true;
@@ -754,10 +754,10 @@ namespace tas.Core.Legacy
             return Indices;
         }
 
-        public NodeLegacy GetNextNode(int NodeIndex, int NodeInterfaceIndex, out int EdgeIndex, out int NewNodeIndex)
+        public Node GetNextNode(int NodeIndex, int NodeInterfaceIndex, out int EdgeIndex, out int NewNodeIndex)
         {
             EdgeIndex = Nodes[NodeIndex].Edges[NodeInterfaceIndex].Index;
-            EdgeLegacy e = Edges[EdgeIndex];
+            Edge e = Edges[EdgeIndex];
             if (e.Ends.I == NodeIndex)
             {
                 NewNodeIndex = e.Ends.J;
@@ -797,14 +797,14 @@ namespace tas.Core.Legacy
         {
             if (index > Nodes.Count - 1) throw new Exception("Network::DeleteNode: Index out of range!");
 
-            NodeLegacy n = Nodes[index];
+            Node n = Nodes[index];
 
             NodeInterface[] interfaces = n.Edges.ToArray();
 
             int[] edge_indices = interfaces.Select(x => x.Index).ToArray();
-            EdgeLegacy[] edges = interfaces.Select(x => Edges[x.Index]).ToArray();
+            Edge[] edges = interfaces.Select(x => Edges[x.Index]).ToArray();
 
-            NodeLegacy[] surrounding_nodes = new NodeLegacy[edges.Length];
+            Node[] surrounding_nodes = new Node[edges.Length];
 
             for (int i = 0; i < edges.Length; ++i)
             {
@@ -820,7 +820,7 @@ namespace tas.Core.Legacy
         }
     }
 
-    public class NodeLegacy
+    public class Node
     {
         public List<NodeInterface> Edges;
         public List<int> Chains;
@@ -828,7 +828,7 @@ namespace tas.Core.Legacy
         public Plane Frame;
         protected Guid Id;
 
-        public NodeLegacy()
+        public Node()
         {
             Edges = new List<NodeInterface>();
             Chains = new List<int>();
@@ -892,7 +892,7 @@ namespace tas.Core.Legacy
 
         public override bool Equals(object obj)
         {
-            NodeLegacy item = obj as NodeLegacy;
+            Node item = obj as Node;
             return item.Id == this.Id;
         }
 
@@ -938,9 +938,9 @@ namespace tas.Core.Legacy
             elem.Add(n);
         }
 
-        public static NodeLegacy Read(XElement elem)
+        public static Node Read(XElement elem)
         {
-            NodeLegacy n;
+            Node n;
             if (elem.Name != "node")
                 throw new Exception("XElement is not a valid Node!");
 
@@ -964,7 +964,7 @@ namespace tas.Core.Legacy
             else if (type == "BranchingNode")
                 n = new BranchingNode();
             else
-                n = new NodeLegacy();
+                n = new Node();
 
             XElement nedges = elem.Element("node_edges");
             XElement[] edges = nedges.Elements("node_edge").ToArray();
@@ -1026,7 +1026,7 @@ namespace tas.Core.Legacy
         }
     }
 
-    public class BranchingNode : NodeLegacy
+    public class BranchingNode : Node
     {
         public BranchingNode() : base()
         {
@@ -1077,7 +1077,7 @@ namespace tas.Core.Legacy
 
     }
 
-    public class FootNode : NodeLegacy
+    public class FootNode : Node
     {
         public override string ToString()
         {
@@ -1102,7 +1102,7 @@ namespace tas.Core.Legacy
 
     }
 
-    public class EdgeLegacy
+    public class Edge
     {
         public IndexPair Ends;
         public Plane Frame;
@@ -1111,13 +1111,13 @@ namespace tas.Core.Legacy
 
         protected Guid Id;
 
-        public EdgeLegacy()
+        public Edge()
         {
         }
 
         public override bool Equals(object obj)
         {
-            EdgeLegacy item = obj as EdgeLegacy;
+            Edge item = obj as Edge;
             return item.Id == this.Id;
         }
 
@@ -1137,9 +1137,9 @@ namespace tas.Core.Legacy
             elem.Add(e);
         }
 
-        public static EdgeLegacy Read(ref XElement elem)
+        public static Edge Read(ref XElement elem)
         {
-            EdgeLegacy e = new EdgeLegacy();
+            Edge e = new Edge();
             if (elem.Name != "edge")
                 throw new Exception("XElement is not a valid Edge!");
 
@@ -1181,7 +1181,7 @@ namespace tas.Core.Legacy
         /// <summary>
         /// Given a list of edges, find all contained Nodes (vertices) that form the links between edges)
         /// </summary>
-        public bool FindVertices(ref NetworkLegacy net)
+        public bool FindVertices(ref Network net)
         {
             bool continuous = true;
             Vertices = new List<int>();

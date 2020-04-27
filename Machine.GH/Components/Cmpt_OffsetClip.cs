@@ -21,7 +21,7 @@ namespace tas.Machine.GH
         public tasTP_OffsetClip()
           : base("tasToolpath: Offset and clip", "tasTP: OffsetClip",
               "Offset toolpaths and clip with bounding mesh.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

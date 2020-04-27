@@ -29,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE;OBSOLETE</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -50,16 +50,18 @@
     <Compile Include="Components\Analyze\Cmpt_AnalyzeDirectRain.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeRibbonEdges.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeLamellaBending.cs" />
-    <Compile Include="Components\Analyze\Cmpt_DeLam2.cs" />
+    <Compile Include="Components\Analyze\Cmpt_DeLaminate.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_CreateGlulam.cs" />
+    <Compile Include="Components\Create 2.0\Cmpt_FindConnections.cs" />
     <Compile Include="Components\Create\Cmpt_BasicAssembly.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankFromBeam.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankNormalToSurface.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankWithGuides.cs" />
     <Compile Include="Components\Create\Cmpt_CreateWorkpiece.cs" />
     <Compile Include="Components\Map\Cmpt_BidirVector2Color.cs" />
+    <Compile Include="Components\Map\Cmpt_GetFrameAtParameter.cs" />
     <Compile Include="Components\Modify\Cmpt_GetGlulamFace.cs" />
-    <Compile Include="Components\Map\Cmpt_GetPlane.cs" />
+    <Compile Include="Components\Map\Cmpt_GetFrame.cs" />
     <Compile Include="Components\Create\Cmpt_GlulamData.cs" />
     <Compile Include="Components\Create\Cmpt_GlulamFromData.cs" />
     <Compile Include="Components\Modify\Cmpt_GlulamBisector.cs" />
@@ -67,12 +69,12 @@
     <Compile Include="Components\Analyze\Cmpt_MeshGrainDirection.cs" />
     <Compile Include="Components\Modify\Cmpt_OptimalCrvFrames.cs" />
     <Compile Include="Components\Modify\Cmpt_SplitGlulam.cs" />
-    <Compile Include="Components\Map\Cmpt_MapMeshToGlulamSpace.cs" />
+    <Compile Include="Components\Map\Cmpt_MapToGlulamSpace.cs" />
     <Compile Include="Components\Map\Cmpt_MapPlanesToGlulamSpace.cs" />
     <Compile Include="Components\Map\Cmpt_MapPointsToGlulamSpace.cs" />
     <Compile Include="Components\Modify\Cmpt_GetEdgePoints.cs" />
-    <Compile Include="Components\Map\Cmpt_GetNPlanes.cs" />
-    <Compile Include="Components\Analyze\Cmpt_DeLam.cs" />
+    <Compile Include="Components\Map\Cmpt_GetFrameList.cs" />
+    <Compile Include="Components\Analyze\Cmpt_GlulamParameters.cs" />
     <Compile Include="Components\Modify\Cmpt_FindJointConditions.cs" />
     <Compile Include="Components\Analyze\Cmpt_GetFibreCutting.cs" />
     <Compile Include="Components\Modify\Cmpt_GetGlulamSideSrf.cs" />

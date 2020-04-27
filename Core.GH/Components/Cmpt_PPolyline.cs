@@ -14,7 +14,7 @@ namespace tas.Core.GH
         public PPolyline_Component()
           : base("PPolyline", "PPoly",
               "PlanePolyline, a polyline with planes as vertices.",
-              "tasTools", "Test")
+              "tasCore", "Oriented Polyline")
         {
         }
 

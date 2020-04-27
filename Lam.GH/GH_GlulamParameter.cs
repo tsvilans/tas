@@ -234,7 +234,7 @@ namespace tas.Lam.GH
 
     public class GlulamDataParamater : GH_PersistentParam<GH_GlulamData>
     {
-        public GlulamDataParamater() : this("GlulamData parameter", "GlulamData", "This is a glulam.", "tasTools", "Parameters") { }
+        public GlulamDataParamater() : this("GlulamData parameter", "GlulamData", "This is a glulam.", "tasLam", "Parameters") { }
         public GlulamDataParamater(string name, string nickname, string description, string category, string subcategory)
             : base(name, nickname, description, category, subcategory) { }
         public GlulamDataParamater(GH_InstanceDescription tag) : base(tag) { }
@@ -254,7 +254,7 @@ namespace tas.Lam.GH
     }
     public class GlulamAssemblyParameter : GH_PersistentParam<GH_Assembly>
     {
-        public GlulamAssemblyParameter() : base("Assembly parameter", "Assembly", "This is a glulam assembly.", "tasTools", "Parameters") { }
+        public GlulamAssemblyParameter() : base("Assembly parameter", "Assembly", "This is a glulam assembly.", "tasLam", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
         public override System.Guid ComponentGuid => new Guid("{de07b39c-5dca-438f-9b1a-73380442ec21}");
@@ -273,7 +273,7 @@ namespace tas.Lam.GH
 
     public class GlulamWorkpieceParameter : GH_PersistentParam<GH_GlulamWorkpiece>
     {
-        public GlulamWorkpieceParameter() : base("GlulamWorkpiece parameter", "GlulamWorkpiece", "This is a glulam workpiece.", "tasTools", "Parameters") { }
+        public GlulamWorkpieceParameter() : base("GlulamWorkpiece parameter", "GlulamWorkpiece", "This is a glulam workpiece.", "tasLam", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_FreeformGlulam_24x24;
         public override System.Guid ComponentGuid => new Guid("{9b760327-3e87-4439-9250-bcaf283ff5c4}");

@@ -14,7 +14,7 @@ namespace tas.Machine.GH
         public Cmpt_CreateToolpath()
           : base("Create Toolpath", "Toolpath",
               "Create a machining toolpath with tool data.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

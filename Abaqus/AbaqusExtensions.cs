@@ -17,11 +17,11 @@ namespace tas.Abaqus
 
         public static void CreateGlulamNodesAndElements(this Glulam g, out List<Node> nodes, out List<Element> elements, int Nx = 4, int Ny = 4, int Nz = 50)
         {
-            double hWidth = g.Width() / 2;
-            double hHeight = g.Height() / 2;
+            double hWidth = g.Width / 2;
+            double hHeight = g.Height / 2;
 
-            double stepX = g.Width() / Nx;
-            double stepY = g.Height() / Ny;
+            double stepX = g.Width / Nx;
+            double stepY = g.Height / Ny;
 
             List<Point3d> xPts = new List<Point3d>();
 

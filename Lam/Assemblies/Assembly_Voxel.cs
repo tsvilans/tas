@@ -37,7 +37,7 @@ namespace tas.Lam
     /// take into account the child laminations, which it doesn't
     /// at the moment...
     /// </summary>
-    public class VoxelAssembly : Assembly
+    public class VoxelAssembly : GlulamAssembly
     {
         // List<Glulam> Blanks;
 
@@ -169,7 +169,7 @@ namespace tas.Lam
             throw new NotImplementedException();
         }
 
-        public override Assembly Duplicate()
+        public override GlulamAssembly Duplicate()
         {
             VoxelAssembly vox = new VoxelAssembly();
             vox.BasePlane = this.BasePlane;

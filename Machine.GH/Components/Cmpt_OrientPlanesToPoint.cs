@@ -17,7 +17,7 @@ namespace tas.Machine.GH
         public Cmpt_OrientPlanesToPoint()
           : base("Orient Targets", "Orient Targets",
               "Orient targets towards a point, maintaining normal direction.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

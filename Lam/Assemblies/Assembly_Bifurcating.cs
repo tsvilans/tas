@@ -47,7 +47,7 @@ namespace tas.Lam
             // TODO: check for continuity between trunk and branches
         }
 
-        public override Assembly Duplicate()
+        public override GlulamAssembly Duplicate()
         {
             Glulam new_trunk = Trunk.Duplicate();
             Glulam[] new_branches = new Glulam[Branches.Length];
@@ -169,7 +169,7 @@ namespace tas.Lam
             Ends = ends;
         }
 
-        public override Assembly Duplicate()
+        public override GlulamAssembly Duplicate()
         {
             Glulam[] new_branches = new Glulam[Branches.Length];
             for (int i = 0; i < Branches.Length; ++i)

@@ -67,9 +67,9 @@ namespace tas.Lam
         }
 
         public abstract GeometryBase GetGeometry();
-        public abstract Mesh[] GetCutterMeshes(Assembly Beam);
-        public abstract Brep[] GetCutterBreps(Assembly Beam);
-        public abstract Assembly[] ConnectedAssemblies();
+        public abstract Mesh[] GetCutterMeshes(GlulamAssembly Beam);
+        public abstract Brep[] GetCutterBreps(GlulamAssembly Beam);
+        public abstract GlulamAssembly[] ConnectedAssemblies();
         //public abstract OrientedPolyline[] GetToolpaths(Assembly Beam, ToolSettings Tool);
 
         /// <summary>

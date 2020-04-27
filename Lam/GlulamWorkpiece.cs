@@ -44,7 +44,7 @@ namespace tas.Lam
         public Guid Id { get; protected set; }
 
         public string Name;
-        public Assembly Blank;
+        public GlulamAssembly Blank;
         public List<FeatureProxy> Features;
         public Plane Plane;
 
@@ -70,12 +70,11 @@ namespace tas.Lam
             }
         }
 
-        public GlulamWorkpiece(Assembly blank) : this(blank, "GlulamWorkpiece")
+        public GlulamWorkpiece(GlulamAssembly blank) : this(blank, "GlulamWorkpiece")
         {
-            
         }
 
-        public GlulamWorkpiece(Assembly blank, string name)
+        public GlulamWorkpiece(GlulamAssembly blank, string name)
         {
             Id = Guid.NewGuid();
             Name = name;

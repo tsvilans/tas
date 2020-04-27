@@ -20,7 +20,7 @@ namespace tas.Core.GH
         public Cmpt_Bitmask()
           : base(new GH_InstanceDescription("Bitmask 3", "Bits3",
               "Bitmask composed of 3 bits.",
-              "tasTools", "Utility"))
+              "tasCore", "Utility"))
         {
         }
 

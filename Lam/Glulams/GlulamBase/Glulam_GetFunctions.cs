@@ -34,6 +34,75 @@ namespace tas.Lam
     public abstract partial class Glulam
     {
 
+        public static List<string> ListParameters()
+        {
+            return new List<string>
+            {
+                "id",
+                "centreline",
+                "width",
+                "height",
+                "length",
+                "lamella_width",
+                "lamella_height",
+                "lamella_count_width",
+                "lamella_count_height",
+                "volume",
+                "samples",
+                "max_curvature",
+                "max_curvature_width",
+                "max_curvature_height",
+                "type",
+                "type_id"
+            };
+        }
+
+        public object GetParameter(string key)
+        {
+            switch(key)
+            {
+                case ("id"):
+                    return ID;
+                case ("centreline"):
+                    return Centreline;
+                case ("width"):
+                    return Width;
+                case ("height"):
+                    return Height;
+                case ("length"):
+                    return Centreline.GetLength();
+                case ("lamella_width"):
+                    return Data.LamWidth;
+                case ("lamella_height"):
+                    return Data.LamHeight;
+                case ("lamella_count_width"):
+                    return Data.NumWidth;
+                case ("lamella_count_height"):
+                    return Data.NumHeight;
+                case ("volume"):
+                    return GetVolume();
+                case ("samples"):
+                    return Data.Samples;
+                case ("max_curvature"):
+                    double max_kw = 0.0, max_kh = 0.0;
+                    return GetMaxCurvature(ref max_kw, ref max_kh);
+                case ("max_curvature_width"):
+                    max_kw = 0.0; max_kh = 0.0;
+                    GetMaxCurvature(ref max_kw, ref max_kh);
+                    return max_kw;
+                case ("max_curvature_height"):
+                    max_kw = 0.0; max_kh = 0.0;
+                    GetMaxCurvature(ref max_kw, ref max_kh);
+                    return max_kh;
+                case ("type"):
+                    return ToString();
+                case ("type_id"):
+                    return (int)Type();
+                default:
+                    return null;
+            }
+        }
+
         public Brep GetEndSurface(int side, double offset, double extra_width, double extra_height, bool flip = false)
         {
             side = side.Modulus(2);
@@ -58,8 +127,8 @@ namespace tas.Lam
 
             GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out t, Data.InterpolationType);
 
-            double hWidth = this.Width() / 2;
-            double hHeight = this.Height() / 2;
+            double hWidth = this.Width / 2;
+            double hHeight = this.Height / 2;
             double x1, y1, x2, y2;
             x1 = y1 = x2 = y2 = 0;
             Rectangle3d face;

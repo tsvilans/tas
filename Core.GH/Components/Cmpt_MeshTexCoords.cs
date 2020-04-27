@@ -15,7 +15,7 @@ namespace tas.Lam.GH.Components
         public Cmpt_MeshTexCoords()
           : base("Get Mesh Texture Coordaintes", "MTex",
               "Encode Mesh texture coordinates.",
-              "tasTools", "Test")
+              "tasCore", "Utility")
         {
         }
 

@@ -48,8 +48,8 @@ namespace tas.Lam.Features
 
             plane = new Plane(plane.Origin, -plane.XAxis, plane.ZAxis);
 
-            double w = m_glulam.Width();
-            double h = m_glulam.Height();
+            double w = m_glulam.Width;
+            double h = m_glulam.Height;
 
             Curve[] crvs = new Curve[4];
             crvs[0] = new Line(new Point3d(-w / 2 - m_extension, m_length, h / 2 + m_extension), new Point3d(w / 2 + m_extension, m_length, h / 2 + m_extension)).ToNurbsCurve();
@@ -117,8 +117,8 @@ namespace tas.Lam.Features
 
             Plane plane = new Plane(p0.Origin, p0.XAxis, p0.ZAxis);
 
-            double w = Math.Max(m_glulam1.Width(), m_glulam2.Width());
-            double h = Math.Max(m_glulam1.Height(), m_glulam2.Height());
+            double w = Math.Max(m_glulam1.Width, m_glulam2.Width);
+            double h = Math.Max(m_glulam1.Height, m_glulam2.Height);
 
             Curve[] crvs = new Curve[4];
             crvs[0] = new Line(new Point3d(-w / 2 - m_extension, m_length / 2, h / 2 + m_extension),

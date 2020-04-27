@@ -15,8 +15,8 @@ namespace tas.Lam.GH
 
             //ad.Set("id", g.ID);
             ad.Set("centreline", g.Centreline);
-            ad.Set("width", g.Width());
-            ad.Set("height", g.Height());
+            ad.Set("width", g.Width);
+            ad.Set("height", g.Height);
             ad.Set("lamella_width", g.Data.LamWidth);
             ad.Set("lamella_height", g.Data.LamHeight);
             ad.Set("lamella_count_width", g.Data.NumWidth);

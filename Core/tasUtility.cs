@@ -315,6 +315,73 @@ namespace tas.Core.Util
             return plane;
         }
 
+        public static Plane CalculateFrenetFrame(Curve c, double t)
+        {
+            Vector3d z = c.TangentAt(t);
+            Vector3d y = c.CurvatureAt(t);
+            return new Plane(c.PointAt(t), Vector3d.CrossProduct(z, y), z);
+        }
+
+        /// <summary>
+        /// Calculate RMF for curve. Adapted from https://math.stackexchange.com/a/2847887 and based on
+        /// the paper https://dl.acm.org/doi/10.1145/1330511.1330513
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="steps"></param>
+        /// <returns></returns>
+        public static List<Plane> CalculateRMF(Curve c, int steps)
+        {
+            List<Plane> frames = new List<Plane>();
+            double c1, c2, step = 1.0 / steps, t0, t1;
+            Vector3d v1, v2, riL, tiL, riN, siN;
+            Plane x0, x1;
+
+            // n = YAxis
+            // r = XAxis
+            // t = ZAxis
+
+            // Start off with the standard tangent/axis/normal frame
+            // associated with the curve just prior the Bezier interval.
+            t0 = -step;
+            frames.Add(CalculateFrenetFrame(c, t0));
+
+            // start constructing RM frames
+            for (; t0 < 1.0; t0 += step)
+            {
+                // start with the previous, known frame
+                x0 = frames[frames.Count - 1];
+
+                // get the next frame: we're going to throw away its axis and normal
+                t1 = t0 + step;
+                x1 = CalculateFrenetFrame(c, t1);
+
+                // First we reflect x0's tangent and axis onto x1, through
+                // the plane of reflection at the point midway x0--x1
+                v1 = x1.Origin - x0.Origin;
+                c1 = v1 * v1;
+                riL = x0.XAxis - v1 * (2 / c1 * (v1 * x0.XAxis));
+                tiL = x0.ZAxis - v1 * (2 / c1 * (v1 * x0.ZAxis));
+
+                // Then we reflection a second time, over a plane at x1
+                // so that the frame tangent is aligned with the curve tangent:
+                v2 = x1.ZAxis - tiL;
+                c2 = v2 * v2;
+                riN = riL - v2 * (2 / c2 * (v2 * riL));
+                siN = Vector3d.CrossProduct(x1.ZAxis, riN);
+                x1.YAxis = siN;
+                x1.XAxis = riN;
+
+                // we record that frame, and move on
+                frames.Add(x1);
+            }
+
+            // and before we return, we throw away the very first frame,
+            // because it lies outside the Bezier interval.
+            frames.RemoveAt(0);
+
+            return frames;
+        }
+
 
     }
 
@@ -382,6 +449,34 @@ namespace tas.Core.Util
         public static Color4f VectorToColor1(Vector3d v)
         {
             return new Color4f((float)(v.X / 2 + 0.5), (float)(v.Y / 2 + 0.5), (float)(v.Z / 2 + 0.5), 1.0f);
+        }
+
+        public static Color4f Contrast(Color4f color, float contrast)
+        {
+            var red = ((color.R - 0.5f) * contrast) + 0.5f;
+            var green = ((color.G - 0.5f) * contrast) + 0.5f;
+            var blue = ((color.B - 0.5f) * contrast) + 0.5f;
+
+            red = Math.Min(1.0f, Math.Max(0.0f, red));
+            green = Math.Min(1.0f, Math.Max(0.0f, green));
+            blue = Math.Min(1.0f, Math.Max(0.0f, blue));
+
+            return Color4f.FromArgb(color.A, red, green, blue);
+        }
+
+        public static Color Contrast(Color color, double contrast)
+        {
+            var red = ((((color.R / 255.0) - 0.5) * contrast) + 0.5) * 255.0;
+            var green = ((((color.G / 255.0) - 0.5) * contrast) + 0.5) * 255.0;
+            var blue = ((((color.B / 255.0) - 0.5) * contrast) + 0.5) * 255.0;
+            if (red > 255) red = 255;
+            if (red < 0) red = 0;
+            if (green > 255) green = 255;
+            if (green < 0) green = 0;
+            if (blue > 255) blue = 255;
+            if (blue < 0) blue = 0;
+
+            return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
         }
 
         public static Color4f VectorToColor2(Vector3d v)
@@ -453,7 +548,7 @@ namespace tas.Core.Util
 
     public static class Misc
     {
- 
+
         static readonly Random random = new Random();
 
         public static Plane PlaneFromNormalAndYAxis(Point3d origin, Vector3d normal, Vector3d yaxis)
@@ -565,16 +660,16 @@ namespace tas.Core.Util
         {
             //if (typeof(T).IsValueType)
             //{
-                if (dict.ContainsKey(key))
-                {
-                    val = (T)dict[key];
-                    return true;
-                }
-                else
-                {
-                    val = default(T);
-                    return false;
-                }
+            if (dict.ContainsKey(key))
+            {
+                val = (T)dict[key];
+                return true;
+            }
+            else
+            {
+                val = default(T);
+                return false;
+            }
             //}
         }
 
@@ -632,7 +727,7 @@ namespace tas.Core.Util
 
                     for (int i = 0; i < N; ++i)
                     {
-                        iPrev = (i-1).Modulus(N);
+                        iPrev = (i - 1).Modulus(N);
                         iNext = (i + 1).Modulus(N);
 
                         v1 = pl[iPrev] - pl[i];
@@ -1051,7 +1146,7 @@ namespace tas.Core.Util
 
         public static List<List<Polyline>> InsetUntilNoneClusters(Polyline Poly, double Distance, Plane P)
         {
-            
+
             List<List<Polyline>> Clusters = new List<List<Polyline>>();
             Clusters.Add(new List<Polyline>());
 
@@ -1714,7 +1809,36 @@ namespace tas.Core.Util
             return planes;
         }
 
+        public static Brep CutBrep(Brep brep, ICollection<Brep> cutters, double tolerance = 0.0)
+        {
+            if (tolerance == 0.0)
+                tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+            var splits = Brep.CreateBooleanSplit(new Brep[] { brep }, cutters, tolerance);
 
+            return GetBiggestVolume(splits);
+        }
+
+        public static Brep GetBiggestVolume(Brep[] breps)
+        {
+            if (breps == null || breps.Length < 1) return null;
+
+            int index = 0;
+            double volume = 0;
+            double temp;
+
+            for (int i = 0; i < breps.Length; ++i)
+            {
+                if (breps[i] == null) continue;
+                temp = breps[i].GetVolume();
+                if (temp > volume)
+                {
+                    index = i;
+                    volume = temp;
+                }
+            }
+
+            return breps[index];
+        }
     }
 
     public class Gradient

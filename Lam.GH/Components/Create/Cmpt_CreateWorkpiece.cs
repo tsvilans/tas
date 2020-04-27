@@ -47,7 +47,7 @@ namespace tas.Lam.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            Lam.Assembly assembly = null;
+            Lam.GlulamAssembly assembly = null;
             Plane p = Plane.WorldXY;
             object input = null;
 

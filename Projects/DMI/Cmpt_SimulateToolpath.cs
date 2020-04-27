@@ -19,7 +19,7 @@ namespace tas.Projects.DMI.GH
         public Cmpt_SimulateToolpath()
           : base("Simulate Toolpath", "SimTP",
               "Simulate the current position of the machine tool at a specific time parameter.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

@@ -13,7 +13,7 @@ namespace tas.Core.GH
         public Cmpt_ReversePPolyline()
           : base("Reverse PPolyline", "RPPoly",
               "Reverse a PlanePolyline.",
-              "tasTools", "Test")
+              "tasCore", "Oriented Polyline")
         {
         }
 

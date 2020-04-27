@@ -156,7 +156,7 @@ namespace tas.Core.GH
 
     public class OrientedPolylineParameter : GH_PersistentParam<GH_PPolyline>
     {
-        public OrientedPolylineParameter() : base("Oriented Polyline parameter", "OPolyline", "This is an oriented polyline.", "tasTools", "Parameters") { }
+        public OrientedPolylineParameter() : base("Oriented Polyline parameter", "OPolyline", "This is an oriented polyline.", "tasCore", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
         public override System.Guid ComponentGuid => new Guid("{99a9cf30-a28b-475b-8d95-79440ccf631e}");

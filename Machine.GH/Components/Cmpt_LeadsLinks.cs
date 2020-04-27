@@ -14,7 +14,7 @@ namespace tas.Machine.GH
         public Cmpt_LeadsLinks()
           : base("Create Leads and Links", "LeadsLinks",
               "Create leads and links for a toolpath.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

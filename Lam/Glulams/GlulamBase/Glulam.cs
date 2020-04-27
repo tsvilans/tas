@@ -101,6 +101,26 @@ namespace tas.Lam
         protected Point3d[] m_section_corners = null; // Cached section corners
         protected Point3d[] m_lamella_centers = null; // Cached centerpoints for lamellae
 
+        /// <summary>
+        /// Get total width of glulam.
+        /// </summary>
+        public double Width { 
+            get
+            {
+                return Data.LamWidth * Data.NumWidth;
+            }
+        }
+        /// <summary>
+        /// Get total height of glulam.
+        /// </summary>
+        public double Height
+        {
+            get
+            {
+                return Data.LamHeight * Data.NumHeight;
+            }
+        }
+
         public abstract void CalculateLamellaSizes(double width, double height);
 
         public virtual double GetMaxCurvature(ref double width, ref double height)
@@ -114,8 +134,8 @@ namespace tas.Lam
 
             props.Add("id", ID);
             props.Add("centreline", Centreline);
-            props.Add("width", Width());
-            props.Add("height", Height());
+            props.Add("width", Width);
+            props.Add("height", Height);
             props.Add("length", Centreline.GetLength());
             props.Add("lamella_width", Data.LamWidth);
             props.Add("lamella_height", Data.LamHeight);
@@ -141,8 +161,8 @@ namespace tas.Lam
 
             ad.Set("id", ID);
             ad.Set("centreline", Centreline);
-            ad.Set("width", Width());
-            ad.Set("height", Height());
+            ad.Set("width", Width);
+            ad.Set("height", Height);
             ad.Set("length", Centreline.GetLength());
             ad.Set("lamella_width", Data.LamWidth);
             ad.Set("lamella_height", Data.LamHeight);
@@ -177,7 +197,7 @@ namespace tas.Lam
                 Rhino.Geometry.VolumeMassProperties vmp = VolumeMassProperties.Compute(GetBoundingBrep());
                 return vmp.Volume;
             }
-            return Centreline.GetLength() * Width() * Height();
+            return Centreline.GetLength() * Width * Height;
         }
 
         public override bool Equals(object obj)
@@ -247,24 +267,6 @@ namespace tas.Lam
             if (Math.Abs(ratio - Data.LamHeight) > RadiusTolerance || Math.Abs(ratio - Data.LamWidth) > RadiusTolerance)
                 return false;
             return true;
-        }
-
-        /// <summary>
-        /// Get total width of glulam.
-        /// </summary>
-        /// <returns>Total width of glulam.</returns>
-        public double Width()
-        {
-            return Data.LamWidth * Data.NumWidth;
-        }
-
-        /// <summary>
-        /// Get total height of glulam.
-        /// </summary>
-        /// <returns>Total height of glulam.</returns>
-        public double Height()
-        {
-            return Data.LamHeight * Data.NumHeight;
         }
 
         /// <summary>
@@ -582,8 +584,8 @@ namespace tas.Lam
 
         public Point3d[] GenerateCorners(double offset = 0.0)
         {
-            double x = Width();
-            double y = Height();
+            double x = Width;
+            double y = Height;
 
             double x0 = 0, x1 = x, y0 = 0, y1 = y;
             double hx = x / 2, hy = y / 2;
@@ -636,6 +638,153 @@ namespace tas.Lam
             m_section_corners[3] = new Point3d(x0 - offset, y0 - offset, 0);
 
             return m_section_corners;
+        }
+
+        List<Curve> LamellaOutlines(Glulam g)
+        {
+            double[] t = g.Centreline.DivideByCount(g.Data.Samples, true);
+
+            List<Plane> planes = t.Select(x => g.GetPlane(x)).ToList();
+
+            Point3d[][] pts = new Point3d[4][];
+            pts[0] = new Point3d[g.Data.NumWidth + 1];
+            pts[1] = new Point3d[g.Data.NumHeight + 1];
+
+            pts[2] = new Point3d[g.Data.NumWidth + 1];
+            pts[3] = new Point3d[g.Data.NumHeight + 1];
+
+            double hWidth = g.Width / 2;
+            double hHeight = g.Height / 2;
+
+            // Create points for lamella corners
+            for (int i = 0; i <= g.Data.NumWidth; ++i)
+            {
+                pts[0][i] = new Point3d(-hWidth + g.Data.LamWidth * i, -hHeight, 0);
+                pts[2][i] = new Point3d(-hWidth + g.Data.LamWidth * i, hHeight, 0);
+            }
+
+            for (int i = 0; i <= g.Data.NumHeight; ++i)
+            {
+                pts[1][i] = new Point3d(-hWidth, -hHeight + g.Data.LamHeight * i, 0);
+                pts[3][i] = new Point3d(hWidth, -hHeight + g.Data.LamHeight * i, 0);
+            }
+
+            List<Point3d>[][] crv_pts = new List<Point3d>[4][];
+
+            crv_pts[0] = new List<Point3d>[g.Data.NumWidth + 1];
+            crv_pts[1] = new List<Point3d>[g.Data.NumHeight + 1];
+            crv_pts[2] = new List<Point3d>[g.Data.NumWidth + 1];
+            crv_pts[3] = new List<Point3d>[g.Data.NumHeight + 1];
+
+            Transform xform;
+            Point3d pt;
+
+            // Create curve points
+            foreach (Plane p in planes)
+            {
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, p);
+                for (int i = 0; i <= g.Data.NumWidth; ++i)
+                {
+                    pt = new Point3d(pts[0][i]);
+
+                    pt.Transform(xform);
+                    if (crv_pts[0][i] == null)
+                        crv_pts[0][i] = new List<Point3d>();
+                    crv_pts[0][i].Add(pt);
+
+                    pt = new Point3d(pts[2][i]);
+
+                    pt.Transform(xform);
+                    if (crv_pts[2][i] == null)
+                        crv_pts[2][i] = new List<Point3d>();
+                    crv_pts[2][i].Add(pt);
+                }
+
+                for (int i = 0; i <= g.Data.NumHeight; ++i)
+                {
+                    pt = new Point3d(pts[1][i]);
+
+                    pt.Transform(xform);
+                    if (crv_pts[1][i] == null)
+                        crv_pts[1][i] = new List<Point3d>();
+                    crv_pts[1][i].Add(pt);
+
+                    pt = new Point3d(pts[3][i]);
+
+                    pt.Transform(xform);
+                    if (crv_pts[3][i] == null)
+                        crv_pts[3][i] = new List<Point3d>();
+                    crv_pts[3][i].Add(pt);
+                }
+            }
+
+            // Create lamella side curves
+            List<Curve> crvs = new List<Curve>();
+            for (int i = 0; i <= g.Data.NumWidth; ++i)
+            {
+                crvs.Add(Curve.CreateInterpolatedCurve(crv_pts[0][i], 3));
+                crvs.Add(Curve.CreateInterpolatedCurve(crv_pts[2][i], 3));
+            }
+
+            for (int i = 0; i <= g.Data.NumHeight; ++i)
+            {
+                crvs.Add(Curve.CreateInterpolatedCurve(crv_pts[1][i], 3));
+                crvs.Add(Curve.CreateInterpolatedCurve(crv_pts[3][i], 3));
+            }
+
+            // Create lamella end curves
+            Point3d p0, p1;
+
+            xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes.First());
+
+            for (int i = 0; i <= g.Data.NumWidth; ++i)
+            {
+                p0 = new Point3d(pts[0][i]);
+                p0.Transform(xform);
+
+                p1 = new Point3d(pts[2][i]);
+                p1.Transform(xform);
+
+                crvs.Add(new Line(p0, p1).ToNurbsCurve());
+            }
+
+            for (int i = 0; i <= g.Data.NumHeight; ++i)
+            {
+                p0 = new Point3d(pts[1][i]);
+                p0.Transform(xform);
+
+                p1 = new Point3d(pts[3][i]);
+                p1.Transform(xform);
+
+                crvs.Add(new Line(p0, p1).ToNurbsCurve());
+            }
+
+
+            xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes.Last());
+
+            for (int i = 0; i <= g.Data.NumWidth; ++i)
+            {
+                p0 = new Point3d(pts[0][i]);
+                p0.Transform(xform);
+
+                p1 = new Point3d(pts[2][i]);
+                p1.Transform(xform);
+
+                crvs.Add(new Line(p0, p1).ToNurbsCurve());
+            }
+
+            for (int i = 0; i <= g.Data.NumHeight; ++i)
+            {
+                p0 = new Point3d(pts[1][i]);
+                p0.Transform(xform);
+
+                p1 = new Point3d(pts[3][i]);
+                p1.Transform(xform);
+
+                crvs.Add(new Line(p0, p1).ToNurbsCurve());
+            }
+
+            return crvs;
         }
 
         /*

@@ -298,7 +298,7 @@ namespace tas.Core
             new_poly.MergeColinearSegments(tolerance, seam);
 
             return new_poly;
-
+            /*
             List<Point3d> pts = new List<Point3d>();
             pts.Add(poly[0]);
             for (int i = 1; i < poly.Count - 1; ++i)
@@ -310,6 +310,7 @@ namespace tas.Core
             }
             pts.Add(poly[poly.Count - 1]);
             return new Polyline(pts);
+            */
         }
 
     }
@@ -354,11 +355,12 @@ namespace tas.Core
             angles[2, 1] = CS1[1] * CS2[2];
             angles[2, 2] = CS1[2] * CS2[2];
 
-            Vector3d vv = new Vector3d();
-
-            vv.X = v.X * angles[0, 0] + v.Y * angles[0, 1] + v.Z * angles[0, 2];
-            vv.Y = v.X * angles[1, 0] + v.Y * angles[1, 1] + v.Z * angles[1, 2];
-            vv.Z = v.X * angles[2, 0] + v.Y * angles[2, 1] + v.Z * angles[2, 2];
+            Vector3d vv = new Vector3d
+            {
+                X = v.X * angles[0, 0] + v.Y * angles[0, 1] + v.Z * angles[0, 2],
+                Y = v.X * angles[1, 0] + v.Y * angles[1, 1] + v.Z * angles[1, 2],
+                Z = v.X * angles[2, 0] + v.Y * angles[2, 1] + v.Z * angles[2, 2]
+            };
 
             return vv;
         }
@@ -546,8 +548,7 @@ namespace tas.Core
             List<Vector3d> Normals = new List<Vector3d>();
 
             Random rnd = new Random();
-            Point3d pom, test;
-            Vector3d Normal;
+            Point3d test;
 
             for (int i = 0; i < M.Faces.Count; ++i)
             {
@@ -557,7 +558,7 @@ namespace tas.Core
                 C = M.Vertices[M.Faces[i].C];
 
                 test = new Point3d((A.X + B.X + C.X) / 3, (A.Y + B.Y + C.Y) / 3, (A.Z + B.Z + C.Z) / 3);
-                M.ClosestPoint(test, out pom, out Normal, 0.0);
+                M.ClosestPoint(test, out _, out Vector3d Normal, 0.0);
 
                 if (Normal == null) continue;
 
@@ -666,9 +667,7 @@ namespace tas.Core
         public static Mesh FitToAxes(this Mesh m, Plane p)
         {
             Plane pp = Plane.WorldXY;
-            Polyline poly;
-
-            return m.FitToAxes(p, out poly, ref pp);
+            return m.FitToAxes(p, out _, ref pp);
         }
     }
 
@@ -712,10 +711,9 @@ namespace tas.Core
             if (pts.Count < 1) return null;
             //Transform xform = Transform.PlaneToPlane(plane, Plane.WorldXY);
             //List<Point3d> pts_xformed = new List<Point3d>();
-            Point3d m_temp;
             for (int i = 0; i < pts.Count; ++i)
             {
-                plane.RemapToPlaneSpace(pts[i], out m_temp);
+                plane.RemapToPlaneSpace(pts[i], out Point3d m_temp);
                 pts[i] = m_temp;
                 //Point3d p = pts[i];
                 //p.Transform(xform);

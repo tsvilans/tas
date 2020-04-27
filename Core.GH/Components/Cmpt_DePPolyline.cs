@@ -11,7 +11,7 @@ namespace tas.Core.GH
         public DePPolyline_Component()
           : base("Deconstruct PPolyline", "DePPoly",
               "Extract planes from PlanePolyline.",
-              "tasTools", "Test")
+              "tasCore", "Oriented Polyline")
         {
         }
 

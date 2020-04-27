@@ -31,7 +31,7 @@ namespace tas.Lam.GH
     public class Cmpt_DeLaminate : GH_Component
     {
         public Cmpt_DeLaminate()
-          : base("Delaminate 2.0", "Delam 2.0",
+          : base("Delaminate", "DeLam",
               "Gets individual lamellas from Glulam.",
               "tasLam", "Analyze")
         {

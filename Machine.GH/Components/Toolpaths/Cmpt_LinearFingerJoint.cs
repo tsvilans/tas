@@ -15,7 +15,7 @@ namespace tas.Machine.GH.Toolpaths
         public Cmpt_LinearFingerJoint()
           : base("Special - Finger Joint Linear", "LinFJ",
               "Create linear finger joint from beam member geometry.",
-              "tasTools", "Toolpaths")
+              "tasMachine", "Toolpaths")
         {
         }
 

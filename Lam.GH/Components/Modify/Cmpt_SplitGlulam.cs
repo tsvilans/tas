@@ -52,22 +52,12 @@ namespace tas.Lam.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+
+            // Get Glulam
             object obj = null;
-
-            if (!DA.GetData("Glulam", ref obj))
-            {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No glulam blank connected.");
-                return;
-            }
-
-            Glulam g;
-
-            if (obj is GH_Glulam)
-                g = (obj as GH_Glulam).Value;
-            else
-                g = obj as Glulam;
-
-            if (g == null)
+            DA.GetData("Glulam", ref obj);
+            Glulam m_glulam = GH_Glulam.ParseGlulam(obj);
+            if (m_glulam == null)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid glulam input.");
                 return;
@@ -90,18 +80,18 @@ namespace tas.Lam.GH
 
             List<Interval> domains = new List<Interval>();
 
-            domains.Add(new Interval(g.Centreline.Domain.Min, m_params.First()));
+            domains.Add(new Interval(m_glulam.Centreline.Domain.Min, m_params.First()));
             for (int i = 0; i < m_params.Count - 1; ++i)
             {
                 domains.Add(new Interval(m_params[i], m_params[i + 1]));
             }
-            domains.Add(new Interval(m_params.Last(), g.Centreline.Domain.Max));
+            domains.Add(new Interval(m_params.Last(), m_glulam.Centreline.Domain.Max));
 
             domains = domains.Where(x => x.Length > m_overlap).ToList();
 
             for (int i = 0; i < domains.Count; ++i)
             {
-                m_glulams.Add(g.Extract(domains[i], m_overlap));
+                m_glulams.Add(m_glulam.Extract(domains[i], m_overlap));
             }
             
 

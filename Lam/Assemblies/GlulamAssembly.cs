@@ -27,15 +27,15 @@ using Rhino.Geometry;
 
 namespace tas.Lam
 {
-    public abstract class Assembly
+    public abstract class GlulamAssembly
     {
-        protected Assembly(Plane p)
+        protected GlulamAssembly(Plane p)
         {
             Id = Guid.NewGuid();
             BasePlane = p;
         }
 
-        protected Assembly() : this(Plane.WorldXY) { }
+        protected GlulamAssembly() : this(Plane.WorldXY) { }
 
         public Plane BasePlane;
         public Guid Id { get; protected set; }
@@ -43,7 +43,7 @@ namespace tas.Lam
         public abstract Mesh[] ToMesh();
         public abstract Brep[] ToBrep();
         public abstract void Transform(Transform x);
-        public abstract Assembly Duplicate();
+        public abstract GlulamAssembly Duplicate();
         public abstract bool TryGetWidthAndHeight(out double Width, out double Height, int part_index = 0);
         public abstract Glulam[] GetAllGlulams();
         public abstract Glulam GetSubElement(int part_index = 0);
@@ -86,7 +86,7 @@ namespace tas.Lam
         }
     }
 
-    public abstract class DirectedAssembly : Assembly
+    public abstract class DirectedAssembly : GlulamAssembly
     {
         public Curve[] Centrelines;
 

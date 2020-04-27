@@ -18,7 +18,7 @@ namespace tas.Machine.GH.Toolpaths
         public Cmpt_CreateRamp()
           : base("Special - Ramp", "Ramp",
               "Create ramp that conforms to underlying polyline.",
-              "tasTools", "Toolpaths")
+              "tasMachine", "Toolpaths")
         {
         }
 

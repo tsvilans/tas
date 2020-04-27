@@ -70,6 +70,7 @@ namespace tas.Lam
         public static GlulamData Default
         { get { return new GlulamData(); } }
 
+
         public GlulamData(int num_width = 4, int num_height = 4, double lam_width = 20.0, double lam_height = 20.0, int samples = 50, CrossSectionPosition alignment = CrossSectionPosition.MiddleCentre)
         {
             Lamellae = new Stick[num_width,num_height];

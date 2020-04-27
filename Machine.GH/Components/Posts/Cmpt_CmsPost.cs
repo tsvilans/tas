@@ -18,7 +18,7 @@ namespace tas.Machine.GH.Posts
         public Cmpt_CmsPost()
           : base("Post to CMS", "Post2CMS",
               "Post toolpaths to CMS 5-axis machining centre.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 

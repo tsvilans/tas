@@ -18,7 +18,7 @@ namespace tas.Projects.DMI.GH
         public Cmpt_VisualizeHaas()
           : base("Visualize Haas", "VizHaas",
               "Visualize Haas TM-3 milling centre.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
             this.Message = "Booting up...";
             xforms = new Transform[DOF + 2];

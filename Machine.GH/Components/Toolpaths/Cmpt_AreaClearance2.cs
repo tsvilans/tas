@@ -21,7 +21,7 @@ namespace tas.Machine.GH.Toolpaths
         public AreaClearance2_Component()
           : base("Roughing - Area Clearance2", "Area Clearance2",
               "Area clearance toolpath strategy.",
-              "tasTools", "Toolpaths")
+              "tasMachine", "Toolpaths")
         {
         }
 

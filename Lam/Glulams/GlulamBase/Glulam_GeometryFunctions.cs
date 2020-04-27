@@ -33,6 +33,79 @@ namespace tas.Lam
 {
     public abstract partial class Glulam
     {
+
+        public Plane[] MapToGlulamSpace(IList<Plane> planes)
+        {
+            Plane[] m_output_planes = new Plane[planes.Count];
+
+            Plane m_plane;
+            Plane m_temp;
+            double t;
+
+            for (int i = 0; i < planes.Count; ++i)
+            {
+                Centreline.ClosestPoint(planes[i].Origin, out t);
+                m_plane = GetPlane(t);
+                m_temp = planes[i];
+                m_temp.Transform(Rhino.Geometry.Transform.PlaneToPlane(m_plane, Plane.WorldXY));
+                m_temp.OriginZ = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
+
+                m_output_planes[i] = m_temp;
+            }
+
+            return m_output_planes;
+        }
+
+        public Plane MapToGlulamSpace(Plane plane)
+        {
+            Centreline.ClosestPoint(plane.Origin, out double t);
+            Plane m_plane = GetPlane(t);
+            plane.Transform(Rhino.Geometry.Transform.PlaneToPlane(m_plane, Plane.WorldXY));
+            plane.OriginZ = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
+
+            return plane;
+        }
+
+        public Point3d MapToGlulamSpace(Point3d pt)
+        {
+            Centreline.ClosestPoint(pt, out double t);
+            Plane m_plane = GetPlane(t);
+            pt.Transform(Rhino.Geometry.Transform.PlaneToPlane(m_plane, Plane.WorldXY));
+            pt.Z = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
+
+            return pt;
+        }
+
+        public Point3d[] MapToGlulamSpace(IList<Point3d> pts)
+        {
+            Point3d[] m_output_pts = new Point3d[pts.Count];
+
+            Plane m_plane;
+            Point3d m_temp;
+            double t;
+            for (int i = 0; i < pts.Count; ++i)
+            {
+                Centreline.ClosestPoint(pts[i], out t);
+                m_plane = GetPlane(t);
+                m_plane.RemapToPlaneSpace(pts[i], out m_temp);
+                m_temp.Z = Centreline.GetLength(new Interval(Centreline.Domain.Min, t));
+
+                m_output_pts[i] = m_temp;
+            }
+
+            return m_output_pts;
+        }
+
+        public Mesh MapToGlulamSpace(Mesh mesh)
+        {
+            //Mesh m_mesh = new Mesh();
+            Mesh m_mesh = mesh.DuplicateMesh();
+            m_mesh.Vertices.Clear();
+            m_mesh.Vertices.AddVertices(MapToGlulamSpace(mesh.Vertices.ToPoint3dArray()));
+
+            return m_mesh;
+        }
+
         public List<Point3d> DiscretizeCentreline(bool adaptive = true)
         {
             if (adaptive)

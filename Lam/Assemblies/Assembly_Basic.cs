@@ -65,7 +65,7 @@ namespace tas.Lam
             Blank.Transform(x);
         }
 
-        public override Assembly Duplicate()
+        public override GlulamAssembly Duplicate()
         {
             BasicAssembly bas = new BasicAssembly(this.Blank, this.BasePlane);
             return bas;

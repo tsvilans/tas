@@ -29,11 +29,11 @@ using System.Linq;
 
 namespace tas.Lam.GH
 {
-    public class Cmpt_GetNPlanes : GH_Component
+    public class Cmpt_GetFrameList : GH_Component
     {
-        public Cmpt_GetNPlanes()
-          : base("Get N Planes", "GetNPlanes",
-              "Gets cross-sectional planes at N points along a Glulam object.",
+        public Cmpt_GetFrameList()
+          : base("Get Frame List", "GetFrames",
+              "Gets Glulam frames at multiple parameters along a Glulam object.",
               "tasLam", "Map")
         {
         }
@@ -41,7 +41,8 @@ namespace tas.Lam.GH
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Glulam", "G", "Input glulam blank to deconstruct.", GH_ParamAccess.item);
-            pManager.AddIntegerParameter("Number", "N", "Number of equally-spaced planes to extract.", GH_ParamAccess.item, 10);
+            pManager.AddNumberParameter("Parameters", "t", "Parameters at which to extract a Glulam frame.", GH_ParamAccess.list);
+            //pManager.AddIntegerParameter("Number", "N", "Number of equally-spaced frames to extract.", GH_ParamAccess.item, 10);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -51,36 +52,21 @@ namespace tas.Lam.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            object obj = null;
+            Glulam m_glulam = null;
 
-            if (!DA.GetData("Glulam", ref obj))
+            if (!DA.GetData<Glulam>("Glulam", ref m_glulam))
             {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No glulam blank connected.");
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Invalid glulam input.");
                 return;
             }
 
-            int N = 10;
+            List<double> m_parameters = new List<double>();
+            DA.GetDataList("Parameters", m_parameters);
 
-            DA.GetData("Number", ref N);
 
-            if (N < 2) N = 2;
+            //double[] tt = g.Centreline.DivideByCount(N, true);
 
-            Glulam g;
-
-            if (obj is GH_Glulam)
-                g = (obj as GH_Glulam).Value;
-            else
-                g = obj as Glulam;
-
-            if (g == null)
-            {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid glulam input.");
-                return;
-            }
-
-            double[] tt = g.Centreline.DivideByCount(N, true);
-
-            Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
+            Plane[] planes = m_parameters.Select(x => m_glulam.GetPlane(x)).ToArray();
 
             DA.SetDataList("Planes", planes);
         }

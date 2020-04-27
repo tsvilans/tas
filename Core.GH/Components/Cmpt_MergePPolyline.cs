@@ -14,7 +14,7 @@ namespace tas.Core.GH
         public Cmpt_MergePPolyline()
           : base("Merge PPolylines", "MPPoly",
               "Merge multiple PPolylines into one..",
-              "tasTools", "Test")
+              "tasCore", "Oriented Polyline")
         {
         }
 

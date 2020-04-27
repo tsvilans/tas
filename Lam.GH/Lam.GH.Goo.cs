@@ -51,6 +51,13 @@ namespace tas.Lam.GH
         }
         #endregion
 
+        public static Glulam ParseGlulam(object obj)
+        {
+            if (obj is GH_Glulam)
+                return (obj as GH_Glulam).Value;
+            else
+                return obj as Glulam;
+        }
         public override string ToString()
         {
             if (Value == null) return "Null glulam";
@@ -286,11 +293,11 @@ namespace tas.Lam.GH
         #endregion
     }
 
-    public class GH_Assembly : GH_Goo<Assembly>, IGH_PreviewData
+    public class GH_Assembly : GH_Goo<GlulamAssembly>, IGH_PreviewData
     {
         public GH_Assembly() { this.Value = null; }
         public GH_Assembly(GH_Assembly goo) { this.Value = goo.Value; }
-        public GH_Assembly(Assembly native) { this.Value = native; }
+        public GH_Assembly(GlulamAssembly native) { this.Value = native; }
         public override IGH_Goo Duplicate() => new GH_Assembly(this);
         public override bool IsValid => true;
         public override string TypeName => "GlulamAssemblyGoo";
@@ -300,9 +307,9 @@ namespace tas.Lam.GH
 
         public override bool CastFrom(object source)
         {
-            if (source is Assembly)
+            if (source is GlulamAssembly)
             {
-                Value = source as Assembly;
+                Value = source as GlulamAssembly;
                 return true;
             }
 
@@ -324,7 +331,7 @@ namespace tas.Lam.GH
                 target = (Q)mesh;
                 return true;
             }
-            if (typeof(Q).IsAssignableFrom(typeof(Assembly)))
+            if (typeof(Q).IsAssignableFrom(typeof(GlulamAssembly)))
             {
                 object blank = Value;
                 target = (Q)blank;

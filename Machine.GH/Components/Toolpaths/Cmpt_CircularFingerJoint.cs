@@ -12,7 +12,7 @@ namespace tas.Machine.GH.Toolpaths
         public CircularFingerJoint_Component()
           : base("Special - Finger Joint Circular", "CircFJ",
               "Create radial finger joint from beam member geometry.",
-              "tasTools", "Toolpaths")
+              "tasMachine", "Toolpaths")
         {
         }
 

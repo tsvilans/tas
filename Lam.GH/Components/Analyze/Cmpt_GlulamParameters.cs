@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Drawing;
 using System.Collections.Generic;
 
 using Rhino.Geometry;
@@ -25,45 +26,74 @@ using Rhino.Geometry;
 using Grasshopper.Kernel;
 using Grasshopper;
 using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel.Special;
 
 namespace tas.Lam.GH
 {
-    public class Cmpt_DeLam : GH_Component
+    public class Cmpt_GlulamParameters : GH_Component
     {
-        public Cmpt_DeLam()
-          : base("Delaminate", "Delam",
+        public Cmpt_GlulamParameters()
+          : base("Get Glulam parameters", "GParam",
               "Extracts parameters from Glulam object.",
               "tasLam", "Analyze")
         {
         }
 
+        GH_ValueList valueList = null;
+        IGH_Param parameter = null;
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Glulam", "G", "Input glulam blank to deconstruct.", GH_ParamAccess.item);
-            pManager.AddTextParameter("Keys", "K", "Parameters to extract.", GH_ParamAccess.list);
+            pManager.AddTextParameter("Key", "K", "Key value of parameters to extract.", GH_ParamAccess.list);
+            parameter = pManager[1];
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Params", "P", "Extracted parameters", GH_ParamAccess.tree);
-            /*
-            pManager.AddCurveParameter("Centreline", "C", "Centreline of glulam blank.", GH_ParamAccess.item);
-            pManager.AddNumberParameter("LamellaWidth", "Lw", "Width of glulam lamellas.", GH_ParamAccess.item);
-            pManager.AddNumberParameter("LamellaHeight", "Lh", "Height of glulam lamellas.", GH_ParamAccess.item);
-            pManager.AddIntegerParameter("NumWidth", "Nw", "Number of glulam lamellas horiztonally.", GH_ParamAccess.item);
-            pManager.AddIntegerParameter("NumHeight", "Nh", "Number of glulam lamellas vertically.", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Frames", "F", "Glulam cross-section control frames.", GH_ParamAccess.list);
-            pManager.AddIntegerParameter("Samples", "S", "Sampling density for glulam blank.", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("IsValid", "K", "Does the glulam curvature fall within the lamella dimension limits? " +
-                "Default radius multiplier is 200.0 (curvature limit is lamella width or height x 200.0).", GH_ParamAccess.item);
-            */
+        }
+
+        protected override void BeforeSolveInstance()
+        {
+            if (valueList == null)
+            {
+                if (parameter.Sources.Count == 0)
+                {
+                    valueList = new GH_ValueList();
+                }
+                else
+                {
+                    foreach (var source in parameter.Sources)
+                    {
+                        if (source is GH_ValueList) valueList = source as GH_ValueList;
+                        return;
+                    }
+                }
+
+                valueList.CreateAttributes();
+                valueList.Attributes.Pivot = new PointF(this.Attributes.Pivot.X - 200, this.Attributes.Pivot.Y - 1);
+                valueList.ListItems.Clear();
+
+                var glulamParameters = Glulam.ListParameters();
+
+                foreach (string param in glulamParameters)
+                {
+                    valueList.ListItems.Add(new GH_ValueListItem(param, $"\"{param}\""));
+                }
+
+                Instances.ActiveCanvas.Document.AddObject(valueList, false);
+                parameter.AddSource(valueList);
+                parameter.CollectData();
+            }
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            object obj = null;
+            Glulam g = null;
 
-            if (!DA.GetData("Glulam", ref obj))
+            if (!DA.GetData<Glulam>("Glulam", ref g))
             {
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No glulam blank connected.");
                 return;
@@ -71,12 +101,13 @@ namespace tas.Lam.GH
 
             List<string> keys = new List<string>();
 
-            if (!DA.GetDataList("Keys", keys))
+            if (!DA.GetDataList("Key", keys))
             {
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No keys found.");
                 return;
             }
 
+            /*
             Glulam g;
 
             if (obj is GH_Glulam)
@@ -89,6 +120,7 @@ namespace tas.Lam.GH
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Invalid glulam input.");
                 return;
             }
+            */
 
             DataTree<object> output = new DataTree<object>();
             Dictionary<string, object> props = g.GetProperties();

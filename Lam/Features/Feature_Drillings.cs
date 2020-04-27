@@ -9,7 +9,7 @@ namespace tas.Lam.Features
     /// Single-sided counter-sunk drilling feature. The workplane is on the surface of the workpiece.
     /// The drill geometry points down along the Z-axis.
     /// </summary>
-    class CounterSunkDrill : FeatureX
+    public class CounterSunkDrill : FeatureX
     {
         double m_cs_radius = 8.0;
         double m_cs_depth = 4.0;
@@ -79,7 +79,7 @@ namespace tas.Lam.Features
     /// Double-sided counter-sunk drilling feature. The workplane is in the center of the workpiece.
     /// The drill geometry goes outwards from the workplane.
     /// </summary>
-    class DoubleSidedCounterSunkDrill : FeatureX
+    public class DoubleSidedCounterSunkDrill : FeatureX
     {
         double m_cs_radius = 8.0;
         double m_cs_depth = 4.0;

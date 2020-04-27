@@ -47,6 +47,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Components\Cmpt_Bitmask.cs" />
+    <Compile Include="Components\Cmpt_Contrast.cs" />
+    <Compile Include="Components\Cmpt_Cut.cs" />
     <Compile Include="Components\Cmpt_ReversePPolyline.cs" />
     <Compile Include="Components\Cmpt_MergePPolyline.cs" />
     <Compile Include="Components\Cmpt_DePPolyline.cs" />
@@ -81,10 +83,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.7.18199.22081</Version>
+      <Version>6.24.20079.23341</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>6.7.18199.22081</Version>
+      <Version>6.24.20079.23341</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

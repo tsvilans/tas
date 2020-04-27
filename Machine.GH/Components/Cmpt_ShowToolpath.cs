@@ -14,7 +14,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_ShowToolpath()
           : base("Show Toolpath", "Show",
               "Display toolpath.",
-              "tasTools", "Machining")
+              "tasMachine", "Machining")
         {
         }
 
