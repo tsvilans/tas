@@ -57,6 +57,7 @@
     <Compile Include="Components\Create\Cmpt_CreateBlankFromBeam.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankNormalToSurface.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankWithGuides.cs" />
+    <Compile Include="Components\Create\Cmpt_CreateGlulamDataFromWidthHeight.cs" />
     <Compile Include="Components\Create\Cmpt_CreateWorkpiece.cs" />
     <Compile Include="Components\Map\Cmpt_BidirVector2Color.cs" />
     <Compile Include="Components\Map\Cmpt_GetFrameAtParameter.cs" />
@@ -196,6 +197,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tas_icons_GlulamEdges_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_Bisector_24x24.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

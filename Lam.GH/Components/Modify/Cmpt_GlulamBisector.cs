@@ -18,8 +18,8 @@ namespace tas.Lam.GH.Components
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Glulam A", "gA", "First Glulam.", GH_ParamAccess.item);
-            pManager.AddGenericParameter("Glulam B", "gB", "Second Glulam.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Glulam A", "G", "First Glulam.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Glulam B", "G", "Second Glulam.", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -30,18 +30,13 @@ namespace tas.Lam.GH.Components
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            object iGA = null, iGB = null;
+            Glulam gA = null, gB = null;
             double extension = 10.0;
             bool normalized = false;
 
-            DA.GetData("Glulam A", ref iGA);
-            DA.GetData("Glulam B", ref iGB);
-
-            Glulam gA = iGA as Glulam;
-            if (gA == null) return;
-
-            Glulam gB = iGB as Glulam;
-            if (gB == null) return;
+            if (!DA.GetData<Glulam>("Glulam A", ref gA) ||
+            !DA.GetData<Glulam>("Glulam B", ref gB))
+                return;
 
             Brep bi = Glulam.GetGlulamBisector(gA, gB, extension, normalized);
 
@@ -52,7 +47,7 @@ namespace tas.Lam.GH.Components
         {
             get
             {
-                return null;
+                return Properties.Resources.tas_icons_Bisector_24x24;
             }
         }
 
