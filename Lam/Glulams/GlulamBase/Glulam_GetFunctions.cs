@@ -123,9 +123,22 @@ namespace tas.Lam
         public Brep GetGlulamFace(tas.Core.Util.Side side)
         {
             Plane[] planes;
-            double[] t;
+            double[] parameters;
 
-            GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out t, Data.InterpolationType);
+            GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out parameters, Data.InterpolationType);
+
+            //
+            /*
+            int N = Math.Max(Data.Samples, 2);
+            parameters = Centreline.DivideByCount(N - 1, true).ToArray();
+
+            planes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
+                Centreline.PointAt(x),
+                Centreline.TangentAt(x),
+                Orientation.GetOrientation(Centreline, x))).ToArray();
+            */
+            //
+
 
             double hWidth = this.Width / 2;
             double hHeight = this.Height / 2;
@@ -133,40 +146,42 @@ namespace tas.Lam
             x1 = y1 = x2 = y2 = 0;
             Rectangle3d face;
 
+            GetSectionOffset(out double offsetX, out double offsetY);
+
             switch (side)
             {
                 case (Side.Back):
-                    face = new Rectangle3d(planes.First(), new Interval(-hWidth, hWidth), new Interval(-hHeight, hHeight));
+                    face = new Rectangle3d(planes.First(), new Interval(-hWidth + offsetX, hWidth + offsetX), new Interval(-hHeight + offsetY, hHeight + offsetY));
                     return Brep.CreateFromCornerPoints(face.Corner(0), face.Corner(1), face.Corner(2), face.Corner(3), 0.001);
                 case (Side.Front):
-                    face = new Rectangle3d(planes.Last(), new Interval(-hWidth, hWidth), new Interval(-hHeight, hHeight));
+                    face = new Rectangle3d(planes.Last(), new Interval(-hWidth + offsetX, hWidth + offsetX), new Interval(-hHeight + offsetY, hHeight + offsetY));
                     return Brep.CreateFromCornerPoints(face.Corner(0), face.Corner(1), face.Corner(2), face.Corner(3), 0.001);
                 case (Side.Left):
-                    x1 = hWidth; y1 = hHeight;
-                    x2 = hWidth; y2 = -hHeight;
+                    x1 = hWidth + offsetX; y1 = hHeight + offsetY;
+                    x2 = hWidth + offsetX; y2 = -hHeight + offsetY;
                     break;
                 case (Side.Right):
-                    x1 = -hWidth; y1 = hHeight;
-                    x2 = -hWidth; y2 = -hHeight;
+                    x1 = -hWidth + offsetX; y1 = hHeight + offsetY;
+                    x2 = -hWidth + offsetX; y2 = -hHeight + offsetY;
                     break;
                 case (Side.Top):
-                    x1 = hWidth; y1 = hHeight;
-                    x2 = -hWidth; y2 = hHeight;
+                    x1 = hWidth + offsetX; y1 = hHeight + offsetY;
+                    x2 = -hWidth + offsetX; y2 = hHeight + offsetY;
                     break;
                 case (Side.Bottom):
-                    x1 = hWidth; y1 = -hHeight;
-                    x2 = -hWidth; y2 = -hHeight;
+                    x1 = hWidth + offsetX; y1 = -hHeight + offsetY;
+                    x2 = -hWidth + offsetX; y2 = -hHeight + offsetY;
                     break;
             }
 
-            Curve[] rules = new Curve[t.Length];
+            Curve[] rules = new Curve[parameters.Length];
             for (int i = 0; i < planes.Length; ++i)
                 rules[i] = new Line(
                     planes[i].Origin + planes[i].XAxis * x1 + planes[i].YAxis * y1,
                     planes[i].Origin + planes[i].XAxis * x2 + planes[i].YAxis * y2
                     ).ToNurbsCurve();
 
-            Brep[] loft = Brep.CreateFromLoft(rules, Point3d.Unset, Point3d.Unset, LoftType.Tight, false);
+            Brep[] loft = Brep.CreateFromLoft(rules, Point3d.Unset, Point3d.Unset, LoftType.Normal, false);
             if (loft == null || loft.Length < 1) throw new Exception("Glulam::GetGlulamFace::Loft failed!");
 
             Brep brep = loft[0];
@@ -182,7 +197,7 @@ namespace tas.Lam
             for (int i = 0; i < 6; ++i)
             {
                 if ((mask & (1 << i)) > 0)
-                    breps.Add(GetGlulamFace((Side)i));
+                    breps.Add(GetGlulamFace((Side)(1 << i)));
             }
 
             return breps.ToArray();
@@ -199,18 +214,26 @@ namespace tas.Lam
             if (extension > 0.0)
                 c = c.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
-            double[] t = c.DivideByCount(Data.Samples, true);
-            Curve[] rules = new Curve[t.Length];
+            GenerateCrossSectionPlanes(Math.Max(6, Data.Samples), extension, out Plane[] planes, out double[] parameters, Data.InterpolationType);
 
-            for (int i = 0; i < t.Length; ++i)
+            Curve[] rules = new Curve[planes.Length];
+
+            double offsetX, offsetY;
+            GetSectionOffset(out offsetX, out offsetY);
+
+            for (int i = 0; i < planes.Length; ++i)
             {
-                Plane p = GetPlane(t[i]);
+                Plane p = planes[i];
                 if (side == 0)
-                    rules[i] = new Line(p.Origin + p.XAxis * offset + p.YAxis * w2,
-                        p.Origin + p.XAxis * offset - p.YAxis * w2).ToNurbsCurve();
+                    rules[i] = new Line(
+                        p.Origin + p.XAxis * (offset + offsetX) + p.YAxis * (w2 + offsetY),
+                        p.Origin + p.XAxis * (offset + offsetX) - p.YAxis * (w2 - offsetY)
+                        ).ToNurbsCurve();
                 else
-                    rules[i] = new Line(p.Origin + p.YAxis * offset + p.XAxis * w2,
-                        p.Origin + p.YAxis * offset - p.XAxis * w2).ToNurbsCurve();
+                    rules[i] = new Line(
+                        p.Origin + p.YAxis * (offset + offsetY) + p.XAxis * (w2 + offsetX),
+                        p.Origin + p.YAxis * (offset + offsetY) - p.XAxis * (w2 - offsetX)
+                        ).ToNurbsCurve();
 
             }
 

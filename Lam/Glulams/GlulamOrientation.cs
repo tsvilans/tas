@@ -42,15 +42,32 @@ namespace tas.Lam
             return GetOrientation(crv, t);
         }
 
-        public abstract List<Vector3d> GetOrientations(Curve crv, List<double> t);
+        public abstract List<Vector3d> GetOrientations(Curve crv, IList<double> t);
 
         public abstract void Remap(Curve old_curve, Curve new_curve);
 
-        public abstract List<GlulamOrientation> Split(ICollection<double> t);
+        public virtual GlulamOrientation[] Split(IList<double> t)
+        {
+            GlulamOrientation[] new_orientations = new GlulamOrientation[t.Count + 1];
+            for (int i = 0; i < new_orientations.Length; ++i)
+            {
+                new_orientations[i] = this.Duplicate();
+            }
+
+            return new_orientations;
+        }
 
         public abstract GlulamOrientation Join(GlulamOrientation orientation);
 
-        public abstract GlulamOrientation Duplicate();
+        public virtual GlulamOrientation Duplicate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual GlulamOrientation Trim(Interval domain)
+        {
+            return this.Duplicate();
+        }
 
         public abstract void Transform(Transform x);
 
@@ -84,7 +101,7 @@ namespace tas.Lam
             return NormalizeVector(crv, t, m_vector);
         }
 
-        public override List<Vector3d> GetOrientations(Curve crv, List<double> t)
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
             return t.Select(x => GetOrientation(crv, x)).ToList();
         }
@@ -97,17 +114,6 @@ namespace tas.Lam
         public override GlulamOrientation Duplicate()
         {
             return new VectorOrientation(m_vector);
-        }
-
-        public override List<GlulamOrientation> Split(ICollection<double> t)
-        {
-            List<GlulamOrientation> new_orientations = new List<GlulamOrientation>();
-            new_orientations.Add(this.Duplicate());
-            foreach (double param in t)
-            {
-                new_orientations.Add(this.Duplicate());
-            }
-            return new_orientations;
         }
 
         public override object GetDriver()
@@ -127,71 +133,173 @@ namespace tas.Lam
     }
 
     /// <summary>
+    /// Simple class to group together curve parameter, direction vector, and angular offset
+    /// for the VectorListOrientation class.
+    /// </summary>
+    public struct VectorParameter: IComparable, IComparable<VectorParameter>, IComparable<double>
+    {
+        public Vector3d Direction;
+        public double Parameter;
+        public double AngularOffset;
+
+        public static VectorParameter Unset => new VectorParameter { Parameter = double.NaN, AngularOffset = double.NaN, Direction = Vector3d.Unset };
+
+        public void CalculateAngularOffset(Curve curve)
+        {
+            curve.PerpendicularFrameAt(Parameter, out Plane RMF);
+            AngularOffset = Vector3d.VectorAngle(RMF.YAxis, Direction, RMF);
+        }
+
+        public int CompareTo(VectorParameter vp)
+        {
+            if (vp.Parameter == double.NaN) return 1;
+
+            if (Parameter == vp.Parameter) return 0;
+
+            return Parameter > vp.Parameter ? 1 : -1;
+        }
+
+        public int CompareTo(double t)
+        {
+            if (Parameter == t) return 0;
+            return Parameter > t ? 1 : -1;
+        }
+
+        public int CompareTo(object obj)
+        {
+            return Parameter.CompareTo(obj);
+        }
+
+        public VectorParameter Duplicate() => new VectorParameter{ Parameter = Parameter, Direction = Direction, AngularOffset = AngularOffset };
+        
+    }
+
+    public class VectorParameterComparer : IComparer<VectorParameter>
+    {
+        public int Compare(VectorParameter x, VectorParameter y)
+        {
+            return x.CompareTo(y.Parameter);
+        }
+        public int Compare(VectorParameter x, double y)
+        {
+            return x.CompareTo(y);
+        }
+    }
+
+
+    /// <summary>
     /// An orientation consisting of a list of vectors arranged at specific parameters
     /// along a curve. Vectors should be perpendicular to the curve upon input, 
     /// otherwise it might give funny results.
     /// </summary>
     public class VectorListOrientation : GlulamOrientation
     {
-        protected List<Vector3d> m_vectors;
-        protected List<double> m_parameters;
+        protected VectorParameter[] m_guides;
         protected Curve m_curve;
 
-        public List<Vector3d> Vectors { get { return m_vectors; } }
-        public List<double> Parameters { get { return m_parameters; } }
+        public List<Vector3d> Vectors { get { return m_guides.Select(x => x.Direction).ToList(); } }
+        public List<double> Parameters { get { return m_guides.Select(x => x.Parameter).ToList(); } }
+        public List<double> AngularOffsets { get { return m_guides.Select(x => x.AngularOffset).ToList(); } }
 
-        public VectorListOrientation(Curve curve, List<double> parameters, List<Vector3d> vectors)
+        public VectorListOrientation(Curve curve, IList<VectorParameter> guides)
         {
+            m_guides = new VectorParameter[guides.Count];
+            Array.Copy(guides.ToArray(), m_guides, guides.Count);
             m_curve = curve;
-            m_vectors = new List<Vector3d>();
-            m_parameters = new List<double>();
 
+            //RecalculateVectors();
+
+            for (int i = 0; i < m_guides.Length; ++i)
+            {
+                if (m_guides[i].AngularOffset == double.NaN)
+                {
+                    //m_guides[i].CalculateAngularOffset(curve);
+                }
+            }
+            
+            if (m_guides.Length > 1)
+                for (int i = 1; i < m_guides.Length; ++i)
+                {
+                    /*
+                    double diff = m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset;
+                    if (Math.Abs(diff) > Math.PI)
+                    {
+                        m_guides[i].AngularOffset -= Constants.Tau * Math.Sign(diff); ;
+                    }
+                    */
+                    
+                    if (m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset > Math.PI)
+                        m_guides[i].AngularOffset -= Constants.Tau;
+                    else if (m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset < -Math.PI)
+                        m_guides[i].AngularOffset += Constants.Tau;
+                    
+                }
+
+            Array.Sort(m_guides, (a, b) => a.Parameter.CompareTo(b.Parameter));
+        }
+
+        public VectorListOrientation(Curve curve, IList<double> parameters, IList<Vector3d> vectors)
+        {
             int N = Math.Min(parameters.Count, vectors.Count);
 
+            m_curve = curve;
+            m_guides = new VectorParameter[N];
+
+            Plane RMF;
+            int index = 0;
             for (int i = 0; i < N; ++i)
             {
                 if (vectors[i].IsValid && !vectors[i].IsZero)
-                {    
-                    m_vectors.Add(vectors[i]);
-                    m_parameters.Add(parameters[i]);
+                {
+                    curve.PerpendicularFrameAt(parameters[i], out RMF);
+                    m_guides[index] = new VectorParameter{ Direction = vectors[i], Parameter = parameters[i], AngularOffset = Vector3d.VectorAngle(RMF.YAxis, vectors[i], RMF) };
+                    index++;
                 }
             }
 
-            if (m_vectors.Count != m_parameters.Count || m_vectors.Count == 0 || m_parameters.Count == 0)
+            Array.Resize(ref m_guides, index);
+
+            if (index > 0)
             {
-                throw new Exception("No valid vectors or parameters.");
+                for (int i = 1; i < index; ++i)
+                {
+                    double diff = m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset;
+                    if (Math.Abs(diff) > Math.PI)
+                    {
+                        m_guides[i].AngularOffset -= Constants.Tau * Math.Sign(diff); ;
+                    }
+
+                    /*
+                    if ((m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset) > Math.PI)
+                        m_guides[i].AngularOffset -= Constants.Tau;
+                    else if ((m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset) < -Math.PI)
+                        m_guides[i].AngularOffset += Constants.Tau;
+                    */  
+                }
             }
+            else
+                throw new Exception("No valid vectors or parameters.");
 
-            Sort();
+            Array.Sort(m_guides, (a, b) => a.Parameter.CompareTo(b.Parameter));
+
             RecalculateVectors();
-        }
-
-        public void Sort()
-        {
-            // Zip and sort using LINQ
-            var ordered_zip = m_parameters.Zip(m_vectors, (x, y) => new { x, y })
-                      .OrderBy(pair => pair.x)
-                      .ToList();
-
-            m_parameters = ordered_zip.Select(pair => pair.x).ToList();
-            m_vectors = ordered_zip.Select(pair => pair.y).ToList();
         }
 
         public override Vector3d GetOrientation(Curve crv, double t)
         {
-
-            Vector3d vec;
-            if (t <= m_parameters.First())
+            double angle;
+            if (t <= m_guides.First().Parameter)
             {
-                vec = m_vectors.First();
+                angle = m_guides.First().AngularOffset;
             }
-            else if (t >= m_parameters.Last())
+            else if (t >= m_guides.Last().Parameter)
             {
-                vec = m_vectors.Last();
+                angle = m_guides.Last().AngularOffset;
             }
 
-            int res = m_parameters.BinarySearch(t);
-            int max = m_parameters.Count - 1;
+            int res = Array.BinarySearch(m_guides.ToArray(), t);
+
+            int max = m_guides.Length - 1;
             double mu;
 
             if (res < 0)
@@ -202,15 +310,27 @@ namespace tas.Lam
 
             if (res >= 0 && res < max)
             {
-                mu = (t - m_parameters[res]) / (m_parameters[res + 1] - m_parameters[res]);
-                vec = Interpolation.Slerp(m_vectors[res], m_vectors[res + 1], mu);
+                mu = (t - m_guides[res].Parameter) / (m_guides[res + 1].Parameter - m_guides[res].Parameter);
+                angle = Interpolation.Lerp(m_guides[res].AngularOffset, m_guides[res + 1].AngularOffset, mu);
             }
             else if (res < 0)
-                vec = m_vectors.First();
+            {
+                angle = m_guides.First().AngularOffset;
+            }
             else if (res >= max)
-                vec = m_vectors.Last();
+            {
+                angle = m_guides.Last().AngularOffset;
+            }
             else
-                vec = Vector3d.Unset;
+            {
+                angle = 0.0;
+            }
+
+            Plane RMF;
+            crv.PerpendicularFrameAt(t, out RMF);
+            Vector3d vec = RMF.YAxis;
+
+            vec.Transform(Rhino.Geometry.Transform.Rotation(angle, RMF.ZAxis, RMF.Origin));
 
             return NormalizeVector(crv, t, vec);
         }
@@ -221,7 +341,7 @@ namespace tas.Lam
         /// <param name="crv"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-        public override List<Vector3d> GetOrientations(Curve crv, List<double> t)
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
             return t.Select(x => GetOrientation(crv, x)).ToList();
         }
@@ -230,31 +350,68 @@ namespace tas.Lam
         {
             Point3d pt;
             double t;
-            for (int i = 0; i < m_parameters.Count; ++i)
+            for (int i = 0; i < m_guides.Length; ++i)
             {
-                pt = old_curve.PointAt(m_parameters[i]);
+                pt = old_curve.PointAt(m_guides[i].Parameter);
                 new_curve.ClosestPoint(pt, out t);
-                m_parameters[i] = t;
+                m_guides[i].Parameter = t;
             }
 
-            Sort();
-
-            //m_parameters.Reverse();
-            //m_vectors.Reverse();
+            Array.Sort(m_guides, (a, b) => a.Parameter.CompareTo(b.Parameter));
         }
 
         public override GlulamOrientation Duplicate()
         {
-            return new VectorListOrientation(m_curve, m_parameters, m_vectors);
+            return new VectorListOrientation(m_curve, m_guides);
         }
 
-        public override List<GlulamOrientation> Split(ICollection<double> t)
+        public override GlulamOrientation Trim(Interval domain)
         {
-            List<GlulamOrientation> new_orientations = new List<GlulamOrientation>();
+            if (domain.IsDecreasing)
+                domain.Swap();
+
+            int plusMin = 0, plusMax = 0;
+
+            if (domain.Min > m_curve.Domain.Min)
+                plusMin++;
+            if (domain.Max < m_curve.Domain.Max)
+                plusMax++;
+
+
+            int iMin = Array.BinarySearch(m_guides, domain.Min);
+            if (iMin < 0)
+                iMin = ~iMin;
+
+            int iMax = Array.BinarySearch(m_guides, domain.Max);
+            if (iMax < 0)
+                iMax = ~iMax; 
+
+            int length = iMax - iMin + plusMin + plusMax;
+
+            VectorParameter[] vp = new VectorParameter[length];
+            Array.Copy(m_guides, iMin, vp, plusMin, iMax - iMin);
+
+            if (plusMin > 0)
+            {
+                vp[0] = new VectorParameter { Parameter = domain.Min, Direction = GetOrientation(m_curve, domain.Min) };
+                vp[0].CalculateAngularOffset(m_curve);
+            }
+            if (plusMax > 0)
+            {
+                vp[vp.Length - 1] = new VectorParameter { Parameter = domain.Max, Direction = GetOrientation(m_curve, domain.Max) };
+                vp[vp.Length - 1].CalculateAngularOffset(m_curve);
+            }
+
+            return new VectorListOrientation(m_curve, vp);
+        }
+
+        public override GlulamOrientation[] Split(IList<double> t)
+        {
+            GlulamOrientation[] new_orientations = new GlulamOrientation[t.Count + 1];
 
             if (t.Count < 1)
             {
-                new_orientations.Add(this.Duplicate());
+                new_orientations[0] = this.Duplicate();
                 return new_orientations;
             }
 
@@ -262,33 +419,36 @@ namespace tas.Lam
             double prev_param = 0.0;
             bool flag = false;
 
-            List<double> new_parameters;
-            List<Vector3d> new_vectors;
+            VectorParameter[] new_guides;
 
+            int index = 0;
             foreach (double param in t)
             {
-                int res = m_parameters.BinarySearch(param);
+                int res = Array.BinarySearch(m_guides, param);
 
                 if (res < 0)
                 {
                     res = ~res;
 
-                    new_parameters = m_parameters.GetRange(prev, res - prev);
-                    new_vectors = m_vectors.GetRange(prev, res - prev);
+                    new_guides = new VectorParameter[res - prev + 1];
+                    Array.Copy(m_guides, prev, new_guides, 0, res - prev);
 
-                    new_parameters.Add(param);
-                    new_vectors.Add(GetOrientation(m_curve, param));
+                    new_guides[new_guides.Length - 1] = new VectorParameter { Parameter = param, Direction = GetOrientation(m_curve, param) };
+                    new_guides[new_guides.Length - 1].CalculateAngularOffset(m_curve);
 
                     if (prev > 0 || flag)
                     {
-                        new_parameters.Insert(0, prev_param);
-                        new_vectors.Insert(0, GetOrientation(m_curve, prev_param));
+                        VectorParameter[] temp = new VectorParameter[new_guides.Length + 1];
+                        temp[0] = new VectorParameter { Parameter = prev_param, Direction = GetOrientation(m_curve, prev_param) };
+                        temp[0].CalculateAngularOffset(m_curve);
+
+                        Array.Copy(new_guides, 0, temp, 1, new_guides.Length);
+                        new_guides = temp;
                     }
 
-                    new_orientations.Add(new VectorListOrientation(
+                    new_orientations[index] = new VectorListOrientation(
                         m_curve,
-                        new_parameters,
-                        new_vectors));
+                        new_guides);
 
                     prev_param = param;
                     prev = res;
@@ -296,28 +456,28 @@ namespace tas.Lam
                 }
                 else
                 {
-                    new_parameters = m_parameters.GetRange(prev, res - prev + 1);
-                    new_vectors = m_vectors.GetRange(prev, res - prev + 1);
+                    new_guides = new VectorParameter[res - prev + 1];
+                    Array.Copy(m_guides, prev, new_guides, 0, res - prev + 1);
 
-                    new_orientations.Add(new VectorListOrientation(
+                    new_orientations[index] = new VectorListOrientation(
                         m_curve,
-                        new_parameters,
-                        new_vectors));
+                        new_guides);
 
                     prev = res;
                 }
+
+                index++;
             }
 
-            new_parameters = m_parameters.GetRange(prev, m_parameters.Count - prev);
-            new_vectors = m_vectors.GetRange(prev, m_vectors.Count - prev);
+            new_guides = new VectorParameter[m_guides.Length - prev + 1];
+            Array.Copy(m_guides, prev, new_guides, 1, m_guides.Length - prev);
 
-            new_parameters.Insert(0, t.Last());
-            new_vectors.Insert(0, GetOrientation(m_curve, t.Last()));
+            new_guides[0] = new VectorParameter { Parameter = t.Last(), Direction = GetOrientation(m_curve, t.Last()) };
+            new_guides[0].CalculateAngularOffset(m_curve);
 
-            new_orientations.Add(new VectorListOrientation(
+            new_orientations[index] = new VectorListOrientation(
                 m_curve,
-                new_parameters,
-                new_vectors));
+                new_guides);
 
             return new_orientations;
         }
@@ -325,15 +485,13 @@ namespace tas.Lam
 
         public override object GetDriver()
         {
-            return m_parameters.Zip(m_vectors, (x, y) => new { x, y })
-                      .OrderBy(pair => pair.x)
-                      .ToList();
+            return m_guides;
         }
 
         public void RecalculateVectors()
         {
-            for (int i = 0; i < m_parameters.Count; ++i)
-                m_vectors[i] = NormalizeVector(m_curve, m_parameters[i], m_vectors[i]);
+            for (int i = 0; i < m_guides.Length; ++i)
+                m_guides[i].Direction = NormalizeVector(m_curve, m_guides[i].Parameter, m_guides[i].Direction);
         }
 
         public override GlulamOrientation Join(GlulamOrientation orientation)
@@ -341,22 +499,26 @@ namespace tas.Lam
             if (orientation is VectorListOrientation)
             {
                 VectorListOrientation vlo = orientation as VectorListOrientation;
-                m_parameters.AddRange(vlo.m_parameters);
-                m_vectors.AddRange(vlo.m_vectors);
+                VectorParameter[] temp = new VectorParameter[m_guides.Length + vlo.m_guides.Length];
+                Array.Copy(m_guides, temp, m_guides.Length);
+                Array.Copy(vlo.m_guides, 0, temp, m_guides.Length, vlo.m_guides.Length);
+                Array.Sort(temp, (a, b) => a.Parameter.CompareTo(b.Parameter));
 
-                Sort();
+                m_guides = temp;
             }
+
             return this.Duplicate();
         }
 
         public override void Transform(Transform x)
         {
-            for (int i = 0; i < m_vectors.Count; ++i)
+            for (int i = 0; i < m_guides.Length; ++i)
             {
-                m_vectors[i].Transform(x);
+                m_guides[i].Direction.Transform(x);
             }
         }
     }
+
 
     public class SurfaceOrientation : GlulamOrientation
     {
@@ -381,7 +543,7 @@ namespace tas.Lam
         }
 
 
-        public override List<Vector3d> GetOrientations(Curve crv, List<double> t)
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
             return t.Select(x => GetOrientation(crv, x)).ToList();
         }
@@ -396,17 +558,6 @@ namespace tas.Lam
             return new SurfaceOrientation(m_surface);
         }
 
-
-        public override List<GlulamOrientation> Split(ICollection<double> t)
-        {
-            List<GlulamOrientation> new_orientations = new List<GlulamOrientation>();
-            new_orientations.Add(this.Duplicate());
-            foreach (double param in t)
-            {
-                new_orientations.Add(this.Duplicate());
-            }
-            return new_orientations;
-        }
    
         public override object GetDriver()
         {
@@ -463,7 +614,7 @@ namespace tas.Lam
             return NormalizeVector(crv, t, v);
         }
 
-        public override List<Vector3d> GetOrientations(Curve crv, List<double> t)
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
             return t.Select(x => GetOrientation(crv, x)).ToList();
         }
@@ -476,17 +627,6 @@ namespace tas.Lam
         public override GlulamOrientation Duplicate()
         {
             return new RailCurveOrientation(m_curve);
-        }
-
-        public override List<GlulamOrientation> Split(ICollection<double> t)
-        {
-            List<GlulamOrientation> new_orientations = new List<GlulamOrientation>();
-            new_orientations.Add(this.Duplicate());
-            foreach (double param in t)
-            {
-                new_orientations.Add(this.Duplicate());
-            }
-            return new_orientations;
         }
 
         public override object GetDriver()
@@ -507,7 +647,9 @@ namespace tas.Lam
 
     /// <summary>
     /// Orientation that does nothing. Direction vector is the 
-    /// normalized curvature vector of the queried curve.
+    /// normalized curvature vector of the queried curve (Frenet-Serret 
+    /// Frame). If querying multiple orientations, the vectors
+    /// are reverse if necessary to avoid flips.
     /// </summary>
     public class KCurveOrientation : GlulamOrientation
     {
@@ -522,9 +664,17 @@ namespace tas.Lam
             k.Unitize();
             return k;
         }
-        public override List<Vector3d> GetOrientations(Curve crv, List<double> t)
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
-            return t.Select(x => GetOrientation(crv, x)).ToList();
+            var v = t.Select(x => GetOrientation(crv, x)).ToList();
+            if (t.Count > 0)
+                for (int i = 1; i < v.Count; ++i)
+                {
+                    if (v[i] * v[i - 1] < 0)
+                        v[i].Reverse();
+                }
+
+            return v;
         }
 
         public override void Remap(Curve old_curve, Curve new_curve)
@@ -537,14 +687,64 @@ namespace tas.Lam
             return new KCurveOrientation();
         }
 
-        public override List<GlulamOrientation> Split(ICollection<double> t)
+
+        public override object GetDriver()
         {
-            List<GlulamOrientation> new_orientations = new List<GlulamOrientation>();
-            new_orientations.Add(this.Duplicate());
-            foreach (double param in t)
+            return null;
+        }
+
+        public override GlulamOrientation Join(GlulamOrientation orientation)
+        {
+            return this.Duplicate();
+        }
+
+        public override void Transform(Transform x)
+        {
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Orientation that uses the rotation minimizing frame of the curve. 
+    /// Direction vector is the Y-axis of the RMF.
+    /// </summary>
+    public class RmfOrientation : GlulamOrientation
+    {
+
+        public RmfOrientation()
+        {
+        }
+
+        public override Vector3d GetOrientation(Curve crv, double t)
+        {
+            return crv.GetPerpendicularFrames(new double[] { crv.Domain.Min, t })[1].YAxis;
+            crv.PerpendicularFrameAt(t, out Plane plane);
+            return plane.YAxis;
+        }
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
+        {
+            Plane[] planes = crv.GetPerpendicularFrames(t);
+            return planes.Select(x => x.YAxis).ToList();
+        }
+
+        public override void Remap(Curve old_curve, Curve new_curve)
+        {
+            return;
+        }
+
+        public override GlulamOrientation Duplicate()
+        {
+            return new RmfOrientation();
+        }
+
+        public override GlulamOrientation[] Split(IList<double> t)
+        {
+            GlulamOrientation[] new_orientations = new GlulamOrientation[t.Count + 1];
+            for (int i = 0; i < new_orientations.Length; ++i)
             {
-                new_orientations.Add(this.Duplicate());
+                new_orientations[i] = this.Duplicate();
             }
+
             return new_orientations;
         }
 

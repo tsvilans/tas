@@ -16,6 +16,7 @@ namespace tas.Abaqus
         public List<Material> Materials;
         public List<BoundaryCondition> BoundaryConditions;
         public List<Load> Loads;
+        public List<Step> Steps;
 
         public string JobName, Author;
 
@@ -26,7 +27,8 @@ namespace tas.Abaqus
             Materials = new List<Material>();
             BoundaryConditions = new List<BoundaryCondition>();
             Loads = new List<Load>();
-            JobName = "Job-1";
+            Steps = new List<Step>();
+            JobName = "Job-99";
         }
 
         public void WriteHeader(List<string> inp)
@@ -51,7 +53,7 @@ namespace tas.Abaqus
 
         public void WritePart(List<string> inp, Part prt)
         {
-            inp.Add($"*Part, name=\"{prt.Name}\"");
+            inp.Add($"*Part, name={prt.Name}");
 
             inp.Add("* Node");
 
@@ -60,19 +62,27 @@ namespace tas.Abaqus
                 inp.Add($"    {n.Id}, {n.X}, {n.Y}, {n.Z}");
             }
 
-            inp.Add("*Element, type=C3D8R");
+            if (prt.Elements.Count < 1) throw new Exception("Part must contain elements!");
+
+            inp.Add($"*Element, type={prt.Elements[0].Type}");
+            string line = "";
             foreach (Element ele in prt.Elements)
             {
-                inp.Add($"    {ele.Id}, {ele.A}, {ele.B}, {ele.C}, {ele.D}, {ele.E}, {ele.F}, {ele.G}, {ele.H}");
+                line = $"    {ele.Id}";
+                foreach(int ni in ele.Data)
+                {
+                    line += $", {ni}";
+                }
+                inp.Add(line);
             }
 
-            inp.Add("*Nset, nset=Set-1, generate");
+            inp.Add("*Nset, nset=AllNodes, generate");
             inp.Add($"1, {prt.Nodes.Count}, 1");
 
-            inp.Add("*Elset, elset=Set-1, generate");
+            inp.Add("*Elset, elset=AllElements, generate");
             inp.Add($"1, {prt.Elements.Count}, 1");
 
-            inp.Add("*Distribution, name=Ori-1-DiscOrient, location=ELEMENT, Table=Ori-1-DiscOrient_Table");
+            inp.Add("*Distribution, name=OrientationDistribution, location=ELEMENT, Table=OrientationDistributionTable");
             inp.Add(", 1., 0., 0., 0., 1., 0.");
 
             foreach (ElementOrientation ori in prt.ElementOrientations)
@@ -80,13 +90,13 @@ namespace tas.Abaqus
                 inp.Add($"    {ori.Id}, {ori.Data.ZAxis.X}, {ori.Data.ZAxis.Y}, {ori.Data.ZAxis.Z}, {ori.Data.YAxis.X}, {ori.Data.YAxis.Y}, {ori.Data.YAxis.Z}, ");
             }
 
-            inp.Add("*Orientation, name=Ori-1, system=RECTANGULAR");
-            inp.Add("Ori-1-DiscOrient");
+            inp.Add("*Orientation, name=Orientation-1, system=RECTANGULAR");
+            inp.Add("OrientationDistribution");
             inp.Add("1, 0");
 
 
             inp.Add("** Section: Glulam section");
-            inp.Add($"*Solid Section, elset=Set-1, orientation=Ori-1, material={prt.Material.Name}");
+            inp.Add($"*Solid Section, elset=AllElements, orientation=Orientation-1, material={prt.Material.Name}");
             inp.Add(",");
 
             inp.Add("*End Part");
@@ -109,23 +119,53 @@ namespace tas.Abaqus
             inp.Add($"*Assembly, name={ass.Name}");
             inp.Add("**");
 
-            foreach (Part prt in ass.Parts)
+            foreach (PartInstance prt in ass.Instances)
             {
-                string instance_name = prt.Name + "-1";
-                inp.Add($"*Instance, name=\"{instance_name}\", part=\"{prt.Name}\"");
+                inp.Add($"*Instance, name={prt.Name}, part={prt.Part.Name}");
                 inp.Add("*End Instance");
                 inp.Add("**");
+            }
 
-                inp.Add($"*Nset, nset=Set-1, instance=\"{instance_name}\""); // Find out what these node and element sets correspond with
-                inp.Add("1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12");
-                inp.Add($"*Elset, elset=Set-1, instance=\"{instance_name}\"");
-                inp.Add("1, 2, 3, 4, 5, 6");
+            string line = "";
+
+            foreach (ElementSet set in ass.ElementSets)
+            {
+                line = $"*Elset, elset={set.Name}";
+                if (set.Instance != null)
+                    line += $", instance={set.Instance.Name}";
+                inp.Add(line);
+
+                //line = "";
+                line = string.Join<int>(",", set.Data);
+
+                inp.Add(line);
+            }
+
+            foreach (NodeSet set in ass.NodeSets)
+            {
+                line = $"*Nset, nset={set.Name}";
+                if (set.Instance != null)
+                    line += $", instance={set.Instance.Name}";
+                inp.Add(line);
+
+                //line = "";
+                line = string.Join<int>(",", set.Data);
+
+                inp.Add(line);
+            }
+
+            foreach (Surface srf in ass.Surfaces)
+            {
+                inp.Add($"*Surface, type={srf.Type}, name={srf.Name}");
+                int N = Math.Min(srf.Sets.Count, srf.ElementSides.Count);
+
+                for (int i = 0; i < N; ++i)
+                {
+                    inp.Add($"{srf.Sets[i].Name}, {srf.ElementSides[i]}");
+                }
             }
 
             inp.Add("*End Assembly");
-
-            inp.Add("*Distribution Table, name=Ori-1-DiscOrient_Table"); // This should be a DistributionTable object
-            inp.Add("coord3D, coord3D");
 
         }
 
@@ -147,27 +187,56 @@ namespace tas.Abaqus
         public void WriteMaterial(List<string> inp, Material mat)
         {
             inp.Add($"*Material, name={mat.Name}");
+
             inp.Add("*Density");
             inp.Add($"{mat.Density}");
-            inp.Add("*Elastic, type=ENGINEERING CONSTANTS");
+
+            inp.Add("*Elastic, type=ENGINEERING CONSTANTS ");
             inp.Add($"{mat.EngineeringConstants[0]}, {mat.EngineeringConstants[1]}, {mat.EngineeringConstants[2]}, " +
                 $"{mat.EngineeringConstants[3]}, {mat.EngineeringConstants[4]}, {mat.EngineeringConstants[5]}, " +
                 $"{mat.EngineeringConstants[6]}, {mat.EngineeringConstants[7]}, ");
             inp.Add($"{mat.EngineeringConstants[8]}");
         }
 
-        public void WriteStep(List<string> inp /*, Step step*/)
+        public void WriteSteps(List<string> inp)
+        {
+            foreach (Step step in Steps)
+            {
+                WriteStep(inp, step);
+            }
+
+            inp.Add("**----------------");
+        }
+
+        protected void WriteStep(List<string> inp, Step step)
         {
             inp.Add("**");
-            inp.Add("** STEP: Step-1");
+            inp.Add($"** STEP: {step.Name}");
             inp.Add("**");
 
-            inp.Add("*Step, name=Step-1, nlgeom=NO");
-            inp.Add("*Static");
+            string is_nlgeom = step.nlgeom ? "YES" : "NO";
+            inp.Add($"*Step, name={step.Name}, nlgeom={is_nlgeom}");
+            string is_static = step.Static ? "Static" : "Dynamic";
+            inp.Add($"*{is_static}");
             inp.Add("1., 1., 1e-05, 1.");
 
-            WriteBoundaryConditions(inp);
-            WriteLoads(inp);
+            inp.Add("**");
+            inp.Add("** BOUNDARY CONDITIONS");
+            inp.Add("**");
+
+            foreach (BoundaryCondition bc in step.BoundaryConditions)
+            {
+                WriteBoundaryCondition(inp, bc);
+            }
+
+            inp.Add("**");
+            inp.Add("** LOADS");
+            inp.Add("**");
+
+            foreach (Load lo in step.Loads)
+            {
+                WriteLoad(inp, lo);
+            }
 
             inp.Add("**");
             inp.Add("** OUTPUT REQUESTS");
@@ -190,28 +259,46 @@ namespace tas.Abaqus
             inp.Add("*End Step");
         }
 
-        public void WriteBoundaryConditions(List<string> inp)
+        /*
+        protected void WriteBoundaryConditions(List<string> inp)
         {
             inp.Add("**");
             inp.Add("** BOUNDARY CONDITIONS");
             inp.Add("**");
-            
-            foreach(BoundaryCondition bc in BoundaryConditions)
+
+            foreach (BoundaryCondition bc in BoundaryConditions)
             {
                 WriteBoundaryCondition(inp, bc);
             }
         }
+        */
 
-        public void WriteBoundaryCondition(List<string> inp, BoundaryCondition bc)
+        protected void WriteBoundaryCondition(List<string> inp, BoundaryCondition bc)
         {
             inp.Add($"** Name: {bc.Name} Type: {bc.Type}");
             inp.Add("*Boundary");
-            inp.Add("Set-1, 1, 1");
-            inp.Add("Set-1, 2, 2");
-            inp.Add("Set-1, 3, 3");
+
+            switch(bc.Type)
+            {
+                case (BoundaryCondition.BoundaryConditionType.CUSTOM):
+                    throw new NotImplementedException("CUSTOM boundary condition not implemented yet.");
+                    inp.Add($"{bc.Set.Name}");
+                    break;
+                default:
+                    if (bc.Set != null)
+                        inp.Add($"{bc.Set.Name}, {bc.Type.ToString()}");
+                    break;
+            }
+
+
+
+
+            //inp.Add("Set-1, 1, 1");
+            //inp.Add("Set-1, 2, 2");
+            //inp.Add("Set-1, 3, 3");
         }
 
-        public void WriteLoads(List<string> inp)
+        protected void WriteLoads(List<string> inp)
         {
             inp.Add("**");
             inp.Add("** LOADS");
@@ -223,7 +310,7 @@ namespace tas.Abaqus
             }
         }
 
-        public void WriteLoad(List<string> inp, Load lo)
+        protected void WriteLoad(List<string> inp, Load lo)
         {
             inp.Add($"** Name: {lo.Name} Type: {lo.Type}");
             inp.Add("*Dload");
@@ -236,6 +323,9 @@ namespace tas.Abaqus
 
             WriteHeader(inp);
 
+            inp.Add("*Distribution Table, name=OrientationDistributionTable"); // This should be a DistributionTable object
+            inp.Add("coord3D, coord3D");
+
             // Write all parts
             WriteParts(inp);
 
@@ -246,7 +336,7 @@ namespace tas.Abaqus
             WriteMaterials(inp);
 
             // Write all steps with associated boundary conditions and loads
-            WriteStep(inp);
+            WriteSteps(inp);
 
             return inp;
         }

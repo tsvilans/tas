@@ -1813,7 +1813,9 @@ namespace tas.Core.Util
         {
             if (tolerance == 0.0)
                 tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-            var splits = Brep.CreateBooleanSplit(new Brep[] { brep }, cutters, tolerance);
+
+            var splits = new Brep[0];
+            //var splits = Brep.CreateBooleanSplit(new Brep[] { brep }, cutters, tolerance);
 
             if (splits == null || splits.Length < 1)
                 return brep;

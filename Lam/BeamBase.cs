@@ -21,10 +21,8 @@ namespace tas.Lam
                                                         Orientation.GetOrientation(Centreline, t));
         public Plane GetPlane(Point3d pt)
         {
-            double t;
-            Centreline.ClosestPoint(pt, out t);
-            Vector3d v = Orientation.GetOrientation(Centreline, t);
-            return tas.Core.Util.Misc.PlaneFromNormalAndYAxis(Centreline.PointAt(t), Centreline.TangentAt(t), v);
+            Centreline.ClosestPoint(pt, out double t);
+            return GetPlane(t);
         }
         public void Transform(Transform x)
         {

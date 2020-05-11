@@ -36,29 +36,52 @@ namespace tas.Lam
         /// </summary>
         /// <param name="N">Number of planes to extract.</param>
         /// <param name="extension">Extension of the centreline curve</param>
-        /// <param name="planes">Output cross-section planes.</param>
-        /// <param name="t">Output t-values along centreline curve.</param>
+        /// <param name="frames">Output cross-section planes.</param>
+        /// <param name="parameters">Output t-values along centreline curve.</param>
         /// <param name="interpolation">Type of interpolation to use (default is Linear).</param>
-        public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        public override void GenerateCrossSectionPlanes(int N, double extension, out Plane[] frames, out double[] parameters, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
+            // Experimental new way of generative cross-section planes
+            Curve curve;
+            if (extension > 0 && false)
+                curve = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
+            else
+                curve = Centreline;
+
+
+            parameters = curve.DivideByCount(N - 1, true).ToArray();
+            frames = new Plane[N];
+
+            var vectors = Orientation.GetOrientations(curve, parameters);
+
+            for (int i = 0; i < N; ++i)
+            {
+                frames[i] = Misc.PlaneFromNormalAndYAxis(
+                    curve.PointAt(parameters[i]),
+                    curve.TangentAt(parameters[i]),
+                    vectors[i]);
+            }
+
+            return;
+
             N = Math.Max(N, 2);
 
-            planes = new Plane[N];
+            frames = new Plane[N];
             Curve CL;
             if (Centreline.IsClosed)
                 CL = Centreline.DuplicateCurve();
             else
                 CL = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
-            t = CL.DivideByCount(N - 1, true);
+            parameters = CL.DivideByCount(N - 1, true);
 
             GlulamOrientation TempOrientation = Orientation.Duplicate();
             TempOrientation.Remap(Centreline, CL);
 
             for (int i = 0; i < N; ++i)
             {
-                Vector3d v = TempOrientation.GetOrientation(CL, t[i]);
-                planes[i] = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(CL.PointAt(t[i]), CL.TangentAt(t[i]), v);
+                Vector3d v = TempOrientation.GetOrientation(CL, parameters[i]);
+                frames[i] = tas.Core.Util.Misc.PlaneFromNormalAndYAxis(CL.PointAt(parameters[i]), CL.TangentAt(parameters[i]), v);
             }
 
             return;
@@ -226,23 +249,13 @@ namespace tas.Lam
         {
             Mesh m = new Mesh();
 
-            //Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Smooth);
-            
-            //double[] DivParams;
-            Plane[] xPlanes;
-            // Old way of generating cross-section planes
-            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
+            int N = Math.Max(Data.Samples, 6);
 
-            // Experimental new way of generative cross-section planes
-            int N = Math.Max(Data.Samples, 2);
-            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
+            GenerateCrossSectionPlanes(N, offset, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
-            xPlanes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
-                Centreline.PointAt(x),
-                Centreline.TangentAt(x),
-                Orientation.GetOrientation(Centreline, x))).ToArray();
+            GetSectionOffset(out double offsetX, out double offsetY);
+            Point3d[] m_corners = GenerateCorners();
 
-            //double Step = (Centreline.Domain.Max - Centreline.Domain.Min) / Samples;
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
 
@@ -250,111 +263,99 @@ namespace tas.Lam
             int i4;
             int ii4;
 
-            double Length = Centreline.GetLength() + offset * 2;
-            double MaxT = parameters.Last() - parameters.First();
-            double Width = Data.NumWidth * Data.LamWidth / 1000;
-            double Height = Data.NumHeight * Data.LamHeight / 1000;
+            //double texLength = (Centreline.GetLength() + offset * 2) / 1000;
+            //double MaxT = parameters.Last() - parameters.First();
 
-            for (int i = 0; i < xPlanes.Length; ++i)
+            double texWidth = Data.NumWidth * Data.LamWidth / 1000;
+            double texHeight = Data.NumHeight * Data.LamHeight / 1000;
+
+            for (int i = 0; i < frames.Length; ++i)
             {
                 i4 = i * 8;
                 ii4 = i4 - 8;
 
+                double texLength = Centreline.GetLength(
+                  new Interval(Centreline.Domain.Min, parameters[i])) / 1000;
 
-                for (int j = -1; j <= 1; j += 2)
+                for (int j = 0; j < m_corners.Length; ++j)
                 {
-                    for (int k = -1; k <= 1; k += 2)
-                    {
-                        Point3d v = xPlanes[i].Origin + hW * j * xPlanes[i].XAxis + hH * k * xPlanes[i].YAxis;
-                        m.Vertices.Add(v);
-                        m.Vertices.Add(v);
-                    }
+                    Point3d v = frames[i].PointAt(m_corners[j].X, m_corners[j].Y);
+                    m.Vertices.Add(v);
+                    m.Vertices.Add(v);
                 }
 
-                //double DivV = DivParams[i] / MaxT;
-                double DivV = parameters[i] / MaxT * Length / 1000;
-                m.TextureCoordinates.Add(2 * Width + 2 * Height, DivV);
-                m.TextureCoordinates.Add(0.0, DivV);
+                //double DivV = parameters[i] / MaxT * Length / 1000;
+                m.TextureCoordinates.Add(texLength, 2 * texWidth + 2 * texHeight);
+                m.TextureCoordinates.Add(texLength, 0.0);
 
-                m.TextureCoordinates.Add(Height, DivV);
-                m.TextureCoordinates.Add(Height, DivV);
+                m.TextureCoordinates.Add(texLength, texHeight);
+                m.TextureCoordinates.Add(texLength, texHeight);
 
-                m.TextureCoordinates.Add(2 * Height + Width, DivV);
-                m.TextureCoordinates.Add(2 * Height + Width, DivV);
+                m.TextureCoordinates.Add(texLength, 2 * texHeight + texWidth);
+                m.TextureCoordinates.Add(texLength, 2 * texHeight + texWidth);
 
-                m.TextureCoordinates.Add(Width + Height, DivV);
-                m.TextureCoordinates.Add(Width + Height, DivV);
+                m.TextureCoordinates.Add(texLength, texWidth + texHeight);
+                m.TextureCoordinates.Add(texLength, texWidth + texHeight);
 
 
                 if (i > 0)
                 {
-
                     m.Faces.AddFace(i4 + 2,
                       ii4 + 2,
                       ii4 + 1,
                       i4 + 1);
-                    m.Faces.AddFace(i4 + 6,
-                      ii4 + 6,
+                    m.Faces.AddFace(i4 + 5,
+                      ii4 + 5,
                       ii4 + 3,
                       i4 + 3);
-                    m.Faces.AddFace(i4 + 4,
-                      ii4 + 4,
+                    m.Faces.AddFace(i4 + 7,
                       ii4 + 7,
-                      i4 + 7);
+                      ii4 + 4,
+                      i4 + 4);
+
                     m.Faces.AddFace(i4,
                       ii4,
-                      ii4 + 5,
-                      i4 + 5);
+                      ii4 + 7,
+                      i4 + 7);
                 }
             }
 
             Plane pplane;
 
             // Start cap
-            pplane = xPlanes.First();
-            Point3d vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * 1 * pplane.XAxis + hH * -1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * 1 * pplane.XAxis + hH * 1 * pplane.YAxis;
-            m.Vertices.Add(vc);
+            pplane = frames.First();
+            for (int j = 0; j < m_corners.Length; ++j)
+                m.Vertices.Add(pplane.PointAt(m_corners[j].X, m_corners[j].Y));
 
             m.TextureCoordinates.Add(0, 0);
-            m.TextureCoordinates.Add(0, Height);
-            m.TextureCoordinates.Add(Width, 0);
-            m.TextureCoordinates.Add(Width, Height);
+            m.TextureCoordinates.Add(0, texHeight);
+            m.TextureCoordinates.Add(texWidth, 0);
+            m.TextureCoordinates.Add(texWidth, texHeight);
 
             m.Faces.AddFace(m.Vertices.Count - 4,
               m.Vertices.Count - 3,
-              m.Vertices.Count - 1,
-              m.Vertices.Count - 2);
+              m.Vertices.Count - 2,
+              m.Vertices.Count - 1);
 
             // End cap
-            pplane = xPlanes.Last();
-            vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * -1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * -1 * pplane.XAxis + hH * 1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * 1 * pplane.XAxis + hH * -1 * pplane.YAxis;
-            m.Vertices.Add(vc);
-            vc = pplane.Origin + hW * 1 * pplane.XAxis + hH * 1 * pplane.YAxis;
-            m.Vertices.Add(vc);
+            pplane = frames.Last();
+            for (int j = 0; j < m_corners.Length; ++j)
+                m.Vertices.Add(pplane.PointAt(m_corners[j].X, m_corners[j].Y));
 
             m.TextureCoordinates.Add(0, 0);
-            m.TextureCoordinates.Add(0, Height);
-            m.TextureCoordinates.Add(Width, 0);
-            m.TextureCoordinates.Add(Width, Height);
+            m.TextureCoordinates.Add(0, texHeight);
+            m.TextureCoordinates.Add(texWidth, 0);
+            m.TextureCoordinates.Add(texWidth, texHeight);
 
-            m.Faces.AddFace(m.Vertices.Count - 2,
-              m.Vertices.Count - 1,
+            m.Faces.AddFace(m.Vertices.Count - 1,
+              m.Vertices.Count - 2,
               m.Vertices.Count - 3,
               m.Vertices.Count - 4);
             //m.UserDictionary.ReplaceContentsWith(GetArchivableDictionary());
             //m.UserDictionary.Set("glulam", GetArchivableDictionary());
 
             return m;
+
         }
 
         public Polyline[] GetCrossSections(double offset = 0.0)
@@ -397,20 +398,9 @@ namespace tas.Lam
 
         public override Brep GetBoundingBrep(double offset = 0.0)
         {
-            //double[] t;
-            Plane[] planes;
+            int N = Math.Max(Data.Samples, 6);
 
-            // Old way of generating cross-section planes
-            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
-
-            // Experimental new way of generative cross-section planes
-            int N = Math.Max(Data.Samples, 2);
-            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
-
-            planes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
-                Centreline.PointAt(x),
-                Centreline.TangentAt(x),
-                Orientation.GetOrientation(Centreline, x))).ToArray();
+            GenerateCrossSectionPlanes(N, offset, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             int numCorners = 4;
             GenerateCorners(offset);
@@ -424,10 +414,10 @@ namespace tas.Lam
             Transform xform;
             Point3d temp;
 
-            for (int i = 0; i < Data.Samples; ++i)
+            for (int i = 0; i < N; ++i)
             {
-                planes[i] = planes[i].FlipAroundYAxis();
-                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes[i]);
+                //frames[i] = frames[i].FlipAroundYAxis();
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
 
                 for (int j = 0; j < numCorners; ++j)
                 {
@@ -483,7 +473,9 @@ namespace tas.Lam
             double Length = Centreline.GetLength();
             double hW = Data.NumWidth * Data.LamWidth / 2;
             double hH = Data.NumHeight * Data.LamHeight / 2;
-            double[] DivParams = Centreline.DivideByCount(Data.Samples, true);
+            double[] DivParams = Centreline.DivideByCount(Data.Samples - 1, true);
+
+            GetSectionOffset(out double offsetX, out double offsetY);
 
             Point3d[,,] AllPoints = new Point3d[Data.NumWidth + 1, Data.NumHeight + 1, DivParams.Length];
             Point3d[,] CornerPoints = new Point3d[Data.NumWidth + 1, Data.NumHeight + 1];
@@ -493,18 +485,19 @@ namespace tas.Lam
                 for (int y = 0; y <= Data.NumHeight; ++y)
                 {
                     CornerPoints[x, y] = new Point3d(
-                        -hW + x * Data.LamWidth,
-                        -hH + y * Data.LamHeight,
+                        -hW + offsetX + x * Data.LamWidth,
+                        -hH + offsetY + y * Data.LamHeight,
                         0);
                 }
             }
 
+            GenerateCrossSectionPlanes(Math.Max(Data.Samples, 6), 0.0, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+
             Transform xform;
             Point3d temp;
-            for (int i = 0; i < DivParams.Length; ++i)
+            for (int i = 0; i < frames.Length; ++i)
             {
-                Plane p = GetPlane(DivParams[i]);
-                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, p);
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
 
                 for (int x = 0; x <= Data.NumWidth; ++x)
                 {
@@ -522,8 +515,8 @@ namespace tas.Lam
             {
                 for (int y = 0; y <= Data.NumHeight; ++y)
                 {
-                    Point3d[] pts = new Point3d[DivParams.Length];
-                    for (int z = 0; z < DivParams.Length; ++z)
+                    Point3d[] pts = new Point3d[frames.Length];
+                    for (int z = 0; z < frames.Length; ++z)
                     {
                         pts[z] = AllPoints[x, y, z];
                     }
@@ -541,8 +534,8 @@ namespace tas.Lam
                     edges[4] = new Line(AllPoints[x, y, 0], AllPoints[x + 1, y, 0]).ToNurbsCurve();
                     edges[5] = new Line(AllPoints[x, y + 1, 0], AllPoints[x + 1, y + 1, 0]).ToNurbsCurve();
 
-                    edges[6] = new Line(AllPoints[x, y, DivParams.Length - 1], AllPoints[x + 1, y, DivParams.Length - 1]).ToNurbsCurve();
-                    edges[7] = new Line(AllPoints[x, y + 1, DivParams.Length - 1], AllPoints[x + 1, y + 1, DivParams.Length - 1]).ToNurbsCurve();
+                    edges[6] = new Line(AllPoints[x, y, frames.Length - 1], AllPoints[x + 1, y, frames.Length - 1]).ToNurbsCurve();
+                    edges[7] = new Line(AllPoints[x, y + 1, frames.Length - 1], AllPoints[x + 1, y + 1, frames.Length - 1]).ToNurbsCurve();
 
                     Brep[] sides = new Brep[6];
 
@@ -583,21 +576,8 @@ namespace tas.Lam
 
         public override List<Curve> GetLamellaCurves()
         {
-            //double[] DivParams;
-            Plane[] planes;
-            //GenerateCrossSectionPlanes(Data.Samples, 0, out xPlanes, out DivParams, Data.InterpolationType);
-
-            // Old way of generating cross-section planes
-            //GenerateCrossSectionPlanes(Data.Samples, offset, out planes, out t, Data.InterpolationType);
-
-            // Experimental new way of generative cross-section planes
-            int N = Math.Max(Data.Samples, 2);
-            var parameters = Centreline.DivideByCount(N - 1, true).ToList();
-
-            planes = parameters.Select(x => tas.Core.Util.Misc.PlaneFromNormalAndYAxis(
-                Centreline.PointAt(x),
-                Centreline.TangentAt(x),
-                Orientation.GetOrientation(Centreline, x))).ToArray();
+            int N = Math.Max(Data.Samples, 6);
+            GenerateCrossSectionPlanes(N, 0.0, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             List<Point3d>[] crvPts = new List<Point3d>[Data.Lamellae.Length];
             for (int i = 0; i < Data.Lamellae.Length; ++i)
@@ -615,6 +595,8 @@ namespace tas.Lam
             double hLw = Data.LamWidth / 2;
             double hLh = Data.LamHeight / 2;
 
+            GetSectionOffset(out double offsetX, out double offsetY);
+
             List<Point3d> LamellaPoints = new List<Point3d>();
 
             for (int x = 0; x < Data.Lamellae.GetLength(0); ++x)
@@ -623,15 +605,15 @@ namespace tas.Lam
                 {
                     LamellaPoints.Add(
                         new Point3d(
-                            -hWidth + hLw + x * Data.LamWidth,
-                            -hHeight + hLh + y * Data.LamHeight,
+                            -hWidth + offsetX + hLw + x * Data.LamWidth,
+                            -hHeight + offsetY + hLh + y * Data.LamHeight,
                             0));
                 }
             }
 
-            for (int i = 0; i < Data.Samples; ++i)
+            for (int i = 0; i < N; ++i)
             {
-                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, planes[i]);
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
 
                 for (int j = 0; j < Data.Lamellae.Length; ++j)
                 {
@@ -786,12 +768,12 @@ namespace tas.Lam
         public override Curve CreateOffsetCurve(double x, double y, bool rebuild = false, int rebuild_pts = 20)
         {
             List<Point3d> pts = new List<Point3d>();
-            double[] t = Centreline.DivideByCount(this.Data.Samples, true);
 
+            GenerateCrossSectionPlanes(Math.Max(6, Data.Samples), 0.0, out Plane[] planes, out double[] parameters, Data.InterpolationType);
 
-            for (int i = 0; i < t.Length; ++i)
+            for (int i = 0; i < planes.Length; ++i)
             {
-                Plane p = GetPlane(t[i]);
+                Plane p = planes[i];
                 pts.Add(p.Origin + p.XAxis * x + p.YAxis * y);
             }
 

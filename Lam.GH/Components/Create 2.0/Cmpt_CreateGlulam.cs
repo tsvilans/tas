@@ -55,7 +55,7 @@ namespace tas.Lam.GH
         protected GlulamOrientation ParseGlulamOrientation(List<object> input, Curve curve)
         {
             if (input == null || input.Count < 1)
-                return new VectorOrientation(Vector3d.ZAxis);
+                return new RmfOrientation();
             if (input.Count == 1)
             {
                 object single = input[0];
@@ -88,7 +88,7 @@ namespace tas.Lam.GH
                     return new RailCurveOrientation((single as GH_Curve).Value);
                 }
                 if (single == null)
-                    return new VectorOrientation(Vector3d.ZAxis);
+                    return new RmfOrientation();
             }
 
             if (input.First() is GH_Plane)

@@ -49,9 +49,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.24.20079.23341</Version>
+      <Version>6.13.19058.371</Version>
     </PackageReference>
-    <PackageReference Include="RhinoCommon" Version="6.24.20079.23341" />
+    <PackageReference Include="RhinoCommon" Version="6.13.19058.371" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Core.csproj">

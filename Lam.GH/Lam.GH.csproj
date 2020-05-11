@@ -51,8 +51,11 @@
     <Compile Include="Components\Analyze\Cmpt_AnalyzeRibbonEdges.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeLamellaBending.cs" />
     <Compile Include="Components\Analyze\Cmpt_DeLaminate.cs" />
+    <Compile Include="Components\Analyze\Cmpt_EstimateK.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_CreateGlulam.cs" />
+    <Compile Include="Components\Create 2.0\Cmpt_CrossJoint1.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_FindConnections.cs" />
+    <Compile Include="Components\Create 2.0\Cmpt_SpliceJoint1.cs" />
     <Compile Include="Components\Create\Cmpt_BasicAssembly.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankFromBeam.cs" />
     <Compile Include="Components\Create\Cmpt_CreateBlankNormalToSurface.cs" />
@@ -141,10 +144,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.24.20079.23341</Version>
+      <Version>6.13.19058.371</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>6.24.20079.23341</Version>
+      <Version>6.13.19058.371</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +203,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\tas_icons_Bisector_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_CurvatureAnalysis_24x24.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

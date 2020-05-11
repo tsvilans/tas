@@ -86,8 +86,7 @@ namespace tas.Abaqus
                             indices[ii] = nodes[indices[ii]].Id;
                         }
 
-                        Element ele = new Element(indices);
-                        ele.Id = i + 1;
+                        Element ele = new C3D8 { Data = indices, Id = i + 1 };
 
                         elements.Add(ele);
                         ++i;
@@ -109,9 +108,8 @@ namespace tas.Abaqus
                     ele.Data.Select(x => nodes[x-1].Z).ToArray().Sum() / 8
                     );
 
-                Plane ori = Plane.Unset;
-
-                GetOrientation(g, centre, out ori);
+                //Plane ori = Plane.Unset;
+                GetOrientation(g, centre, out Plane ori);
 
                 orientations.Add(new ElementOrientation(ori, ele.Id));
             }

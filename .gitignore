@@ -20,6 +20,7 @@ include_extended/Triangle.NET
 
 # Packages
 packages/
+resources/
 
 # Dependencies
 bin/Eto.dll

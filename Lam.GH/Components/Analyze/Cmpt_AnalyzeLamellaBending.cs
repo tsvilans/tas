@@ -6,6 +6,7 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Rhino.Display;
 using tas.Core;
+using tas.Core.Util;
 using tas.Lam;
 
 namespace tas.Lam.GH.Components
@@ -45,7 +46,7 @@ namespace tas.Lam.GH.Components
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Glulam blank", "B", "Glulam blank to analyze.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Glulam", "G", "Glulam blank to analyze.", GH_ParamAccess.list);
             pManager.AddNumberParameter("Radius factor", "R", "Multiplier factor for bending limit (default = 200).", GH_ParamAccess.item, 200.0);
             pManager.AddBooleanParameter("Threshold", "T", "Display as gradient or as true / false.", GH_ParamAccess.item, false);
             pManager[0].DataMapping = GH_DataMapping.Flatten;
@@ -62,13 +63,14 @@ namespace tas.Lam.GH.Components
             if (m_display_enabled)
             {
                 List<object> RawBlanks = new List<object>();
-                List<Glulam> Blanks = new List<Glulam>();
+                List<Glulam> m_glulams = new List<Glulam>();
                 m_maxk_list = new List<double>();
 
-                if (!DA.GetDataList("Glulam blank", RawBlanks)) return;
+                if (!DA.GetDataList("Glulam", m_glulams)) return;
 
                 m_maxk_found = 0.0;
 
+                /*
                 foreach (object obj in RawBlanks)
                 {
                     if (obj is Lam.Glulam)
@@ -76,6 +78,7 @@ namespace tas.Lam.GH.Components
                     else if (obj is GH.GH_Glulam)
                         Blanks.Add((obj as GH.GH_Glulam).Value);
                 }
+                */
 
                 double rad_fac = 200.0;
                 DA.GetData("Radius factor", ref rad_fac);
@@ -94,15 +97,15 @@ namespace tas.Lam.GH.Components
 
                 m_k_list = new List<List<List<double>>>();
 
-                foreach (Lam.Glulam blank in Blanks)
+                foreach (Glulam glulam in m_glulams)
                 {
                     m_curve_list.Add(new List<Polyline>());
                     List<Polyline> CurveListCurrent = m_curve_list.Last();
-                    if (blank == null) continue;
+                    if (glulam == null) continue;
 
-                    List<Curve> lam_crvs = blank.GetLamellaCurves();
+                    List<Curve> lam_crvs = glulam.GetLamellaCurves();
 
-                    double min_r = (double)Math.Min(blank.Data.LamHeight, blank.Data.LamWidth) * rad_fac;
+                    double min_r = (double)Math.Min(glulam.Data.LamHeight, glulam.Data.LamWidth) * rad_fac;
                     m_maxk_list.Add(1 / min_r);
 
                     //MaxK = 1 / Math.Max(1.0, (Math.Max(blank.LamellaHeight, blank.LamellaWidth) * 100));
@@ -117,7 +120,7 @@ namespace tas.Lam.GH.Components
                             CurveListCurrent.Add(pl);
                         }
                         else
-                            CurveListCurrent.Add(tas.Core.Util.Misc.CurveToPolyline(c, 0.1));
+                            CurveListCurrent.Add(Misc.CurveToPolyline(c, 0.1));
                     }
                 }
 
@@ -188,7 +191,7 @@ namespace tas.Lam.GH.Components
         {
             get
             {
-                return null;
+                return Properties.Resources.tas_icons_CurvatureAnalysis_24x24;
             }
         }
 

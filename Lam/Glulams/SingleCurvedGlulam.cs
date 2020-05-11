@@ -33,7 +33,7 @@ namespace tas.Lam
         public SingleCurvedGlulam(Curve curve, GlulamOrientation orientation, GlulamData data) : base()
         {
             Data = data.Duplicate();
-            Orientation = orientation;
+            Orientation = orientation.Duplicate();
             Centreline = curve.DuplicateCurve();
         }
 

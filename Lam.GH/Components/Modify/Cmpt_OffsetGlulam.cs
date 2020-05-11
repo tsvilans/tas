@@ -47,9 +47,10 @@ namespace tas.Lam.GH
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            GH_Glulam ghg = null;
 
-            if (!DA.GetData("Glulam", ref ghg))
+            Glulam m_glulam = null;
+
+            if (!DA.GetData<Glulam>("Glulam", ref m_glulam))
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not get Glulam.");
                 return;
@@ -59,18 +60,16 @@ namespace tas.Lam.GH
             DA.GetData("OffsetX", ref x);
             DA.GetData("OffsetY", ref y);
 
-            Glulam g = ghg.Value;
-
-            Curve crv = g.CreateOffsetCurve(x, y);
+            Curve crv = m_glulam.CreateOffsetCurve(x, y);
 
 
            // GlulamData data = GlulamData.FromCurveLimits(crv,g.Data.NumWidth * g.Data.LamWidth, g.Data.NumHeight * g.Data.LamHeight, g.GetAllPlanes());
 
             //data.Samples = g.Data.Samples;
 
-            Glulam g2 = Glulam.CreateGlulam(crv, g.Orientation.Duplicate(), g.Data.Duplicate());
+            Glulam offset_glulam = Glulam.CreateGlulam(crv, m_glulam.Orientation.Duplicate(), m_glulam.Data.Duplicate());
 
-            DA.SetData("Glulam", new GH.GH_Glulam(g2));
+            DA.SetData("Glulam", new GH_Glulam(offset_glulam));
         }
 
         protected override System.Drawing.Bitmap Icon

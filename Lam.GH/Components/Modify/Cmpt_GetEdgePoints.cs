@@ -82,19 +82,24 @@ namespace tas.Lam.GH
 
             if (N < 2) N = g.Data.Samples;
 
-            double[] tt = g.Centreline.DivideByCount(N, true);
+            //double[] tt = g.Centreline.DivideByCount(N, true);
 
-            Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
+            //Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
 
-            double w = g.Data.LamWidth * g.Data.NumWidth;
-            double h = g.Data.LamHeight * g.Data.NumHeight;
+           g.GenerateCrossSectionPlanes(Math.Max(2, N), 0.0, out Plane[] planes, out double[] parameters, g.Data.InterpolationType);
+
+
+            double w = g.Width;
+            double h = g.Height;
             double hw = w / 2;
             double hh = h / 2;
 
-            Point3d[] ptsTR = planes.Select(x => x.PointAt(hw, hh)).ToArray();
-            Point3d[] ptsTL = planes.Select(x => x.PointAt(-hw, hh)).ToArray();
-            Point3d[] ptsBR = planes.Select(x => x.PointAt(hw, -hh)).ToArray();
-            Point3d[] ptsBL = planes.Select(x => x.PointAt(-hw, -hh)).ToArray();
+            Point3d[] corners = g.GenerateCorners();
+
+            Point3d[] ptsTR = planes.Select(x => x.PointAt(corners[0].X, corners[0].Y)).ToArray();
+            Point3d[] ptsTL = planes.Select(x => x.PointAt(corners[1].X, corners[1].Y)).ToArray();
+            Point3d[] ptsBR = planes.Select(x => x.PointAt(corners[2].X, corners[2].Y)).ToArray();
+            Point3d[] ptsBL = planes.Select(x => x.PointAt(corners[3].X, corners[3].Y)).ToArray();
 
             DA.SetDataList("TopRight", ptsTR);
             DA.SetDataList("TopLeft", ptsTL);

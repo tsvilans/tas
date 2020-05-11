@@ -18,60 +18,68 @@
  */
 
 using System;
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
+using Grasshopper;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
+using Rhino.DocObjects;
 using Rhino.Geometry;
+
+using tas.Lam.Features;
 
 namespace tas.Lam.GH
 {
-    public class Cmpt_GetGlulamFace : GH_Component
+    public class Cmpt_CrossJoint1 : GH_Component
     {
-
-        public Cmpt_GetGlulamFace()
-          : base("Get Glulam Face", "GFace",
-              "Get a specific face of the Glulam. ",
-              "tasLam", "Modify")
+        public Cmpt_CrossJoint1()
+          : base("Create Cross Joint", "XJoint",
+              "Create a crossing lap joint between two Glulam objects. Glulams must be crossing.",
+              "tasLam", "Create")
         {
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Glulam", "G", "Input Glulam.", GH_ParamAccess.item);
-            pManager.AddIntegerParameter("Side", "S", "Side of Glulam to extract. Use bitmask flags to get multiple sides.", GH_ParamAccess.item, 0);
+            pManager.AddGenericParameter("GlulamA", "G", "Glulam A.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("GlulamB", "G", "Glulam B.", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddBrepParameter("Faces", "F", "Glulam faces.", GH_ParamAccess.item);
+            pManager.AddBrepParameter("Brep", "B", "Joint geometry as Brep.", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            Glulam glulam = null;
-            if (!DA.GetData<Glulam>("Glulam", ref glulam))
-            {
+            Glulam gA = null, gB = null;
+
+            if (!DA.GetData<Glulam>("GlulamA", ref gA) || !DA.GetData<Glulam>("GlulamB", ref gB))
                 return;
-            }
 
-            int side = 0;
-            DA.GetData("Side", ref side);
+            CrossJoint2 cross_joint = new CrossJoint2(gA, gB);
+            cross_joint.Compute();
 
-            Brep[] breps = glulam.GetGlulamFaces(side);
+            List<Brep> breps = cross_joint.GetCuttingGeometry();
 
-            DA.SetDataList("Faces", breps);
+            if (breps.Count > 0)
+                DA.SetData("Brep", breps[0]);
+
         }
 
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
-                return Properties.Resources.tas_icons_GetGlulamSrf_24x24;
+                return Properties.Resources.tas_icons_StraightGlulam_24x24;
             }
         }
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("5ad108dc-b291-4cd6-bdb2-1568742fcbbe"); }
+            get { return new Guid("{ee629046-5674-4506-99a5-5f07eefa7903}"); }
         }
     }
 }

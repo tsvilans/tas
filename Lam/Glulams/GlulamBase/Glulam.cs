@@ -360,7 +360,7 @@ namespace tas.Lam
             GlulamData Data1 = Data.Duplicate();
             Data1.Samples = (int)(Data.Samples * percentage);
 
-            List<GlulamOrientation> SplitOrientations = Orientation.Split(new double[] { t });
+            GlulamOrientation[] SplitOrientations = Orientation.Split(new double[] { t });
 
             Glulam Blank1 = CreateGlulam(split_curves[0], SplitOrientations[0], Data1);
 
@@ -373,27 +373,32 @@ namespace tas.Lam
             return blanks;
         }
 
-        public Glulam Extract(Interval domain, double overlap)
+        public Glulam Trim(Interval domain, double overlap)
         {
             double l1 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Min));
             double l2 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Max));
             double t1, t2;
-            Centreline.LengthParameter(l1 - overlap, out t1);
-            Centreline.LengthParameter(l2 + overlap, out t2);
+            if (!Centreline.LengthParameter(l1 - overlap, out t1)) t1 = domain.Min;
+            if (!Centreline.LengthParameter(l2 + overlap, out t2)) t2 = domain.Max;
 
             domain = new Interval(
-                Math.Max(domain.Min, Centreline.Domain.Min),
-                Math.Min(domain.Max, Centreline.Domain.Max));
+                Math.Max(t1, Centreline.Domain.Min),
+                Math.Min(t2, Centreline.Domain.Max));
 
             double length = Centreline.GetLength(domain);
+
+            if (domain.IsDecreasing || length < overlap || length < Glulam.OverlapTolerance)
+                return null;
+
             double percentage = length / Centreline.GetLength();
 
             GlulamData data = Data.Duplicate();
-            data.Samples = Math.Max(2, (int)(data.Samples * percentage));
+            data.Samples = Math.Max(6, (int)(data.Samples * percentage));
 
-            List<GlulamOrientation> SplitOrientations = Orientation.Split(new double[] { domain.Min, domain.Max });
+            //GlulamOrientation[] SplitOrientations = Orientation.Split(new double[] { domain.Min, domain.Max });
 
-            Glulam glulam = CreateGlulam(Centreline.Trim(domain), SplitOrientations[1], data);
+            //Glulam glulam = CreateGlulam(Centreline.Trim(domain), SplitOrientations[1], data);
+            Glulam glulam = CreateGlulam(Centreline.Trim(domain), Orientation.Trim(domain), data);
 
             return glulam;
         }
@@ -456,26 +461,53 @@ namespace tas.Lam
             return blanks;
         }
 
-        public List<Glulam> Split(double[] t, double overlap = 0.0)
+        public Glulam[] Split(IList<double> t, double overlap = 0.0)
         {
-            Glulam temp = this;
-            Array.Sort(t);
-            List<Glulam> glulams = new List<Glulam>();
-
-            for (int i = 1; i < t.Length - 1; ++i)
+            if (t.Count < 1)
+                return new Glulam[] { this.Duplicate() };
+            if (t.Count < 2)
             {
-                List<Glulam> splits = temp.Split(t[i], overlap);
+                if (Centreline.Domain.IncludesParameter(t[0]))
+                    return Split(t[0]).ToArray();
+                else
+                    return new Glulam[] { this.Duplicate() };
+            }
+
+
+            Glulam temp = this;
+
+            List<double> parameters = new List<double>();
+            foreach (double p in t)
+            {
+                if (Centreline.Domain.IncludesParameter(p))
+                    parameters.Add(p);
+            }
+            parameters.Sort();
+
+
+            //Curve[] centrelines = Centreline.Split(t);
+            //GlulamOrientation[] orientations = Orientation.Split(t);
+
+            Glulam[] glulams = new Glulam[parameters.Count];
+
+            int num_splits = 0;
+            for (int i = 1; i < parameters.Count - 1; ++i)
+            {
+                List<Glulam> splits = temp.Split(parameters[i], overlap);
 
                 if (splits == null || splits.Count < 2)
                     continue;
 
                 if (splits[0] != null)
-                    glulams.Add(splits[0]);
+                {
+                    glulams[i - 1] = splits[0];
+                    num_splits++;
+                }
                 temp = splits[1];
             }
 
             if (temp != null)
-                glulams.Add(temp);
+                glulams[glulams.Length - 1] = temp;
 
             return glulams;
         }
@@ -582,6 +614,63 @@ namespace tas.Lam
             return FibreDeviation(blank, out angles, divX, divY, divZ);
         }
 
+        public void GetSectionOffset(out double offsetX, out double offsetY)
+        {
+            double x = Width;
+            double y = Height;
+
+            //double x0 = 0, y0 = 0;
+            double hx = x / 2, hy = y / 2;
+
+            offsetX = 0; offsetY = 0;
+
+            switch (Data.SectionAlignment)
+            {
+                case (GlulamData.CrossSectionPosition.MiddleCentre):
+                    offsetX = 0;  offsetY = 0;
+                    //x0 = -hx; y0 = -hy; 
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopLeft):
+                    offsetX = hx; offsetY = -hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopCentre):
+                    offsetX = 0; offsetY = -hy;
+                    //x0 = -hx; y0 = -y; 
+                    break;
+
+                case (GlulamData.CrossSectionPosition.TopRight):
+                    offsetX = -hx; offsetY = -hy;
+                    //x0 = -x; y0 = -y;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.MiddleLeft):
+                    offsetX = hx; offsetY = 0;
+                    //y0 = -hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.MiddleRight):
+                    offsetX = -hx; offsetY = 0;
+                    //x0 = -x; y0 = -hy; 
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomLeft):
+                    offsetX = hx; offsetY = hy;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomCentre):
+                    offsetX = 0; offsetY = hy;
+                    //x0 = -hx;
+                    break;
+
+                case (GlulamData.CrossSectionPosition.BottomRight):
+                    offsetX = -hx; offsetY = hy;
+                    //x0 = -x; 
+                    break;
+            }
+        }
+
         public Point3d[] GenerateCorners(double offset = 0.0)
         {
             double x = Width;
@@ -632,10 +721,10 @@ namespace tas.Lam
                     break;
             }
 
-            m_section_corners[0] = new Point3d(x0 - offset, y1 + offset, 0);
-            m_section_corners[1] = new Point3d(x1 + offset, y1 + offset, 0);
-            m_section_corners[2] = new Point3d(x1 + offset, y0 - offset, 0);
-            m_section_corners[3] = new Point3d(x0 - offset, y0 - offset, 0);
+            m_section_corners[0] = new Point3d(x0 - offset, y0 - offset, 0);
+            m_section_corners[1] = new Point3d(x0 - offset, y1 + offset, 0);
+            m_section_corners[2] = new Point3d(x1 + offset, y1 + offset, 0);
+            m_section_corners[3] = new Point3d(x1 + offset, y0 - offset, 0);
 
             return m_section_corners;
         }

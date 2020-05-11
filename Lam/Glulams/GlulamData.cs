@@ -282,6 +282,8 @@ namespace tas.Lam
             data.LamHeight = LamHeight;
             data.LamWidth = LamWidth;
             data.Samples = Samples;
+            data.SectionAlignment = SectionAlignment;
+            data.InterpolationType = InterpolationType;
             data.Lamellae = new Stick[NumWidth, NumHeight];
             Array.Copy(Lamellae, data.Lamellae, Lamellae.Length);
 
@@ -296,6 +298,8 @@ namespace tas.Lam
             b.AddRange(BitConverter.GetBytes(LamHeight));
             b.AddRange(BitConverter.GetBytes(LamWidth));
             b.AddRange(BitConverter.GetBytes((Int32)Samples));
+            b.AddRange(BitConverter.GetBytes((Int32)SectionAlignment));
+            b.AddRange(BitConverter.GetBytes((Int32)InterpolationType));
 
             return b.ToArray();
         }
@@ -311,6 +315,8 @@ namespace tas.Lam
             data.LamHeight = BitConverter.ToDouble(b, 8);
             data.LamWidth = BitConverter.ToDouble(b, 16);
             data.Samples = BitConverter.ToInt32(b, 24);
+            data.SectionAlignment = (GlulamData.CrossSectionPosition)BitConverter.ToInt32(b, 32);
+            data.InterpolationType = (GlulamData.Interpolation)BitConverter.ToInt32(b, 40);
             data.Lamellae = new Stick[num_width, num_height];
 
             return data;
