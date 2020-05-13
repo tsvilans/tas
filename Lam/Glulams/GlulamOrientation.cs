@@ -717,14 +717,31 @@ namespace tas.Lam
 
         public override Vector3d GetOrientation(Curve crv, double t)
         {
+            crv.Domain.MakeIncreasing();
+
+            t = Math.Max(crv.Domain.Min, Math.Min(crv.Domain.Max, t));
+
             return crv.GetPerpendicularFrames(new double[] { crv.Domain.Min, t })[1].YAxis;
+
+
+            //throw new Exception($"RmfOrientation::GetOrientation: parameter ({t}) is not in curve domain ({crv.Domain}).");
+
             crv.PerpendicularFrameAt(t, out Plane plane);
             return plane.YAxis;
         }
         public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
-            Plane[] planes = crv.GetPerpendicularFrames(t);
-            return planes.Select(x => x.YAxis).ToList();
+            crv.Domain.MakeIncreasing();
+            IEnumerable<double> sorted_t = t.OrderBy(x => x).Where(y => crv.Domain.IncludesParameter(y));
+            try
+            {
+                Plane[] planes = crv.GetPerpendicularFrames(sorted_t);
+                return planes.Select(x => x.YAxis).ToList();
+            }
+            catch
+            {
+                throw new Exception("RmfOrientation::GetOrientations() failed.");
+            }
         }
 
         public override void Remap(Curve old_curve, Curve new_curve)

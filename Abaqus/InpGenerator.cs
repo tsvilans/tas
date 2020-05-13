@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Rhino.Geometry;
-
+using tas.Core;
 
 namespace tas.Abaqus
 {
@@ -55,7 +55,7 @@ namespace tas.Abaqus
         {
             inp.Add($"*Part, name={prt.Name}");
 
-            inp.Add("* Node");
+            inp.Add("*Node");
 
             foreach (Node n in prt.Nodes)
             {
@@ -130,26 +130,50 @@ namespace tas.Abaqus
 
             foreach (ElementSet set in ass.ElementSets)
             {
+                if (set.Data.Count < 1) continue;
+
                 line = $"*Elset, elset={set.Name}";
                 if (set.Instance != null)
                     line += $", instance={set.Instance.Name}";
                 inp.Add(line);
 
-                //line = "";
-                line = string.Join<int>(",", set.Data);
+                line = set.Data[0].ToString() + ", ";
+                for (int i = 1; i < set.Data.Count; ++i)
+                {
+                    if (i.Modulus(16) < 1)
+                    {
+                        inp.Add(line);
+                        line = "";
+                    }
+
+                    line += set.Data[i].ToString() + ", ";
+                }
+                //line = string.Join<int>(",", set.Data);
 
                 inp.Add(line);
             }
 
             foreach (NodeSet set in ass.NodeSets)
             {
+                if (set.Data.Count < 1) continue;
+
                 line = $"*Nset, nset={set.Name}";
                 if (set.Instance != null)
                     line += $", instance={set.Instance.Name}";
                 inp.Add(line);
 
-                //line = "";
-                line = string.Join<int>(",", set.Data);
+                line = set.Data[0].ToString() + ", ";
+                for (int i = 1; i < set.Data.Count; ++i)
+                {
+                    if (i.Modulus(16) < 1)
+                    {
+                        inp.Add(line);
+                        line = "";
+                    }
+
+                    line += set.Data[i].ToString() + ", ";
+                }
+                //line = string.Join<int>(",", set.Data);
 
                 inp.Add(line);
             }

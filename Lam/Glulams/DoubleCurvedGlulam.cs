@@ -36,11 +36,15 @@ namespace tas.Lam
             Data = data.Duplicate();
             Orientation = orientation;
             Centreline = curve.DuplicateCurve();
+            Centreline.Domain.MakeIncreasing();
+
         }
 
         public DoubleCurvedGlulam(Curve centreline, Plane[] planes) : base()
         {
             Centreline = centreline;
+            Centreline.Domain.MakeIncreasing();
+
 
             if (planes != null)
             {

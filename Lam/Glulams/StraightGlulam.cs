@@ -36,18 +36,23 @@ namespace tas.Lam
             Data = data.Duplicate();
             Orientation = orientation;
             Centreline = curve.DuplicateCurve();
+            Centreline.Domain.MakeIncreasing();
         }
 
         public StraightGlulam(Curve curve, Plane[] planes, bool with_twist = false) : base()
         {
+
+            Centreline = curve;
+            Centreline.Domain.MakeIncreasing();
+
             if (planes == null || planes.Length < 1)
             {
                 Plane plane;
-                curve.PerpendicularFrameAt(curve.Domain.Min, out plane);
+                Centreline.PerpendicularFrameAt(Centreline.Domain.Min, out plane);
                 planes = new Plane[] { plane };
             }
 
-            if (!curve.IsLinear(Tolerance)) throw new Exception("StraightGlulam only works with a linear centreline!");
+            if (!Centreline.IsLinear(Tolerance)) throw new Exception("StraightGlulam only works with a linear centreline!");
 
             List<Vector3d> vectors = new List<Vector3d>();
             List<double> parameters = new List<double>();
@@ -57,31 +62,32 @@ namespace tas.Lam
                 double t;
                 foreach (var plane in planes)
                 {
-                    curve.ClosestPoint(plane.Origin, out t);
+                    Centreline.ClosestPoint(plane.Origin, out t);
 
                     parameters.Add(t);
                     vectors.Add(plane.YAxis);
                 }
-                Orientation = new VectorListOrientation(curve, parameters, vectors);
+                Orientation = new VectorListOrientation(Centreline, parameters, vectors);
 
             }
             else
             {
-                var origin = curve.PointAtStart;
-                var x_axis = Vector3d.CrossProduct(planes[0].YAxis, curve.TangentAtStart);
-                var y_axis = Vector3d.CrossProduct(curve.TangentAtStart, x_axis);
+                var origin = Centreline.PointAtStart;
+                var x_axis = Vector3d.CrossProduct(planes[0].YAxis, Centreline.TangentAtStart);
+                var y_axis = Vector3d.CrossProduct(Centreline.TangentAtStart, x_axis);
 
                 Orientation = new VectorOrientation(y_axis);
             }
 
-            Centreline = curve;
         }
 
         public StraightGlulam(Curve curve) : base()
         {
             Centreline = curve;
+            Centreline.Domain.MakeIncreasing();
+
             Plane p;
-            Centreline.PerpendicularFrameAt(curve.Domain.Min, out p);
+            Centreline.PerpendicularFrameAt(Centreline.Domain.Min, out p);
             Orientation = new VectorOrientation(Vector3d.ZAxis);
         }
 
@@ -89,6 +95,7 @@ namespace tas.Lam
         {
             Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Line);
             t = new double[] { CL.Domain.Min, CL.Domain.Max };
+            Array.Sort(t);
             planes = new Plane[] { GetPlane(t[0]), GetPlane(t[1]) };
         }
 

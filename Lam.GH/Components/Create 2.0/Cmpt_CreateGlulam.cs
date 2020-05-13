@@ -175,6 +175,8 @@ namespace tas.Lam.GH
             if (!DA.GetData("Curve", ref crv))
                 return;
 
+            crv.Domain.MakeIncreasing();
+
             List<object> r_orientation = new List<object>();
             DA.GetDataList("Orientation", r_orientation);
 

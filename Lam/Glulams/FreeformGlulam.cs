@@ -48,8 +48,23 @@ namespace tas.Lam
             else
                 curve = Centreline;
 
+            PolylineCurve discrete = curve.ToPolyline(Glulam.Tolerance, Glulam.AngleTolerance, 0.0, 0.0);
 
-            parameters = curve.DivideByCount(N - 1, true).ToArray();
+            if (discrete.TryGetPolyline(out Polyline discrete2))
+            {
+                N = discrete2.Count;
+                parameters = new double[N];
+
+                for (int i = 0; i < N; ++i)
+                {
+                    curve.ClosestPoint(discrete2[i], out parameters[i]);
+                }
+            }
+            else
+            {
+                parameters = curve.DivideByCount(N - 1, true).ToArray();
+            }
+
             frames = new Plane[N];
 
             var vectors = Orientation.GetOrientations(curve, parameters);
