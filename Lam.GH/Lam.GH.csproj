@@ -209,6 +209,12 @@
   <ItemGroup>
     <None Include="Resources\tas_icons_CurvatureAnalysis_24x24.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_FibreDeviation_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tas_icons_FibreDirection_24x24.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
