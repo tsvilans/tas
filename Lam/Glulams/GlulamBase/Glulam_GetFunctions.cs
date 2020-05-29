@@ -34,7 +34,7 @@ namespace tas.Lam
     public abstract partial class Glulam
     {
 
-        public static List<string> ListParameters()
+        public static List<string> ListProperties()
         {
             return new List<string>
             {
@@ -58,7 +58,7 @@ namespace tas.Lam
             };
         }
 
-        public object GetParameter(string key)
+        public object GetProperty(string key)
         {
             switch(key)
             {
@@ -130,7 +130,7 @@ namespace tas.Lam
 
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out planes, out parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out planes, out parameters, Data.InterpolationType);
 
             //
             /*
@@ -220,7 +220,7 @@ namespace tas.Lam
                 c = c.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
             int N = Math.Max(6, Data.Samples);
-            GenerateCrossSectionPlanes(ref N, out Plane[] planes, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] planes, out double[] parameters, Data.InterpolationType);
 
             Curve[] rules = new Curve[planes.Length];
 
@@ -266,6 +266,8 @@ namespace tas.Lam
 
             return brep;
         }
+
+
 
     }
 }

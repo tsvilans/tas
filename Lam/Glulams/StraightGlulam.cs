@@ -91,7 +91,7 @@ namespace tas.Lam
             Orientation = new VectorOrientation(Vector3d.ZAxis);
         }
 
-        public override void GenerateCrossSectionPlanes(ref int N, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        public override void GenerateCrossSectionPlanes(int N, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             //Curve CL = Centreline.Extend(CurveEnd.Both, offset, CurveExtensionStyle.Line);
             Curve CL = Centreline;
@@ -109,7 +109,7 @@ namespace tas.Lam
             double[] parameters;
             Plane[] frames;
             int N = 2;
-            GenerateCrossSectionPlanes(ref N, out frames, out parameters, interpolation);
+            GenerateCrossSectionPlanes(N, out frames, out parameters, interpolation);
 
             double hW = Data.NumWidth * Data.LamWidth / 2 + offset;
             double hH = Data.NumHeight * Data.LamHeight / 2 + offset;
@@ -327,6 +327,46 @@ namespace tas.Lam
             return LamellaBreps;
         }
 
+        public override Curve[] GetEdgeCurves(double offset = 0.0)
+        {
+            int N = Math.Max(Data.Samples, 6);
+
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+
+            int numCorners = 4;
+            GenerateCorners(offset);
+
+            List<Point3d>[] crvPts = new List<Point3d>[numCorners];
+            for (int i = 0; i < numCorners; ++i)
+            {
+                crvPts[i] = new List<Point3d>();
+            }
+
+            Transform xform;
+            Point3d temp;
+
+            for (int i = 0; i < parameters.Length; ++i)
+            {
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
+
+                for (int j = 0; j < numCorners; ++j)
+                {
+                    temp = new Point3d(m_section_corners[j]);
+                    temp.Transform(xform);
+                    crvPts[j].Add(temp);
+                }
+            }
+
+            Curve[] edges = new Curve[numCorners];
+
+            for (int i = 0; i < numCorners; ++i)
+            {
+                edges[i] = new Line(crvPts[i][0], crvPts[i][1]).ToNurbsCurve();
+                //edges[i] = Curve.CreateInterpolatedCurve(crvPts[i], 3, CurveKnotStyle.Chord, frames.First().ZAxis, frames.Last().ZAxis);
+            }
+
+            return edges;
+        }
         public override double GetMaxCurvature(ref double width, ref double height)
         {
             width = 0.0;

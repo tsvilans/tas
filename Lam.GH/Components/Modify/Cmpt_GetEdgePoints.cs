@@ -86,7 +86,7 @@ namespace tas.Lam.GH
 
             //Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
 
-           g.GenerateCrossSectionPlanes(ref N, out Plane[] planes, out double[] parameters, g.Data.InterpolationType);
+           g.GenerateCrossSectionPlanes(N, out Plane[] planes, out double[] parameters, g.Data.InterpolationType);
 
 
             double w = g.Width;

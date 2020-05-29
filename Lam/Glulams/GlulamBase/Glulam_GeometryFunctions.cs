@@ -118,6 +118,43 @@ namespace tas.Lam
             return tt.Select(x => Centreline.PointAt(x)).ToList();
         }
 
+        public List<Point3d>[] GetEdgePoints(double offset = 0.0)
+        {
+            int N = Math.Max(Data.Samples, 6);
+
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+
+            int numCorners = 4;
+            GenerateCorners(offset);
+
+            Transform xform;
+            Point3d temp;
+
+            //List<Point3d>[] edge_points = new List<Point3d>[numCorners];
+            //for (int i = 0; i < numCorners; ++i)
+            //{
+            //    edge_points[i] = new List<Point3d>();
+            //}
+
+            List<Point3d>[]  edge_points = m_section_corners.Select(x => frames.Select(y => y.PointAt(x.X, x.Y)).ToList()).ToArray();
+
+            return edge_points;
+
+            for (int i = 0; i < parameters.Length; ++i)
+            {
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
+
+                for (int j = 0; j < numCorners; ++j)
+                {
+                    temp = new Point3d(m_section_corners[j]);
+                    temp.Transform(xform);
+                    edge_points[j].Add(temp);
+                }
+            }
+
+            return edge_points;
+        }
+
         public virtual Mesh GetBoundingMesh(double offset = 0.0, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             return new Mesh();
@@ -143,7 +180,12 @@ namespace tas.Lam
             return new List<Brep>();
         }
 
-        public abstract void GenerateCrossSectionPlanes(ref int N, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
+        public virtual Curve[] GetEdgeCurves(double offset = 0.0)
+        {
+            return new Curve[0];
+        }
+
+        public abstract void GenerateCrossSectionPlanes(int N, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
 
 
     }

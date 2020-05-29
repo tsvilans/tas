@@ -39,7 +39,7 @@ namespace tas.Lam
         /// <param name="frames">Output cross-section planes.</param>
         /// <param name="parameters">Output t-values along centreline curve.</param>
         /// <param name="interpolation">Type of interpolation to use (default is Linear).</param>
-        public override void GenerateCrossSectionPlanes(ref int N, out Plane[] frames, out double[] parameters, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
+        public override void GenerateCrossSectionPlanes(int N, out Plane[] frames, out double[] parameters, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
             // Experimental new way of generative cross-section planes
             Curve curve;
@@ -282,7 +282,7 @@ namespace tas.Lam
 
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             GetSectionOffset(out double offsetX, out double offsetY);
             Point3d[] m_corners = GenerateCorners();
@@ -355,6 +355,9 @@ namespace tas.Lam
 
             // Start cap
             pplane = frames.First();
+
+            //m_section_corners.Select(x => frames.Select(y => m.Vertices.Add(y.PointAt(x.X, x.Y))));
+
             for (int j = 0; j < m_corners.Length; ++j)
                 m.Vertices.Add(pplane.PointAt(m_corners[j].X, m_corners[j].Y));
 
@@ -393,7 +396,7 @@ namespace tas.Lam
         {
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] tt, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] tt, Data.InterpolationType);
 
             GenerateCorners(offset);
 
@@ -425,9 +428,10 @@ namespace tas.Lam
 
         public override Brep GetBoundingBrep(double offset = 0.0)
         {
+            /*
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             int numCorners = 4;
             GenerateCorners(offset);
@@ -453,19 +457,23 @@ namespace tas.Lam
                     crvPts[j].Add(temp);
                 }
             }
-            
+            */
+
+            var edge_points = GetEdgePoints(offset);
+            int numCorners = m_section_corners.Length;
+
             Curve[] edges = new Curve[numCorners + 4];
 
             for (int i = 0; i < numCorners; ++i)
             {
-                edges[i] = Curve.CreateInterpolatedCurve(crvPts[i], 3, CurveKnotStyle.Chord, frames.First().ZAxis, frames.Last().ZAxis);
+                edges[i] = Curve.CreateInterpolatedCurve(edge_points[i], 3, CurveKnotStyle.Chord, Centreline.TangentAtStart, Centreline.TangentAtEnd);
             }
 
-            edges[4] = new Line(crvPts[3].First(), crvPts[0].First()).ToNurbsCurve();
-            edges[5] = new Line(crvPts[2].First(), crvPts[1].First()).ToNurbsCurve();
+            edges[4] = new Line(edge_points[3].First(), edge_points[0].First()).ToNurbsCurve();
+            edges[5] = new Line(edge_points[2].First(), edge_points[1].First()).ToNurbsCurve();
 
-            edges[6] = new Line(crvPts[2].Last(), crvPts[1].Last()).ToNurbsCurve();
-            edges[7] = new Line(crvPts[3].Last(), crvPts[0].Last()).ToNurbsCurve();
+            edges[6] = new Line(edge_points[2].Last(), edge_points[1].Last()).ToNurbsCurve();
+            edges[7] = new Line(edge_points[3].Last(), edge_points[0].Last()).ToNurbsCurve();
 
             Brep[] sides = new Brep[numCorners + 2];
             int ii = 0;
@@ -507,7 +515,7 @@ namespace tas.Lam
         {
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             int numCorners = 4;
             GenerateCorners(0.0);
@@ -562,7 +570,7 @@ namespace tas.Lam
 
             int N = Math.Max(Data.Samples, 6);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             GetSectionOffset(out double offsetX, out double offsetY);
 
@@ -667,7 +675,7 @@ namespace tas.Lam
         public override List<Curve> GetLamellaCurves()
         {
             int N = Math.Max(Data.Samples, 6);
-            GenerateCrossSectionPlanes(ref N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
             List<Point3d>[] crvPts = new List<Point3d>[Data.Lamellae.Length];
             for (int i = 0; i < Data.Lamellae.Length; ++i)
@@ -701,7 +709,7 @@ namespace tas.Lam
                 }
             }
 
-            for (int i = 0; i < N; ++i)
+            for (int i = 0; i < frames.Length; ++i)
             {
                 xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
 
@@ -773,6 +781,46 @@ namespace tas.Lam
 
             return crvs;
             */
+        }
+
+        public override Curve[] GetEdgeCurves(double offset = 0.0)
+        {
+            int N = Math.Max(Data.Samples, 6);
+
+            GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
+
+            int numCorners = 4;
+            GenerateCorners(offset);
+
+            List<Point3d>[] crvPts = new List<Point3d>[numCorners];
+            for (int i = 0; i < numCorners; ++i)
+            {
+                crvPts[i] = new List<Point3d>();
+            }
+
+            Transform xform;
+            Point3d temp;
+
+            for (int i = 0; i < parameters.Length; ++i)
+            {
+                xform = Rhino.Geometry.Transform.PlaneToPlane(Plane.WorldXY, frames[i]);
+
+                for (int j = 0; j < numCorners; ++j)
+                {
+                    temp = new Point3d(m_section_corners[j]);
+                    temp.Transform(xform);
+                    crvPts[j].Add(temp);
+                }
+            }
+
+            Curve[] edges = new Curve[numCorners];
+
+            for (int i = 0; i < numCorners; ++i)
+            {
+                edges[i] = Curve.CreateInterpolatedCurve(crvPts[i], 3, CurveKnotStyle.Chord, frames.First().ZAxis, frames.Last().ZAxis);
+            }
+
+            return edges;
         }
 
         public override Glulam Overbend(double t)
@@ -861,7 +909,7 @@ namespace tas.Lam
 
             int N = Math.Max(6, Data.Samples);
 
-            GenerateCrossSectionPlanes(ref N, out Plane[] planes, out double[] parameters, Data.InterpolationType);
+            GenerateCrossSectionPlanes(N, out Plane[] planes, out double[] parameters, Data.InterpolationType);
 
             for (int i = 0; i < planes.Length; ++i)
             {

@@ -48,10 +48,12 @@
     </Compile>
     <Compile Include="Components\Analyze\Cmpt_AnalyzeFibreCuttingAngle.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeDirectRain.cs" />
+    <Compile Include="Components\Analyze\Cmpt_AnalyzeLamellaBending2.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeRibbonEdges.cs" />
     <Compile Include="Components\Analyze\Cmpt_AnalyzeLamellaBending.cs" />
     <Compile Include="Components\Analyze\Cmpt_DeLaminate.cs" />
     <Compile Include="Components\Analyze\Cmpt_EstimateK.cs" />
+    <Compile Include="Components\Analyze\Cmpt_GetCurvatureXY.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_CreateGlulam.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_CrossJoint1.cs" />
     <Compile Include="Components\Create 2.0\Cmpt_FindConnections.cs" />

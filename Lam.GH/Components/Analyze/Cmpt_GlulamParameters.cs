@@ -76,7 +76,7 @@ namespace tas.Lam.GH
                 valueList.Attributes.Pivot = new PointF(this.Attributes.Pivot.X - 200, this.Attributes.Pivot.Y - 1);
                 valueList.ListItems.Clear();
 
-                var glulamParameters = Glulam.ListParameters();
+                var glulamParameters = Glulam.ListProperties();
 
                 foreach (string param in glulamParameters)
                 {

@@ -59,23 +59,33 @@ namespace tas.Lam.GH
             N = Math.Max(2, N);
 
             double[] t = m_curve.DivideByCount(N, false);
+            Plane[] frames = m_curve.GetPerpendicularFrames(t);
 
             Plane RMF;
             Vector3d vK;
 
             double kx = 0, ky = 0;
 
-            for (int i = 0; i < t.Length; ++i)
+            for (int i = 0; i < frames.Length; ++i)
             {
-                m_curve.PerpendicularFrameAt(t[i], out RMF);
+                RMF = frames[i];
+                //m_curve.PerpendicularFrameAt(t[i], out RMF);
                 vK = m_curve.CurvatureAt(t[i]);
 
                 kx = Math.Max(kx, Math.Abs(vK * RMF.XAxis));
                 ky = Math.Max(ky, Math.Abs(vK * RMF.YAxis));
             }
 
-            DA.SetData("MaxK X", kx);
-            DA.SetData("MaxK Y", ky);
+            if (m_curve.IsPlanar())
+            {
+                DA.SetData("MaxK X", ky);
+                DA.SetData("MaxK Y", kx);
+            }
+            else
+            {
+                DA.SetData("MaxK X", kx);
+                DA.SetData("MaxK Y", ky);
+            }
         }
 
         protected override System.Drawing.Bitmap Icon
