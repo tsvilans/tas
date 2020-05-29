@@ -55,7 +55,14 @@ namespace tas.Lam.GH
         protected GlulamOrientation ParseGlulamOrientation(List<object> input, Curve curve)
         {
             if (input == null || input.Count < 1)
+            {
+                if (curve.IsPlanar())
+                {
+                    curve.TryGetPlane(out Plane plane);
+                    return new PlanarOrientation(plane);
+                }
                 return new RmfOrientation();
+            }
             if (input.Count == 1)
             {
                 object single = input[0];
@@ -150,7 +157,12 @@ namespace tas.Lam.GH
                 return new VectorListOrientation(curve, parameters, vectors);
             }
 
-            return new KCurveOrientation();
+            if (curve.IsPlanar())
+            {
+                curve.TryGetPlane(out Plane plane);
+                return new PlanarOrientation(plane);
+            }
+            return new RmfOrientation();
         }
 
         protected GlulamData ParseGlulamData(object input)

@@ -80,13 +80,13 @@ namespace tas.Lam.GH
 
             DA.GetData("Samples", ref N);
 
-            if (N < 2) N = g.Data.Samples;
+            if (N < 2) N = Math.Max(g.Data.Samples, 6);
 
             //double[] tt = g.Centreline.DivideByCount(N, true);
 
             //Plane[] planes = tt.Select(x => g.GetPlane(x)).ToArray();
 
-           g.GenerateCrossSectionPlanes(Math.Max(2, N), 0.0, out Plane[] planes, out double[] parameters, g.Data.InterpolationType);
+           g.GenerateCrossSectionPlanes(ref N, out Plane[] planes, out double[] parameters, g.Data.InterpolationType);
 
 
             double w = g.Width;

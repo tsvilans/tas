@@ -25,6 +25,7 @@ using Rhino.Geometry;
 using Grasshopper.Kernel;
 using Grasshopper;
 using Grasshopper.Kernel.Data;
+using Rhino.DocObjects;
 
 namespace tas.Lam.GH
 {
@@ -79,6 +80,9 @@ namespace tas.Lam.GH
                 {
                     case (1):
                         var meshes = g.GetLamellaMeshes();
+
+                        if (meshes.Count < 1)
+                            throw new NotImplementedException();
 
                         for (int x = 0; x < g.Data.NumWidth; ++x)
                         {

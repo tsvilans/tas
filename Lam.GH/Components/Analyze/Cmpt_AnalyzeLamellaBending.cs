@@ -134,6 +134,13 @@ namespace tas.Lam.GH.Components
                         m_k_list[i].Add(new List<double>());
 
                         m_k_list[i][j].Add(0.0);
+
+                        /*****************************/
+
+                        
+
+                        /*****************************/
+
                         double K = 0.0;
                         for (int k = 1; k < CurveListCurrent[j].Count - 1; ++k)
                         {

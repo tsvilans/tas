@@ -40,12 +40,14 @@ namespace tas.Abaqus
             Plane[] xplanes;
             double[] xt;
 
-            g.GenerateCrossSectionPlanes(Nz + 1, 0, out xplanes, out xt, GlulamData.Interpolation.LINEAR);
+            int N = Nz + 1;
+
+            g.GenerateCrossSectionPlanes(ref N, out xplanes, out xt, GlulamData.Interpolation.LINEAR);
 
             nodes = new List<Node>();
 
             int i = 0;
-            for (int z = 0; z <= Nz; ++z)
+            for (int z = 0; z < N; ++z)
             {
                 Transform xform = Transform.PlaneToPlane(Plane.WorldXY, xplanes[z]);
                 for (int j = 0; j < xPts.Count; ++j)

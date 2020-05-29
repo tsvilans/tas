@@ -35,7 +35,7 @@ namespace tas.Lam
             Data = data.Duplicate();
             Orientation = orientation.Duplicate();
             Centreline = curve.DuplicateCurve();
-            Centreline.Domain.MakeIncreasing();
+            //Centreline.Domain.MakeIncreasing();
 
         }
 
@@ -67,7 +67,7 @@ namespace tas.Lam
             }
 
             Centreline = centreline;
-            Centreline.Domain.MakeIncreasing();
+            //Centreline.Domain.MakeIncreasing();
 
             //Frames = new List<Tuple<double, Plane>>();
             double t;

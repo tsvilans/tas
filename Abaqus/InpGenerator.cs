@@ -9,26 +9,10 @@ using tas.Core;
 
 namespace tas.Abaqus
 {
-    public class InpGenerator
+    public class InpGenerator : Job
     {
-        public List<Assembly> Assemblies;
-        public List<Part> Parts;
-        public List<Material> Materials;
-        public List<BoundaryCondition> BoundaryConditions;
-        public List<Load> Loads;
-        public List<Step> Steps;
-
-        public string JobName, Author;
-
-        public InpGenerator()
+        public InpGenerator() : base()
         {
-            Assemblies = new List<Assembly>();
-            Parts = new List<Part>();
-            Materials = new List<Material>();
-            BoundaryConditions = new List<BoundaryCondition>();
-            Loads = new List<Load>();
-            Steps = new List<Step>();
-            JobName = "Job-99";
         }
 
         public void WriteHeader(List<string> inp)

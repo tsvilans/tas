@@ -53,7 +53,8 @@ namespace tas.Lam
                 "max_curvature_width",
                 "max_curvature_height",
                 "type",
-                "type_id"
+                "type_id",
+                "orientation"
             };
         }
 
@@ -98,6 +99,8 @@ namespace tas.Lam
                     return ToString();
                 case ("type_id"):
                     return (int)Type();
+                case ("orientation"):
+                    return Orientation;
                 default:
                     return null;
             }
@@ -125,7 +128,9 @@ namespace tas.Lam
             Plane[] planes;
             double[] parameters;
 
-            GenerateCrossSectionPlanes(Data.Samples, 0.0, out planes, out parameters, Data.InterpolationType);
+            int N = Math.Max(Data.Samples, 6);
+
+            GenerateCrossSectionPlanes(ref N, out planes, out parameters, Data.InterpolationType);
 
             //
             /*
@@ -214,7 +219,8 @@ namespace tas.Lam
             if (extension > 0.0)
                 c = c.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
 
-            GenerateCrossSectionPlanes(Math.Max(6, Data.Samples), extension, out Plane[] planes, out double[] parameters, Data.InterpolationType);
+            int N = Math.Max(6, Data.Samples);
+            GenerateCrossSectionPlanes(ref N, out Plane[] planes, out double[] parameters, Data.InterpolationType);
 
             Curve[] rules = new Curve[planes.Length];
 

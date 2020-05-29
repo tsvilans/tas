@@ -143,7 +143,7 @@ namespace tas.Lam
             return new List<Brep>();
         }
 
-        public abstract void GenerateCrossSectionPlanes(int N, double extension, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
+        public abstract void GenerateCrossSectionPlanes(ref int N, out Plane[] planes, out double[] t, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR);
 
 
     }

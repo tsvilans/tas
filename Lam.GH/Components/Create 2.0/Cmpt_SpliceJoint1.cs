@@ -61,12 +61,29 @@ namespace tas.Lam.GH
             if (!DA.GetData<Glulam>("GlulamA", ref gA) || !DA.GetData<Glulam>("GlulamB", ref gB))
                 return;
 
-            gA.Centreline.ClosestPoints(gB.Centreline, out Point3d pA, out Point3d pB);
+            //gA.Centreline.ClosestPoints(gB.Centreline, out Point3d pA, out Point3d pB);
 
-            Point3d pC = (pA + pB) / 2;
+            double search_distance = Math.Max(Math.Max(gA.Height, gB.Height), Math.Max(gA.Width, gB.Width));
 
-            gA.Centreline.ClosestPoint(pC, out double tA);
-            gB.Centreline.ClosestPoint(pC, out double tB);
+            var intersections = Rhino.Geometry.Intersect.Intersection.CurveCurve(gA.Centreline, gB.Centreline, search_distance, search_distance);
+            if (intersections == null || intersections.Count < 1) return;
+
+            var intersection = intersections[0];
+
+            if (!intersection.IsOverlap)
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Glulams are not overlapping. Might create unexpected results.");
+
+            Point3d pA = (intersection.PointA + intersection.PointA2) / 2;
+            Point3d pB = (intersection.PointB + intersection.PointB2) / 2;
+
+            gA.Centreline.ClosestPoint(pA, out double tA);
+            gB.Centreline.ClosestPoint(pB, out double tB);
+
+
+            //Point3d pC = (pA + pB) / 2;
+
+            //gA.Centreline.ClosestPoint(pC, out double tA);
+            //gB.Centreline.ClosestPoint(pC, out double tB);
 
             double m_length = 100.0, m_incline = 20.0;
 

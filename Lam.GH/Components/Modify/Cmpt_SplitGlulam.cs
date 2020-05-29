@@ -87,7 +87,7 @@ namespace tas.Lam.GH
             }
             domains.Add(new Interval(m_params.Last(), m_glulam.Centreline.Domain.Max));
 
-            domains = domains.Where(x => m_glulam.Centreline.GetLength(x) > m_overlap).ToList();
+            //domains = domains.Where(x => m_glulam.Centreline.GetLength(x) > m_overlap).ToList();
 
             for (int i = 0; i < domains.Count; ++i)
             {

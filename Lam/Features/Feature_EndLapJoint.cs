@@ -113,23 +113,66 @@ namespace tas.Lam.Features
             Plane p1 = m_glulam1.GetPlane(m_t1);
             Plane p2 = m_glulam2.GetPlane(m_t2);
 
+            Vector3d v = p1.Origin - p2.Origin;
+
+
             Plane p0 = tas.Core.Util.Interpolation.InterpolatePlanes2(p1, p2, 0.5);
+
+            int sign = (v * p0.YAxis) > 0 ? -1 : 1;
 
             Plane plane = new Plane(p0.Origin, p0.XAxis, p0.ZAxis);
 
-            double w = Math.Max(m_glulam1.Width, m_glulam2.Width);
-            double h = Math.Max(m_glulam1.Height, m_glulam2.Height);
+            double w = Math.Max(m_glulam1.Width, m_glulam2.Width) + Math.Abs(v * p0.XAxis);
+            double h = Math.Max(m_glulam1.Height, m_glulam2.Height) + Math.Abs(v * p0.YAxis);
 
+            // Construct main loft curves
             Curve[] crvs = new Curve[4];
-            crvs[0] = new Line(new Point3d(-w / 2 - m_extension, m_length / 2, h / 2 + m_extension),
-              new Point3d(w / 2 + m_extension, m_length / 2, h / 2 + m_extension)).ToNurbsCurve();
-            crvs[1] = new Line(new Point3d(-w / 2 - m_extension, m_length / 2, m_incline),
-              new Point3d(w / 2 + m_extension, m_length / 2, m_incline)).ToNurbsCurve();
-            crvs[2] = new Line(new Point3d(-w / 2 - m_extension, -m_length / 2, -m_incline),
-              new Point3d(w / 2 + m_extension, -m_length / 2, -m_incline)).ToNurbsCurve();
-            crvs[3] = new Line(new Point3d(-w / 2 - m_extension, -m_length / 2, -h / 2 - m_extension),
-              new Point3d(w / 2 + m_extension, -m_length / 2, -h / 2 - m_extension)).ToNurbsCurve();
 
+            crvs[0] = new Line(
+                new Point3d(
+                    -w / 2 - m_extension, 
+                    m_length / 2, 
+                    (h / 2 + m_extension) * sign),
+              new Point3d(
+                  w / 2 + m_extension, 
+                  m_length / 2, 
+                  (h / 2 + m_extension) * sign)
+              ).ToNurbsCurve();
+
+            crvs[1] = new Line(
+                new Point3d(
+                    -w / 2 - m_extension, 
+                    m_length / 2, 
+                    m_incline * sign),
+              new Point3d(
+                  w / 2 + m_extension, 
+                  m_length / 2, 
+                  m_incline * sign)
+              ).ToNurbsCurve();
+
+            crvs[2] = new Line(
+                new Point3d(
+                    -w / 2 - m_extension, 
+                    -m_length / 2, 
+                    -m_incline * sign),
+              new Point3d(
+                  w / 2 + m_extension, 
+                  -m_length / 2, 
+                  -m_incline * sign)
+              ).ToNurbsCurve();
+
+            crvs[3] = new Line(
+                new Point3d(
+                    -w / 2 - m_extension, 
+                    -m_length / 2, 
+                    (-h / 2 - m_extension) * sign),
+              new Point3d(
+                  w / 2 + m_extension, 
+                  -m_length / 2, 
+                  (-h / 2 - m_extension) * sign)
+              ).ToNurbsCurve();
+
+            // Loft curves together as straight sections
             Brep brep = Brep.CreateFromLoft(crvs, Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
 
             brep.Transform(Transform.PlaneToPlane(Plane.WorldXY, plane));

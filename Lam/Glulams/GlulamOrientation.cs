@@ -146,7 +146,17 @@ namespace tas.Lam
 
         public void CalculateAngularOffset(Curve curve)
         {
-            curve.PerpendicularFrameAt(Parameter, out Plane RMF);
+            Plane RMF;
+            if (Math.Abs(Parameter - curve.Domain.Min) < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, curve.Domain.Max }).First();
+            else if (Math.Abs(Parameter - curve.Domain.Max) < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, curve.Domain.Max }).Last();
+            else if (Parameter > curve.Domain.Min)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, Parameter }).Last();
+            else
+                RMF = curve.GetPerpendicularFrames(new double[] { Parameter, curve.Domain.Max }).First();
+
+            //curve.PerpendicularFrameAt(Parameter, out Plane RMF);
             AngularOffset = Vector3d.VectorAngle(RMF.YAxis, Direction, RMF);
         }
 
@@ -245,14 +255,18 @@ namespace tas.Lam
             m_curve = curve;
             m_guides = new VectorParameter[N];
 
-            Plane RMF;
+            //Plane[] RMFs = curve.GetPerpendicularFrames(parameters);
+
+            //Plane RMF;
             int index = 0;
             for (int i = 0; i < N; ++i)
             {
                 if (vectors[i].IsValid && !vectors[i].IsZero)
                 {
-                    curve.PerpendicularFrameAt(parameters[i], out RMF);
-                    m_guides[index] = new VectorParameter{ Direction = vectors[i], Parameter = parameters[i], AngularOffset = Vector3d.VectorAngle(RMF.YAxis, vectors[i], RMF) };
+                    //RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, parameters[i] })[1];
+                    //curve.PerpendicularFrameAt(parameters[i], out RMF);
+                    m_guides[index] = new VectorParameter{ Direction = vectors[i], Parameter = parameters[i], AngularOffset = double.NaN };
+                    m_guides[index].CalculateAngularOffset(curve);
                     index++;
                 }
             }
@@ -285,7 +299,7 @@ namespace tas.Lam
             RecalculateVectors();
         }
 
-        public override Vector3d GetOrientation(Curve crv, double t)
+        public override Vector3d GetOrientation(Curve curve, double t)
         {
             double angle;
             if (t <= m_guides.First().Parameter)
@@ -323,16 +337,27 @@ namespace tas.Lam
             }
             else
             {
+                throw new Exception("It shouldn't come to this...");
                 angle = 0.0;
             }
 
             Plane RMF;
-            crv.PerpendicularFrameAt(t, out RMF);
+
+            if (Math.Abs(t - curve.Domain.Min) < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, curve.Domain.Max }).First();
+            else if (Math.Abs(t - curve.Domain.Max) < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, curve.Domain.Max }).Last();
+            else if (t > curve.Domain.Min)
+                RMF = curve.GetPerpendicularFrames(new double[] { curve.Domain.Min, t }).Last();
+            else
+                RMF = curve.GetPerpendicularFrames(new double[] { t, curve.Domain.Max }).First();
+
+            //crv.PerpendicularFrameAt(t, out RMF);
             Vector3d vec = RMF.YAxis;
 
             vec.Transform(Rhino.Geometry.Transform.Rotation(angle, RMF.ZAxis, RMF.Origin));
 
-            return NormalizeVector(crv, t, vec);
+            return NormalizeVector(curve, t, vec);
         }
 
         /// <summary>
@@ -354,10 +379,26 @@ namespace tas.Lam
             {
                 pt = old_curve.PointAt(m_guides[i].Parameter);
                 new_curve.ClosestPoint(pt, out t);
+
                 m_guides[i].Parameter = t;
+                m_guides[i].CalculateAngularOffset(new_curve);
             }
 
             Array.Sort(m_guides, (a, b) => a.Parameter.CompareTo(b.Parameter));
+
+            while (m_guides[0].AngularOffset > Math.PI)
+                m_guides[0].AngularOffset -= Math.PI * 2;
+            while (m_guides[0].AngularOffset < -Math.PI)
+                m_guides[0].AngularOffset += Math.PI * 2;
+
+            for (int i = 1; i < m_guides.Length; ++i)
+            {
+                while (m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset < -Math.PI )
+                    m_guides[i].AngularOffset += Math.PI * 2;
+                while (m_guides[i].AngularOffset - m_guides[i - 1].AngularOffset > Math.PI)
+                    m_guides[i].AngularOffset -= Math.PI * 2;
+            }
+
         }
 
         public override GlulamOrientation Duplicate()
@@ -379,12 +420,16 @@ namespace tas.Lam
 
 
             int iMin = Array.BinarySearch(m_guides, domain.Min);
+
             if (iMin < 0)
                 iMin = ~iMin;
 
             int iMax = Array.BinarySearch(m_guides, domain.Max);
+
             if (iMax < 0)
-                iMax = ~iMax; 
+                iMax = ~iMax;
+            else
+                iMax++;
 
             int length = iMax - iMin + plusMin + plusMax;
 
@@ -491,7 +536,10 @@ namespace tas.Lam
         public void RecalculateVectors()
         {
             for (int i = 0; i < m_guides.Length; ++i)
+            {
+                m_guides[i].Direction.Unitize();
                 m_guides[i].Direction = NormalizeVector(m_curve, m_guides[i].Parameter, m_guides[i].Direction);
+            }
         }
 
         public override GlulamOrientation Join(GlulamOrientation orientation)
@@ -538,6 +586,20 @@ namespace tas.Lam
             Vector3d normal;
 
             m_surface.ClosestPoint(pt, out cp, out ci, out u, out v, 0, out normal);
+
+            if (ci.ComponentIndexType == ComponentIndexType.BrepEdge)
+            {
+                int fi = m_surface.Edges[ci.Index].AdjacentFaces().First();
+                m_surface.Faces[fi].ClosestPoint(cp, out u, out v);
+                normal = m_surface.Faces[fi].NormalAt(u, v);
+            }
+            else if (ci.ComponentIndexType == ComponentIndexType.BrepVertex)
+            {
+                int ei = m_surface.Vertices[ci.Index].EdgeIndices().First();
+                int fi = m_surface.Edges[ei].AdjacentFaces().First();
+                m_surface.Faces[fi].ClosestPoint(cp, out u, out v);
+                normal = m_surface.Faces[fi].NormalAt(u, v);
+            }
 
             return NormalizeVector(crv, t, normal);
         }
@@ -719,7 +781,16 @@ namespace tas.Lam
         {
             crv.Domain.MakeIncreasing();
 
-            t = Math.Max(crv.Domain.Min, Math.Min(crv.Domain.Max, t));
+            if (t <= crv.Domain.Min)
+            {
+                return crv.GetPerpendicularFrames(new double[] { t, crv.Domain.Max})[0].YAxis;
+            }
+            else if (t >= crv.Domain.Max)
+            {
+                return crv.GetPerpendicularFrames(new double[] { crv.Domain.Min, t })[1].YAxis;
+            }
+
+            //t = Math.Max(crv.Domain.Min, Math.Min(crv.Domain.Max, t));
 
             return crv.GetPerpendicularFrames(new double[] { crv.Domain.Min, t })[1].YAxis;
 
@@ -731,13 +802,17 @@ namespace tas.Lam
         }
         public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
         {
-            crv.Domain.MakeIncreasing();
+            //crv.Domain.MakeIncreasing();
             IEnumerable<double> sorted_t = t.OrderBy(x => x).Where(y => crv.Domain.IncludesParameter(y));
             try
             {
                 Plane[] planes = crv.GetPerpendicularFrames(sorted_t);
                 return planes.Select(x => x.YAxis).ToList();
             }
+            //catch (InvalidOperationException e)
+            //{
+            //    throw e;
+            //}
             catch
             {
                 throw new Exception("RmfOrientation::GetOrientations() failed.");
@@ -777,6 +852,61 @@ namespace tas.Lam
 
         public override void Transform(Transform x)
         {
+            return;
+        }
+    }
+
+    public class PlanarOrientation : GlulamOrientation
+    {
+        public Plane Plane;
+        public PlanarOrientation(Plane plane)
+        {
+            Plane = plane;
+        }
+
+        public override Vector3d GetOrientation(Curve crv, double t)
+        {
+            return Vector3d.CrossProduct(Plane.Normal, crv.TangentAt(t));
+        }
+        public override List<Vector3d> GetOrientations(Curve crv, IList<double> t)
+        {
+            return t.Select(x => Vector3d.CrossProduct(Plane.Normal, crv.TangentAt(x))).ToList();
+        }
+
+        public override void Remap(Curve old_curve, Curve new_curve)
+        {
+            return;
+        }
+
+        public override GlulamOrientation Duplicate()
+        {
+            return new PlanarOrientation(Plane);
+        }
+
+        public override GlulamOrientation[] Split(IList<double> t)
+        {
+            GlulamOrientation[] new_orientations = new GlulamOrientation[t.Count + 1];
+            for (int i = 0; i < new_orientations.Length; ++i)
+            {
+                new_orientations[i] = this.Duplicate();
+            }
+
+            return new_orientations;
+        }
+
+        public override object GetDriver()
+        {
+            return Plane;
+        }
+
+        public override GlulamOrientation Join(GlulamOrientation orientation)
+        {
+            return this.Duplicate();
+        }
+
+        public override void Transform(Transform x)
+        {
+            Plane.Transform(x);
             return;
         }
     }

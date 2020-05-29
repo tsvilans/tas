@@ -83,9 +83,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
       <Version>6.13.19058.371</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
       <Version>6.13.19058.371</Version>
     </PackageReference>
   </ItemGroup>

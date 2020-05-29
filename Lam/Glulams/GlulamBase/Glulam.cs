@@ -39,9 +39,9 @@ namespace tas.Lam
 
 
         #region Static variables and methods
-        protected static double Tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
-        protected static double OverlapTolerance = 1.0 * Rhino.RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, Rhino.UnitSystem.Millimeters);
-        protected static double AngleTolerance = Math.Cos(2);
+        public static double Tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+        public static double OverlapTolerance = 1.0 * Rhino.RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, Rhino.UnitSystem.Millimeters);
+        public static double AngleTolerance = Math.Cos(5);
 
         static public Brep GetGlulamBisector(Glulam g1, Glulam g2, double extension = 50.0, bool normalized = false)
         {
@@ -151,6 +151,7 @@ namespace tas.Lam
             props.Add("max_curvature_height", max_kh);
             props.Add("type", ToString());
             props.Add("type_id", (int)Type());
+            props.Add("orientation", Orientation);
             
             return props;
         }
@@ -378,6 +379,7 @@ namespace tas.Lam
             double l1 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Min));
             double l2 = Centreline.GetLength(new Interval(Centreline.Domain.Min, domain.Max));
             double t1, t2;
+
             if (!Centreline.LengthParameter(l1 - overlap, out t1)) t1 = domain.Min;
             if (!Centreline.LengthParameter(l2 + overlap, out t2)) t2 = domain.Max;
 
@@ -395,10 +397,13 @@ namespace tas.Lam
             GlulamData data = Data.Duplicate();
             data.Samples = Math.Max(6, (int)(data.Samples * percentage));
 
-            //GlulamOrientation[] SplitOrientations = Orientation.Split(new double[] { domain.Min, domain.Max });
 
-            //Glulam glulam = CreateGlulam(Centreline.Trim(domain), SplitOrientations[1], data);
-            Glulam glulam = CreateGlulam(Centreline.Trim(domain), Orientation.Trim(domain), data);
+            Curve trimmed_curve = Centreline.Trim(domain);
+
+            GlulamOrientation trimmed_orientation = Orientation.Trim(domain);
+            trimmed_orientation.Remap(Centreline, trimmed_curve);
+
+            Glulam glulam = CreateGlulam(trimmed_curve, trimmed_orientation, data);
 
             return glulam;
         }
