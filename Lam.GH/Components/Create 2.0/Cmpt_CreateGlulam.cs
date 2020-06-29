@@ -56,9 +56,9 @@ namespace tas.Lam.GH
         {
             if (input == null || input.Count < 1)
             {
-                if (curve.IsPlanar())
+                if (curve.IsPlanar(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance))
                 {
-                    curve.TryGetPlane(out Plane plane);
+                    curve.TryGetPlane(out Plane plane, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                     return new PlanarOrientation(plane);
                 }
                 return new RmfOrientation();
@@ -66,7 +66,7 @@ namespace tas.Lam.GH
             if (input.Count == 1)
             {
                 object single = input[0];
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, single.ToString());
+                //AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, single.ToString());
 
                 if (single is Vector3d)
                     return new VectorOrientation((Vector3d)single);

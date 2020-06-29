@@ -83,10 +83,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.13.19058.371</Version>
+      <Version>6.22.20028.13281</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>6.13.19058.371</Version>
+      <Version>6.22.20028.13281</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

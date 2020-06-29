@@ -42,7 +42,7 @@ namespace tas.Abaqus
 
             int N = Nz + 1;
 
-            g.GenerateCrossSectionPlanes(ref N, out xplanes, out xt, GlulamData.Interpolation.LINEAR);
+            g.GenerateCrossSectionPlanes(N, out xplanes, out xt, GlulamData.Interpolation.LINEAR);
 
             nodes = new List<Node>();
 
