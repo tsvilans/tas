@@ -50,7 +50,7 @@ namespace tas.Lam
             else
                 curve = Centreline;
             */
-            double multiplier = RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, UnitSystem.Millimeters);
+            double multiplier = RhinoMath.UnitScale(UnitSystem.Millimeters, Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
 
             //PolylineCurve discrete = curve.ToPolyline(Glulam.Tolerance * 10, Glulam.AngleTolerance, 0.0, 0.0);
             PolylineCurve discrete = curve.ToPolyline(multiplier * 5.0, RhinoMath.ToRadians(5), multiplier * 50.0, curve.GetLength() / 25);
