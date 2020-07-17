@@ -37,6 +37,7 @@ namespace tas.Lam
         protected Glulam()
         {
             ID = Guid.NewGuid();
+            CornerGenerator = GenerateCorners;
         }
 
         static public Glulam CreateGlulam(Curve curve, GlulamOrientation orientation, GlulamData data)

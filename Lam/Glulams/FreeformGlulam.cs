@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Eto.Forms;
+using Grasshopper.Kernel.Geometry.Delaunay;
 using Rhino;
 using Rhino.Geometry;
 using tas.Core;
@@ -461,28 +463,45 @@ namespace tas.Lam
 
             var edge_points = GetEdgePoints(offset);
             int numCorners = m_section_corners.Length;
+            var num_points = edge_points[0].Count;
 
-            Curve[] edges = new Curve[numCorners + 4];
+            NurbsCurve[] edges = new NurbsCurve[numCorners + 4];
+            var edge_parameters = new List<double>[numCorners];
+            double t;
 
             for (int i = 0; i < numCorners; ++i)
             {
-                edges[i] = Curve.CreateInterpolatedCurve(edge_points[i], 3, CurveKnotStyle.Chord, Centreline.TangentAtStart, Centreline.TangentAtEnd);
+                //edges[i] = NurbsCurve.CreateInterpolatedCurve(edge_points[i], 3, CurveKnotStyle.Chord, Centreline.TangentAtStart, Centreline.TangentAtEnd);
+                edges[i] = NurbsCurve.Create(false, 3, edge_points[i]);
+                edge_parameters[i] = new List<double>();
+
+                foreach (Point3d pt in edge_points[i])
+                {
+                    edges[i].ClosestPoint(pt, out t);
+                    edge_parameters[i].Add(t);
+                }
             }
 
-            edges[4] = new Line(edge_points[3].First(), edge_points[0].First()).ToNurbsCurve();
-            edges[5] = new Line(edge_points[2].First(), edge_points[1].First()).ToNurbsCurve();
+            edges[numCorners + 0] = new Line(edge_points[3].First(), edge_points[0].First()).ToNurbsCurve();
+            edges[numCorners + 1] = new Line(edge_points[2].First(), edge_points[1].First()).ToNurbsCurve();
 
-            edges[6] = new Line(edge_points[2].Last(), edge_points[1].Last()).ToNurbsCurve();
-            edges[7] = new Line(edge_points[3].Last(), edge_points[0].Last()).ToNurbsCurve();
+            edges[numCorners + 2] = new Line(edge_points[2].Last(), edge_points[1].Last()).ToNurbsCurve();
+            edges[numCorners + 3] = new Line(edge_points[3].Last(), edge_points[0].Last()).ToNurbsCurve();
 
             Brep[] sides = new Brep[numCorners + 2];
             int ii = 0;
             for (int i = 0; i < numCorners; ++i)
             {
                 ii = (i + 1).Modulus(numCorners);
-                sides[i] = Brep.CreateFromLoft(
-                  new Curve[] { edges[i], edges[ii] },
-                  Point3d.Unset, Point3d.Unset, LoftType.Straight, false)[0];
+
+                List<Point2d> rulings = new List<Point2d>();
+                for (int j = 0; j < num_points; ++j)
+                    rulings.Add(new Point2d(edge_parameters[i][j], edge_parameters[ii][j]));
+
+                sides[i] = Brep.CreateDevelopableLoft(edges[i], edges[ii], rulings).First();
+                //sides[i] = Brep.CreateFromLoft(
+                //  new Curve[] { edges[i], edges[ii] },
+                //  Point3d.Unset, Point3d.Unset, LoftType.Normal, false)[0];
             }
 
             // Make ends
