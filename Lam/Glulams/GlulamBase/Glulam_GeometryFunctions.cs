@@ -124,8 +124,8 @@ namespace tas.Lam
 
             GenerateCrossSectionPlanes(N, out Plane[] frames, out double[] parameters, Data.InterpolationType);
 
-            int numCorners = 4;
-            GenerateCorners(offset);
+            m_section_corners = CornerGenerator(offset);
+            int numCorners = m_section_corners.Length;
 
             Transform xform;
             Point3d temp;

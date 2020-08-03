@@ -102,6 +102,8 @@ namespace tas.Lam
         protected Point3d[] m_section_corners = null; // Cached section corners
         protected Point3d[] m_lamella_centers = null; // Cached centerpoints for lamellae
 
+        public Func<double, Point3d[]> CornerGenerator;
+
         /// <summary>
         /// Get total width of glulam.
         /// </summary>
@@ -687,7 +689,9 @@ namespace tas.Lam
 
             int numCorners = 4;
 
-            m_section_corners = new Point3d[numCorners];
+            Point3d[] section_corners = new Point3d[numCorners];
+
+            //m_section_corners = new Point3d[numCorners];
 
             switch (Data.SectionAlignment)
             {
@@ -727,12 +731,12 @@ namespace tas.Lam
                     break;
             }
 
-            m_section_corners[0] = new Point3d(x0 - offset, y0 - offset, 0);
-            m_section_corners[1] = new Point3d(x0 - offset, y1 + offset, 0);
-            m_section_corners[2] = new Point3d(x1 + offset, y1 + offset, 0);
-            m_section_corners[3] = new Point3d(x1 + offset, y0 - offset, 0);
+            section_corners[0] = new Point3d(x0 - offset, y0 - offset, 0);
+            section_corners[1] = new Point3d(x0 - offset, y1 + offset, 0);
+            section_corners[2] = new Point3d(x1 + offset, y1 + offset, 0);
+            section_corners[3] = new Point3d(x1 + offset, y0 - offset, 0);
 
-            return m_section_corners;
+            return section_corners;
         }
 
         List<Curve> LamellaOutlines(Glulam g)
