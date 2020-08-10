@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tas.Machine.GH</RootNamespace>
     <AssemblyName>tas.Machine.GH</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
@@ -30,7 +30,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;FULL</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -42,6 +42,12 @@
     <Reference Include="ClipperTools">
       <HintPath>..\include\ClipperTools.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Robots">
+      <HintPath>..\include_extended\Robots.dll</HintPath>
+    </Reference>
+    <Reference Include="RobotsGH">
+      <HintPath>..\include_extended\RobotsGH.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

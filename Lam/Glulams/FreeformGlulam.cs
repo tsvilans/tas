@@ -43,7 +43,9 @@ namespace tas.Lam
         /// <param name="interpolation">Type of interpolation to use (default is Linear).</param>
         public override void GenerateCrossSectionPlanes(int N, out Plane[] frames, out double[] parameters, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
-            // Experimental new way of generative cross-section planes
+            Curve curve = Centreline;
+
+            double multiplier = RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, UnitSystem.Millimeters);
 
             //PolylineCurve discrete = curve.ToPolyline(Glulam.Tolerance * 10, Glulam.AngleTolerance, 0.0, 0.0);
             PolylineCurve discrete = curve.ToPolyline(multiplier * Tolerance, AngleTolerance, multiplier * MininumSegmentLength, curve.GetLength() / MinimumNumSegments);
