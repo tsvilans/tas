@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if OBSOLETE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper;
@@ -18,7 +20,7 @@ namespace tas.Machine.GH.Posts
         public Cmpt_CmsPost()
           : base("Post to CMS", "Post2CMS",
               "Post toolpaths to CMS 5-axis machining centre.",
-              "tasMachine", "Machining")
+              "tasMachine", "Posts")
         {
         }
 
@@ -125,3 +127,4 @@ namespace tas.Machine.GH.Posts
         }
     }
 }
+#endif

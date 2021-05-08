@@ -29,7 +29,7 @@ namespace tas.Machine.Posts
     /// <summary>
     /// Post to convert to G-code for Haas 3-axis mill.
     /// </summary>
-    public class HaasPost : tas.Machine.MachinePost
+    public class RaptorBCNPost : tas.Machine.MachinePost
     {
 
         const int DOF = 3;
@@ -41,21 +41,15 @@ namespace tas.Machine.Posts
         public Interval LimitZ { get { return m_limits[2]; } }
         #endregion
 
-        public HaasPost() : base(DOF)
+        public RaptorBCNPost() : base(DOF)
         {
             PreComment = "(";
             PostComment = ")";
+            EOL = "";
 
-            m_limits[0] = new Interval(0, 1016);
-            m_limits[1] = new Interval(0, 508);
-            m_limits[2] = new Interval(0, 406);
-
-            // Spindle nose to table (max): 508 mm
-            // Spindle nose to table (min): 102 mm
-
-            // Table
-            //    length 1467 mm
-            //    width 368 mm
+            m_limits[0] = new Interval(0, 1500);
+            m_limits[1] = new Interval(0, 1200);
+            m_limits[2] = new Interval(0, 30);
 
             m_axis_id[0] = 'X';
             m_axis_id[1] = 'Y';
@@ -88,6 +82,7 @@ namespace tas.Machine.Posts
 
             Program = new List<string>();
             Errors = new List<string>();
+            MachineTool ActiveTool;
 
             BoundingBox = BoundingBox.Empty;
 
@@ -113,52 +108,44 @@ namespace tas.Machine.Posts
 
             EOL = " ;";
 
-            // Create headers
             Program.Add("%");
             Program.Add($"O01001 ({Name})"); // Program number / name
 
-            //bool HighSpeed = true;
-
-
             CreateHeader();
 
-            /* G00 - Rapid mode
-             * G17 - XY plane for circular interpolation
-             * G40 - Cancel cutter compensation
-             * G49 - Cancel Tool Length Compensation
-             * G80 - Cancel canned cycles
-             * G90 - Absolute coordinates
-             * G98 - Return to initial start point
-             */
-            Program.Add("G00 G17 G40 G49 G80 G90 G98;"); // Safety line
-            Program.Add("G00 G53 Z0;"); // Return to machine zero
+            //Program.Add("G00 G17 G40 G49 G80 G90 G98;"); // Safety line
+            //Program.Add("G00 G53 Z0;"); // Return to machine zero
+            Program.Add("G90"); // Return to machine zero
+            Program.Add("G64"); // Return to machine zero
+            Program.Add("M7"); // Return to machine zero
+            Program.Add("M8"); // Return to machine zero
 
             // Loop through Toolpaths
             for (int i = 0; i < Paths.Count; ++i)
             {
 
                 Toolpath TP = Paths[i];
+                ActiveTool = Tools[TP.Tool.Name];
 
-                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment}----------------------------------------------------------------{PostComment}{EOL}");
                 Program.Add($"{PreComment} START Toolpath: {TP.Name} {PostComment}{EOL}");
-                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment}       Tool: {ActiveTool.Name} Diameter: {ActiveTool.Diameter} {PostComment}{EOL}");
+                Program.Add($"{PreComment}----------------------------------------------------------------{PostComment}{EOL}");
 
                 // Tool change
                 // TODO: Change so that it only changes the tool if necessary, though the machine should ignore this anyway
-                Program.Add($"T{Tools[TP.Tool.Name].Number} M06{EOL}");
+                Program.Add($"T{Tools[TP.Tool.Name].Number}{EOL}");
 
                 // Move to first waypoint
                 Waypoint prev = new Waypoint(TP.Paths[0][0]);
                 prev.Type = (int)WaypointType.RAPID;
 
-                /* G00 - Rapid motion
-                 * G90 - Absolute positioning (G91 is incremental)
-                 * G21 - Metric programming (G20 is inch)
-                 * G54 - First work offset
-                 * S, M03 - Start spindle clockwise
-                 */
-                Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
-                Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08{EOL}");
+
+                Program.Add($"S{TP.Tool.SpindleSpeed}");
+                Program.Add("M3");
+
+                //Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
+                //Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08{EOL}");
 
 
 
@@ -284,8 +271,7 @@ namespace tas.Machine.Posts
             //Program.Add($"G00 Z10.");
 
             Program.Add($"{PreComment} End of program {PostComment}{EOL}");
-            Program.Add($"G53 G49 G0 Z0.{EOL}");
-            Program.Add($"G0 X0 Y0{EOL}");
+            Program.Add($"M9");
             Program.Add($"M05{EOL}"); // Spindle stop
             Program.Add($"M30{EOL}");
             Program.Add("%");

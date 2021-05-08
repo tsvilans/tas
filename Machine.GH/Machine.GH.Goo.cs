@@ -47,6 +47,11 @@ namespace tas.Machine.GH
                 Value = source as MachineTool;
                 return true;
             }
+            else if (source is GH_MachineTool)
+            {
+                Value = (source as GH_MachineTool).Value;
+                return true;
+            }
 
             return false;
         }

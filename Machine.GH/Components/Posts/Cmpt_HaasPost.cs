@@ -4,6 +4,8 @@ using System.Linq;
 using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
+#if OBSOLETE
+
 using Rhino.Geometry;
 
 using tas.Core;
@@ -18,7 +20,7 @@ namespace tas.Machine.GH.Posts
         public Cmpt_HaasPost()
           : base("Post to Haas", "Post2Haas",
               "Post toolpaths to Haas 3-axis machining centre.",
-              "tasMachine", "Machining")
+              "tasMachine", "Posts")
         {
         }
 
@@ -156,3 +158,5 @@ namespace tas.Machine.GH.Posts
         }
     }
 }
+
+#endif

@@ -24,6 +24,10 @@ namespace tas.Machine.GH
                 "Name", "N", "Name of tool.", GH_ParamAccess.item, "MachineTool");
             pManager.AddNumberParameter(
                 "Diameter", "D", "Tool diameter.", GH_ParamAccess.item, 12.0);
+            pManager.AddNumberParameter(
+                "StepOver", "SO", "Stepover.", GH_ParamAccess.item, 6.0);
+            pManager.AddNumberParameter(
+                "StepDown", "SD", "Stepdown.", GH_ParamAccess.item, 6.0);
             pManager.AddIntegerParameter(
                 "Number ID", "N", "Tool number.", GH_ParamAccess.item, 1);
             pManager.AddIntegerParameter(
@@ -47,8 +51,10 @@ namespace tas.Machine.GH
         {
             // Initialize variables
             string m_name = default;
-            double m_diameter = default, 
-                m_length = default;
+            double m_diameter = default,
+                m_length = default,
+                m_stepover = default,
+                m_stepdown = default;
             int m_number_id = default, 
                 m_offset_id = default, 
                 m_feedrate = default,
@@ -58,6 +64,8 @@ namespace tas.Machine.GH
             // Harvest inputs
             DA.GetData("Name", ref m_name);
             DA.GetData("Diameter", ref m_diameter);
+            DA.GetData("StepOver", ref m_stepover);
+            DA.GetData("StepDown", ref m_stepdown);
             DA.GetData("Number ID", ref m_number_id);
             DA.GetData("Height ID", ref m_offset_id);
             DA.GetData("Length", ref m_length);
@@ -80,17 +88,22 @@ namespace tas.Machine.GH
                 return;
             }
 
+            var mt = new MachineTool()
+            {
+                Name = m_name,
+                Diameter = m_diameter,
+                Number = m_number_id,
+                OffsetNumber = m_offset_id,
+                Length = m_length,
+                FeedRate = m_feedrate,
+                SpindleSpeed = m_speed,
+                PlungeRate = m_plunge,
+                StepDown = m_stepdown,
+                StepOver = m_stepover
+            };
+
             // Output machine tool
-            DA.SetData("MachineTool", new GH_MachineTool(new MachineTool(
-                m_name,
-                m_diameter,
-                m_number_id,
-                m_offset_id,
-                m_length,
-                m_feedrate,
-                m_speed,
-                m_plunge
-                )));
+            DA.SetData("MachineTool", new GH_MachineTool(mt));
 
         }
 

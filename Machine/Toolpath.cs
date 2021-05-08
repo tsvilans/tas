@@ -31,16 +31,45 @@ namespace tas.Machine
 
     public class Toolpath
     {
+        /// <summary>
+        /// GUID of toolpath.
+        /// </summary>
         public Guid Id { get; private set; }
+
         public List<Path> Paths;
+        /// <summary>
+        /// MachineTool to use for this toolpath.
+        /// </summary>
         public MachineTool Tool = null;
-        //public string ToolName;
+
+        /// <summary>
+        /// Name of toolpath.
+        /// </summary>
         public string Name;
 
+        /// <summary>
+        /// Safety object (plane, geometry).
+        /// </summary>
         public object Safety;
+
+        /// <summary>
+        /// Safety height.
+        /// </summary>
         public double SafeZ { get; set; }
+
+        /// <summary>
+        /// Rapid height.
+        /// </summary>
         public double RapidZ { get; set; }
+
+        /// <summary>
+        /// Are all the waypoints oriented in the same direction?
+        /// </summary>
         public bool IsPlanar { get; set; }
+
+        /// <summary>
+        /// For 5-axis machines, an option to flip the head by 180 degrees to avoid workpiece collisions.
+        /// </summary>
         public bool FlipWrist;
 
         public Toolpath()

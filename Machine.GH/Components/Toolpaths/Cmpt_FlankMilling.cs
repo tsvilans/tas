@@ -9,7 +9,7 @@ using tas.Core.GH;
 
 namespace tas.Machine.GH.Toolpaths
 {
-    public class Cmpt_FlankMilling : GH_Component
+    public class Cmpt_FlankMilling : ToolpathBase_Component
     {
         public Cmpt_FlankMilling()
           : base("Finishing - Flank Milling", "Flank",
@@ -18,35 +18,43 @@ namespace tas.Machine.GH.Toolpaths
         {
         }
 
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
+            base.RegisterInputParams(pManager);
+
             pManager.AddBrepParameter("Brep", "B", "Surface as a Brep.", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Side", "S", "Side of the surface to use for flank machining as a bitmask.", GH_ParamAccess.item, 0);
-            pManager.AddNumberParameter("ToolDiameter", "TD", "Tool diameter.", GH_ParamAccess.item, 12.0);
             pManager.AddNumberParameter("PathExtension", "Pe", "Extend the path by an amount.", GH_ParamAccess.item, 10.0);
             pManager.AddNumberParameter("DepthExtension", "De", "Extend the depth of the rules by an amount.", GH_ParamAccess.item, 3.0);
             pManager.AddNumberParameter("MaxDepth", "Md", "Maximum depth of the cut.", GH_ParamAccess.item, 50.0);
-            pManager.AddNumberParameter("StepDown", "Sd", "Stepdown amount for each pass.", GH_ParamAccess.item, 8.0);
         }
 
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Paths", "P", "Toolpath as list of PPolyline objects.", GH_ParamAccess.list);
+            base.RegisterOutputParams(pManager);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Brep m_brep = null;
             int m_side = 0;
-            double m_tool_offset = 6.0, m_path_extension = 10.0, m_depth_extension = 3.0, m_max_depth = 50.0, m_stepdown = 8.0;
+            double m_path_extension = 10.0, m_depth_extension = 3.0, m_max_depth = 50.0;
+
+            if (!DA.GetData("Workplane", ref Workplane))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Workplane missing. Default used (WorldXY).");
+            }
+
+            if (!DA.GetData("MachineTool", ref Tool))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "MachineTool missing. Default used.");
+            }
 
             DA.GetData("Brep", ref m_brep);
             DA.GetData("Side", ref m_side);
-            DA.GetData("ToolDiameter", ref m_tool_offset);
             DA.GetData("PathExtension", ref m_path_extension);
             DA.GetData("DepthExtension", ref m_depth_extension);
             DA.GetData("MaxDepth", ref m_max_depth);
-            DA.GetData("StepDown", ref m_stepdown);
 
             if (m_brep == null) return;
 
@@ -105,7 +113,7 @@ namespace tas.Machine.GH.Toolpaths
             double deepest = Math.Min(m_max_depth, lengths.Max());
 
             // Determine number of passes based on deepest cut and stepdown
-            int passes = (int)Math.Ceiling(deepest / m_stepdown);
+            int passes = (int)Math.Ceiling(deepest / Tool.StepDown);
 
 
             List<PPolyline> paths = new List<PPolyline>();
@@ -128,11 +136,11 @@ namespace tas.Machine.GH.Toolpaths
                     double depth = Math.Min(m_max_depth, 
                         Math.Min(
                             lengths[j] + m_depth_extension, 
-                            m_stepdown * i));
+                            Tool.StepDown * i));
 
                     Point3d origin = flank_pts[j]
                       + (directions[j] * (Math.Min(m_max_depth, lengths[j] + m_depth_extension) / passes * i)
-                      + (normal * m_tool_offset / 2));
+                      + (normal * Tool.StepOver / 2));
 
                     path.Add(new Plane(origin, directions[j]));
 

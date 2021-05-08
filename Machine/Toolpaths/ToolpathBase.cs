@@ -27,7 +27,7 @@ namespace tas.Machine.Toolpaths
 {
     public abstract class ToolpathStrategy
     {
-        public ToolSettings Tool;
+        public MachineTool Tool;
         public Plane Workplane;
         public double Tolerance;
         public double MaxDepth;
@@ -35,7 +35,7 @@ namespace tas.Machine.Toolpaths
         internal ToolpathStrategy()
         {
             Workplane = Plane.WorldXY;
-            Tool = new ToolSettings();
+            Tool = new MachineTool();
             MaxDepth = double.MaxValue;
         }
 

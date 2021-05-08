@@ -58,6 +58,8 @@
     <Compile Include="Components\Cmpt_JoinToolpaths.cs" />
     <Compile Include="Components\Cmpt_CreateMachineTool.cs" />
     <Compile Include="Components\Cmpt_LeadsLinks.cs" />
+    <Compile Include="Components\Cmpt_SimulateToolpath.cs" />
+    <Compile Include="Components\Posts\Cmpt_Post.cs" />
     <Compile Include="Components\Posts\Cmpt_HaasPost.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_AreaClearance2.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_CircularFingerJoint.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="Components\Cmpt_ToolSettings_Form.designer.cs">
       <DependentUpon>Cmpt_ToolSettings_Form.cs</DependentUpon>
     </Compile>
+    <Compile Include="Components\Toolpaths\Cmpt_ToolpathBase.cs" />
     <Compile Include="GH_Writer.cs" />
     <Compile Include="Machine.GH.Goo.cs" />
     <Compile Include="Machine.GHInfo.cs" />

@@ -190,46 +190,21 @@ namespace tas.Machine.Posts
                 }
             }
 
-            List<string> Program = new List<string>();
+            Program = new List<string>();
             Errors = new List<string>();
-
-            BoundingBox bbox = BoundingBox.Empty;
-
-            if (StockModel != null)
-                bbox = StockModel.GetBoundingBox(true);
-
-            /*
-            // Dummy variables
-            string Name = "Test";
-            string Author = "Tom";
-            string Date = System.DateTime.Now.ToShortDateString();
-            string ProgramTime = "Not too long";
-            double MaterialWidth = 200, MaterialHeight = 500, MaterialDepth = 25;
-            */
 
             //bool HighSpeed = true;
 
             // Create headers
             Program.Add("%");
             Program.Add("O0001");
-            Program.Add($"{PreComment}Revision      : 1 {PostComment}");
-            Program.Add("");
-            Program.Add($"{PreComment}File name      : {Name} {PostComment}");
-            Program.Add($"{PreComment}Programmed by  : {Author} {PostComment}");
-            Program.Add($"{PreComment}Date           : {Date} {PostComment}");
-            Program.Add($"{PreComment}Program length : {ProgramTime} {PostComment}");
-            Program.Add($"{PreComment}Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment}");
-            Program.Add($"{PreComment}Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment}");
-            Program.Add("");
-            Program.Add("");
 
-            // Comment on tools
-            Program.Add($"{PreComment} * * * * * TOOLS * * * * * {PostComment}");
-            Program.Add($"{PreComment} Number ; Offset; Diameter ; Length ; Name {PostComment}");
-            foreach (MachineTool t in Tools.Values)
-            {
-                Program.Add($"( {t.Number} ; {t.OffsetNumber} ; {t.Diameter} ; {t.Length} ; {t.Name} {PostComment}");
-            }
+            BoundingBox = BoundingBox.Empty;
+
+            if (StockModel != null)
+                BoundingBox = StockModel.GetBoundingBox(true);
+
+            CreateHeader();
 
             Program.Add("");
             Program.Add("");
