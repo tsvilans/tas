@@ -5,9 +5,10 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Grasshopper.Kernel.Types;
 
-//using Robots;
+using Robots;
 using tas.Core.Types;
 using GH_IO.Serialization;
+using tas.Core;
 
 namespace tas.Machine.GH
 {
@@ -47,9 +48,9 @@ namespace tas.Machine.GH
         {
         }
 
-        public Zone ZoneRapid = new Zone(3.0, "ZoneRapid");
-        public Zone ZoneCutting = new Zone(1.0, "ZoneCutting");
-        public Zone ZonePrecise = new Zone(0.0, "ZonePrecise");
+        public Zone ZoneRapid = new Zone(3.0, null, null, "ZoneRapid");
+        public Zone ZoneCutting = new Zone(1.0, null, null, "ZoneCutting");
+        public Zone ZonePrecise = new Zone(0.0, null, null, "ZonePrecise");
 
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -58,7 +59,7 @@ namespace tas.Machine.GH
             pManager.AddGenericParameter("Tool", "T", "Robots Tool parameter.", GH_ParamAccess.item);
             pManager.AddGenericParameter("Safety", "S", "Safe zone for rapid movements. If it is a Plane, the tool will retract along its axis to the plane. " +
                 "If it's a Mesh or Brep, the tool will retract along its axis until it hits the geometry.", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Frame", "F", "Optional workframe for all targets.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Frame", "F", "Optional workframe for all targets.", GH_ParamAccess.item);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;
@@ -117,9 +118,15 @@ namespace tas.Machine.GH
 
             // get Frame
             Frame frame = null;
-            Plane frame_ref = new Plane();
+            object frame_ref = null;
             if (!DA.GetData("Frame", ref frame_ref)) frame = null;
-            else frame = new Frame(frame_ref);
+            else
+            {
+                if (frame_ref is Robots.Grasshopper.GH_Frame)
+                    frame = (frame_ref as Robots.Grasshopper.GH_Frame).Value;
+                else if (frame_ref is Frame)
+                    frame = (Frame)frame_ref;
+            }
 
             // get Tool
             Tool tool = new Tool(Plane.WorldXY);
@@ -199,32 +206,32 @@ namespace tas.Machine.GH
                     List<Plane> links = LinkOnSafety2(LastTarget, temp, ref debug);
                     foreach (Plane p in links)
                     {
-                        targets.Add(new CartesianTarget(p, null, Target.Motions.Linear, tool, RapidSpeed, ZoneRapid, null, frame, null));
+                        targets.Add(new CartesianTarget(p, null, Motions.Linear, tool, RapidSpeed, ZoneRapid, null, frame, null));
                         path_planes.Add(p);
                     }
                 }
 
-                targets.Add(new CartesianTarget(temp, null, Target.Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
+                targets.Add(new CartesianTarget(temp, null, Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
                 path_planes.Add(temp);
 
                 temp = poly[0];
                 temp.Origin = poly[0].Origin + temp.ZAxis * settings.SafeZ;
-                targets.Add(new CartesianTarget(temp, null, Target.Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
+                targets.Add(new CartesianTarget(temp, null, Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
                 path_planes.Add(temp);
 
                 temp = poly[0];
-                targets.Add(new CartesianTarget(poly[0], null, Target.Motions.Linear, tool, PlungeSpeed, ZonePrecise, null, frame, null));
+                targets.Add(new CartesianTarget(poly[0], null, Motions.Linear, tool, PlungeSpeed, ZonePrecise, null, frame, null));
                 path_planes.Add(poly[0]);
 
                 for (int i = 1; i < poly.Count; ++i)
                 {
-                    targets.Add(new CartesianTarget(poly[i], null, Target.Motions.Linear, tool, FeedSpeed, ZoneCutting, null, frame, null));
+                    targets.Add(new CartesianTarget(poly[i], null, Motions.Linear, tool, FeedSpeed, ZoneCutting, null, frame, null));
                     path_planes.Add(poly[i]);
                 }
 
                 temp = poly[poly.Count - 1];
                 temp.Origin = poly[poly.Count - 1].Origin + temp.ZAxis * settings.SafeZ;
-                targets.Add(new CartesianTarget(temp, null, Target.Motions.Linear, tool, FeedSpeed, ZonePrecise, null, frame, null));
+                targets.Add(new CartesianTarget(temp, null, Motions.Linear, tool, FeedSpeed, ZonePrecise, null, frame, null));
                 path_planes.Add(temp);
 
                 // last target retracts
@@ -234,7 +241,7 @@ namespace tas.Machine.GH
                 last = true;
 
                 //temp.Origin = poly[poly.Vertices.Count - 1].Origin + temp.ZAxis * settings.RapidZ;
-                targets.Add(new CartesianTarget(temp, null, Target.Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
+                targets.Add(new CartesianTarget(temp, null, Motions.Linear, tool, RapidSpeed, ZonePrecise, null, frame, null));
                 path_planes.Add(temp);
             }
 
@@ -242,7 +249,7 @@ namespace tas.Machine.GH
             {
                 for (int i = 0; i < targets.Count; ++i)
                 {
-                    targets[i].External = new double[] { 0.0, 0.0 };
+                    targets[i].External = new double[] { 0.0 };
                 }
             }
             
@@ -315,7 +322,7 @@ namespace tas.Machine.GH
                     double t = 1.0 / (N - i - 1.0);
                     //double t = (double)i / (N - i - 1);
                     debug += string.Format("Link {0}: {1:0.00}\n", i, t);
-                    Plane p = tas.Core.Util.InterpolatePlanes2(Last, B, t);
+                    Plane p = tas.Core.Util.Interpolation.InterpolatePlanes2(Last, B, t);
 
                     nO = m.ClosestPoint(p.Origin);
 
@@ -368,7 +375,7 @@ namespace tas.Machine.GH
                     counter++;
                     Vector3d toEnd = new Vector3d(B.Origin - mp.Point);
                     Vector3d n = m.NormalAt(mp);
-                    Vector3d v = tas.Core.Util.ProjectToPlane(toEnd, new Plane(mp.Point, n));
+                    Vector3d v = toEnd.ProjectToPlane(new Plane(mp.Point, n));
                     v.Unitize();
                     point = mp.Point + v * step;
                     mp = m.ClosestMeshPoint(point, step / 2);
@@ -382,13 +389,13 @@ namespace tas.Machine.GH
 
                 for (int i = 0; i < poly.Count - 1; ++i)
                 {
-                    Plane p = tas.Core.Util.InterpolatePlanes2(A, B, length / total_length);
+                    Plane p = tas.Core.Util.Interpolation.InterpolatePlanes2(A, B, length / total_length);
                     Plane pnorm = new Plane(p);
                     pnorm.Transform(Transform.Rotation(p.ZAxis, normals[i], p.Origin));
 
                     double t = Math.Sin(length / total_length * Math.PI);
 
-                    p = tas.Core.Util.InterpolatePlanes2(p, pnorm, t);
+                    p = tas.Core.Util.Interpolation.InterpolatePlanes2(p, pnorm, t);
 
 
                     p.Origin = poly[i];
@@ -404,7 +411,8 @@ namespace tas.Machine.GH
         {
             get
             {
-                return Properties.Resources.tasTools_icons_RobotTargets_24x24;
+                return null;
+                //return Properties.Resources.tasTools_icons_RobotTargets_24x24;
             }
         }
 

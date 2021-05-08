@@ -43,20 +43,12 @@ namespace tas.Lam
         /// <param name="interpolation">Type of interpolation to use (default is Linear).</param>
         public override void GenerateCrossSectionPlanes(int N, out Plane[] frames, out double[] parameters, GlulamData.Interpolation interpolation = GlulamData.Interpolation.LINEAR)
         {
-            // Experimental new way of generative cross-section planes
-            Curve curve;
-            curve = Centreline;
-            /*
-            if (extension > 0 && false)
-                curve = Centreline.Extend(CurveEnd.Both, extension, CurveExtensionStyle.Smooth);
-            else
-                curve = Centreline;
-            */
-            double multiplier = RhinoMath.UnitScale(UnitSystem.Millimeters, Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem);
+            Curve curve = Centreline;
+
+            double multiplier = RhinoMath.UnitScale(Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem, UnitSystem.Millimeters);
 
             //PolylineCurve discrete = curve.ToPolyline(Glulam.Tolerance * 10, Glulam.AngleTolerance, 0.0, 0.0);
-            PolylineCurve discrete = curve.ToPolyline(multiplier * 5.0, RhinoMath.ToRadians(5), multiplier * 50.0, curve.GetLength() / 25);
-
+            PolylineCurve discrete = curve.ToPolyline(multiplier * Tolerance, AngleTolerance, multiplier * MininumSegmentLength, curve.GetLength() / MinimumNumSegments);
 
             if (discrete.TryGetPolyline(out Polyline discrete2))
             {
@@ -300,8 +292,8 @@ namespace tas.Lam
             //double texLength = (Centreline.GetLength() + offset * 2) / 1000;
             //double MaxT = parameters.Last() - parameters.First();
 
-            double texWidth = Data.NumWidth * Data.LamWidth / 1000;
-            double texHeight = Data.NumHeight * Data.LamHeight / 1000;
+            double texWidth = Width / 1000.0; // Width in meters
+            double texHeight = Height / 1000.0; // Height in meters
 
             for (int i = 0; i < frames.Length; ++i)
             {
@@ -330,7 +322,6 @@ namespace tas.Lam
 
                 m.TextureCoordinates.Add(texLength, texWidth + texHeight);
                 m.TextureCoordinates.Add(texLength, texWidth + texHeight);
-
 
                 if (i > 0)
                 {

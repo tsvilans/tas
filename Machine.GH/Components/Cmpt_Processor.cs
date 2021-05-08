@@ -6,7 +6,7 @@ using Rhino.Geometry;
 
 //using Robots;
 
-#if (FULL)
+#if (FULL2)
 
 namespace tas.Machine.GH
 {
