@@ -87,7 +87,7 @@ namespace tas.Machine.Toolpaths
                     tan.Unitize();
                     x = Vector3d.CrossProduct(tan, Workplane.ZAxis);
                     p = new Plane(P[0], x, tan);
-                    p.Origin = p.Origin + Tool.ToolDiameter / 2 * p.XAxis * ToolOffset;
+                    p.Origin = p.Origin + Tool.Diameter / 2 * p.XAxis * ToolOffset;
                     OP.Add(p);
                     #endregion
 
@@ -106,7 +106,7 @@ namespace tas.Machine.Toolpaths
                         tan.Unitize();
                         x = Vector3d.CrossProduct(tan, Workplane.ZAxis);
                         p = new Plane(P[i], x, tan);
-                        p.Origin = p.Origin + (Tool.ToolDiameter / 2) / Math.Sin(angle / 2) * p.XAxis * ToolOffset;
+                        p.Origin = p.Origin + (Tool.Diameter / 2) / Math.Sin(angle / 2) * p.XAxis * ToolOffset;
                         OP.Add(p);
                     }
                     #endregion
@@ -116,7 +116,7 @@ namespace tas.Machine.Toolpaths
                     tan.Unitize();
                     x = Vector3d.CrossProduct(tan, Workplane.ZAxis);
                     p = new Plane(P[P.Count - 1], x, tan);
-                    p.Origin = p.Origin + Tool.ToolDiameter / 2 * p.XAxis * ToolOffset;
+                    p.Origin = p.Origin + Tool.Diameter / 2 * p.XAxis * ToolOffset;
                     OP.Add(p);
                     #endregion
                 }
@@ -141,7 +141,7 @@ namespace tas.Machine.Toolpaths
                         tan.Unitize();
                         x = Vector3d.CrossProduct(tan, Workplane.ZAxis);
                         p = new Plane(P[i], x, tan);
-                        p.Origin = p.Origin + (Tool.ToolDiameter / 2) / Math.Sin(angle / 2) * p.XAxis * ToolOffset;
+                        p.Origin = p.Origin + (Tool.Diameter / 2) / Math.Sin(angle / 2) * p.XAxis * ToolOffset;
                         OP.Add(p);
                     }
 

@@ -84,6 +84,7 @@ namespace tas.Lam
                     frames[i] = temp;
                 else
                     throw new Exception(string.Format("Plane is invalid: vector {0} tangent {1}", vectors[i], curve.TangentAt(parameters[i])));
+                    // TODO: Make back-up orientation direction in this case.
             }
 
             return;

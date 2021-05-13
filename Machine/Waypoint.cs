@@ -23,8 +23,19 @@ namespace tas.Machine
 {
     public struct Waypoint
     {
+        /// <summary>
+        /// Position and orientation of the waypoint.
+        /// </summary>
         public Plane Plane;
+
+        /// <summary>
+        /// Type of movement (any bitwise combination of WaypointType).
+        /// </summary>
         public int Type;
+
+        /// <summary>
+        /// If the waypoint is an Arc movement, the radius of the arc.
+        /// </summary>
         public double Radius;
 
         public static Waypoint Unset
@@ -34,14 +45,64 @@ namespace tas.Machine
                 return new Waypoint(Plane.Unset);
             }
         }
+        /// <summary>
+        /// The waypoint is a Rapid movement
+        /// </summary>
+        public bool Rapid
+        {
+            get
+            {
+                return (Type & 1) != 0;
+            }
+        }
+        /// <summary>
+        /// The waypoint is a Plunge movement.
+        /// </summary>
+        public bool Plunge
+        {
+            get
+            {
+                return (Type & 2) != 0;
+            }
+        }
+        /// <summary>
+        /// The waypoint is a Feed movement.
+        /// </summary>
+        public bool Feed
+        {
+            get
+            {
+                return (Type & 3) != 0;
+            }
+        }
+        /// <summary>
+        /// The waypoint is an Arc movement.
+        /// </summary>
+        public bool Arc
+        {
+            get
+            {
+                return (Type & 4) != 0;
+            }
+        }
+        /// <summary>
+        /// If Arc, returns whether or not it is clockwise.
+        /// </summary>
+        public bool Clockwise
+        {
+            get
+            {
+                return (Type & 12) != 0;
+            }
+        }
 
-        public bool IsRapid() => (Type & 1) != 0; // if bit 1 is on
-        public bool IsPlunge() => (Type & 2) != 0; // if bit 2 is on
-        public bool IsFeed() => (Type & 3) == 0; // if neither bit 1 or 2 are on
-        public bool IsArc() => (Type & 4) != 0; // if bit 3 is on
+        public bool IsRapid() => (Type & (int)WaypointType.RAPID) != 0; // if bit 1 is on
+        public bool IsPlunge() => (Type & (int)WaypointType.PLUNGE) != 0; // if bit 2 is on
+        public bool IsFeed() => (Type & ((int)WaypointType.RAPID | (int)WaypointType.PLUNGE)) == 0; // if neither bit 1 or 2 are on
+        public bool IsArc() => (Type & (int)WaypointType.ARC_CW) != 0; // if bit 3 is on
 
-        public bool IsClockwise() => (Type & 12) != 0;
-        public bool IsCounterClockwise() => (Type & 12) == 0;
+        public bool IsClockwise() => (Type & (int)WaypointType.ARC_CCW) != 0;
+        public bool IsCounterClockwise() => (Type & (int)WaypointType.ARC_CCW) == 0;
 
         public Waypoint(Plane p, int t = (int)WaypointType.FEED, double r = 0.0)
         {

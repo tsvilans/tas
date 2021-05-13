@@ -52,6 +52,9 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="MachinePost.cs" />
+    <Compile Include="MachineTool.cs" />
+    <Compile Include="Posts\Post_RaptorBCN.cs" />
+    <Compile Include="Posts\Post_Shopbot.cs" />
     <Compile Include="Posts\Post_Basic3Axis.cs" />
     <Compile Include="Posts\Post_CMS.cs" />
     <Compile Include="Posts\Post_Haas.cs" />

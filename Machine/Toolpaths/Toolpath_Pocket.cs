@@ -193,7 +193,7 @@ namespace tas.Machine.Toolpaths
             Polyline3D.Offset(
                 DriveCurves, 
                 Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, 
-                Tool.ToolDiameter / 2, Workplane, 0.01, 
+                Tool.Diameter / 2, Workplane, 0.01, 
                 out DriveCurveContours, out OffsetDriveCurves);
 
             for (int i = 0; i < N; ++i)

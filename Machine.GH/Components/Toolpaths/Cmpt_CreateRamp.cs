@@ -24,6 +24,7 @@ namespace tas.Machine.GH.Toolpaths
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+
             pManager.AddCurveParameter("PPolyline", "PPoly", "Input polyline.", GH_ParamAccess.list);
             pManager.AddPlaneParameter("Workplane", "WP", "Active workplane for ramp.", GH_ParamAccess.item, Plane.WorldXY);
             pManager.AddNumberParameter("Ramp Height", "H", "Ramp height.", GH_ParamAccess.item, 6.0);

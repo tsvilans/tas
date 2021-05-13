@@ -24,62 +24,6 @@ using Rhino.Geometry;
 
 namespace tas.Machine
 {
-    /// <summary>
-    /// Simple class for holing tool information.
-    /// </summary>
-    public class MachineTool
-    {
-        public string Name;
-        public double Diameter;
-        public double Length;
-        public int Number;
-        public int OffsetNumber;
-        public int FeedRate;
-        public int PlungeRate;
-        public int SpindleSpeed;
-
-        public MachineTool()
-        {
-            Name = "MachineTool";
-        }
-
-        public MachineTool(string name, double diameter, int tool_number, int offset_number, 
-            double length = 0.0, int feed = 2000, int speed = 15000, int plunge = 600)
-        {
-            Name = name;
-            Diameter = diameter;
-            Length = length;
-            Number = tool_number;
-            FeedRate = feed;
-            PlungeRate = plunge;
-            SpindleSpeed = speed;
-            OffsetNumber = offset_number;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj as MachineTool != null)
-            {
-                MachineTool mt = obj as MachineTool;
-                if (mt.Name == this.Name &&
-                    mt.Number == this.Number &&
-                    mt.OffsetNumber == this.OffsetNumber &&
-                    mt.Length == this.Length)
-                    return true;
-            }
-            return false;
-        }
-
-        public override string ToString()
-        {
-            return $"MachineTool ({Name}, {Number}, {Length})";
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-    }
 
     /// <summary>
     /// Base class for toolpath post-processor. Inherit from this
@@ -89,6 +33,7 @@ namespace tas.Machine
     {
         public string PreComment = "%";
         public string PostComment = "";
+        public string EOL = "";
         public string Name = "MachinePostBase";
         public string Author = "Author";
         public string Date = System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
@@ -97,6 +42,8 @@ namespace tas.Machine
         public bool AlwaysWriteGCode = false;
 
         public Point3d WorkOffset = Point3d.Origin;
+        public List<string> Program = new List<string>();
+        public BoundingBox BoundingBox = BoundingBox.Empty;
 
         public List<Toolpath> Paths = new List<Toolpath>();
 
@@ -134,6 +81,29 @@ namespace tas.Machine
         public void ClearPaths() => Paths.Clear();
         public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
         public List<string> Errors = new List<string>();
+
+        public void CreateHeader()
+        {
+            // Create headers
+            Program.Add($"{PreComment}----------------------------------------------------------------{PostComment}{EOL}");
+            Program.Add($"{PreComment} Revision      : 1 {PostComment}{EOL}");
+            Program.Add($"{PreComment} File name      : {Name} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Date           : {Date} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}");
+            Program.Add($"{PreComment} Bounds min.    : {BoundingBox.Min.X:F3} {BoundingBox.Min.Y:F3} {BoundingBox.Min.Z:F3} {PostComment}{EOL}");
+            Program.Add($"{PreComment} Bounds max.    : {BoundingBox.Max.X:F3} {BoundingBox.Max.Y:F3} {BoundingBox.Max.Z:F3} {PostComment}{EOL}");
+            Program.Add($"{PreComment}{PostComment};");
+
+            Program.Add($"{PreComment}Tool #    Offset #    Name    Diameter    Length {PostComment}{EOL}");
+
+            foreach (var d in Tools)
+            {
+                MachineTool mt = d.Value;
+                Program.Add($"{PreComment} {mt.Number}    {mt.OffsetNumber}    {mt.Name}    {mt.Diameter:0.0}    {mt.Length:0.000} {PostComment}{EOL}");
+            }
+            Program.Add($"{PreComment}----------------------------------------------------------------{PostComment}{EOL}");
+        }
 
         public void AddTool(MachineTool t)
         {

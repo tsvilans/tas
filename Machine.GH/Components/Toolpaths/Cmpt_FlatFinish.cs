@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
-
+#if OBSOLETE
 namespace tas.Machine.GH.Toolpaths
 {
-    public class Cmpt_FlatFinish: GH_Component
+    public class Cmpt_FlatFinish: ToolpathBase_Component
     {
 
         public Cmpt_FlatFinish()
@@ -18,20 +18,17 @@ namespace tas.Machine.GH.Toolpaths
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddPlaneParameter("Workplane", "WP", "Workplane of toolpath.", GH_ParamAccess.item, Plane.WorldXY);
             pManager.AddGeometryParameter("Boundary", "Bnd", "Boundary to constrain toolpath to.", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Geometry", "Geo", "Drive geometry as GeometryBase.", GH_ParamAccess.item);
             pManager.AddNumberParameter("ToolDiameter", "TD", "Diameter of cutter.", GH_ParamAccess.item, 6.0);
             pManager.AddBooleanParameter("Offset Tool", "OT", "Offset tool from edge to avoid adjacent surfaces.", GH_ParamAccess.item, false);
-            pManager.AddBooleanParameter("Calculate", "Calc", "Calculate toolpath.", GH_ParamAccess.item, false);
+            //pManager.AddBooleanParameter("Calculate", "Calc", "Calculate toolpath.", GH_ParamAccess.item, false);
 
 
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddCurveParameter("Toolpath", "TP", "Output toolpath.", GH_ParamAccess.list);
-            pManager.AddTextParameter("debug", "d", "Debugging info.", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -53,3 +50,4 @@ namespace tas.Machine.GH.Toolpaths
     }
 }
 
+#endif

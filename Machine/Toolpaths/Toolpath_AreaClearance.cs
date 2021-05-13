@@ -62,20 +62,20 @@ namespace tas.Machine.Toolpaths
         }
 
         public Toolpath_AreaClearance(List<Mesh> Geometry, List<Mesh> StockGeometry) :
-            this (Geometry, StockGeometry, new ToolSettings())
+            this (Geometry, StockGeometry, new MachineTool())
         {
         }
 
-        public Toolpath_AreaClearance(List<Mesh> Geometry, List<Mesh> StockGeometry, ToolSettings Settings)
+        public Toolpath_AreaClearance(List<Mesh> Geometry, List<Mesh> StockGeometry, MachineTool Tool)
         {
-            Tool = Settings;
+            Tool = Tool;
             Workplane = Plane.WorldXY;
             StartEnd = false;
             DriveGeometry = Geometry;
             Stock = StockGeometry;
             MaxDepth = double.MaxValue;
 
-            SmallPathThreshold = Tool.ToolDiameter;
+            SmallPathThreshold = Tool.Diameter;
             Tolerance = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
         }
 
@@ -131,7 +131,7 @@ namespace tas.Machine.Toolpaths
                 offset.AddPaths(Polygons.Item3, JoinType.jtMiter, EndType.etClosedPolygon);
 
                 PolyTree tree = new PolyTree();
-                offset.Execute(ref tree, -(Tool.ToolDiameter / 2 + RestHorizontal) / Tolerance);
+                offset.Execute(ref tree, -(Tool.Diameter / 2 + RestHorizontal) / Tolerance);
 
                 Paths WorkingPaths = new Paths();
 
@@ -303,7 +303,7 @@ namespace tas.Machine.Toolpaths
 
                 ClipperOffset stock_offset = new ClipperOffset(0.25, 0.25);
                 stock_offset.AddPaths(SolutionStock, JoinType.jtMiter, EndType.etClosedPolygon);
-                stock_offset.Execute(ref SolutionStock, (Tool.ToolDiameter / 2 + RestHorizontal) / Tolerance);
+                stock_offset.Execute(ref SolutionStock, (Tool.Diameter / 2 + RestHorizontal) / Tolerance);
             }
 
             if (SolutionStock.Count > 0 && SolutionMesh.Count > 0)

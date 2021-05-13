@@ -7,7 +7,7 @@ using Rhino.Geometry;
 
 namespace tas.Machine.GH.Toolpaths
 {
-    public class CircularFingerJoint_Component : GH_Component
+    public class CircularFingerJoint_Component : ToolpathBase_Component
     {
         public CircularFingerJoint_Component()
           : base("Special - Finger Joint Circular", "CircFJ",
@@ -18,7 +18,8 @@ namespace tas.Machine.GH.Toolpaths
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddPlaneParameter("Plane", "Pl", "Plane defining center and orientation of joint.", GH_ParamAccess.item);
+            base.RegisterInputParams(pManager);
+
             pManager.AddBrepParameter("Brep", "B", "Beam member geometry to clip with.", GH_ParamAccess.item);
             //pManager.AddCurveParameter("Cross section", "X", "Cross section of beam member at plane.", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Male", "M", "Toggle between male and female type of joint.", GH_ParamAccess.item, false);
@@ -28,7 +29,7 @@ namespace tas.Machine.GH.Toolpaths
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddBrepParameter("Finger Joint", "FJ", "Resultant finger jointed member.", GH_ParamAccess.item);
-            pManager.AddCurveParameter("Toolpath", "TP", "Tool path for finger joint as polyline.", GH_ParamAccess.item);
+            base.RegisterOutputParams(pManager);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -36,8 +37,15 @@ namespace tas.Machine.GH.Toolpaths
             Brep brep = null;
             DA.GetData("Brep", ref brep);
 
-            Plane plane = new Plane();
-            DA.GetData("Plane", ref plane);
+            if (!DA.GetData("Workplane", ref Workplane))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Workplane missing. Default used (WorldXY).");
+            }
+
+            if (!DA.GetData("MachineTool", ref Tool))
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "MachineTool missing. Default used.");
+            }
 
             bool male = false;
             DA.GetData("Male", ref male);
@@ -51,10 +59,10 @@ namespace tas.Machine.GH.Toolpaths
 
             Curve[] intersections;
             Point3d[] intersection_points;
-            Rhino.Geometry.Intersect.Intersection.BrepPlane(brep, plane, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, out intersections, out intersection_points);
+            Rhino.Geometry.Intersect.Intersection.BrepPlane(brep, Workplane, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, out intersections, out intersection_points);
             if (intersections.Length < 1) return;
 
-            BoundingBox bb = intersections[0].GetBoundingBox(plane);
+            BoundingBox bb = intersections[0].GetBoundingBox(Workplane);
 
             double r = double.MaxValue;
             for (int i = 0; i < 2; ++i)
@@ -82,7 +90,7 @@ namespace tas.Machine.GH.Toolpaths
 
             Polyline poly = new Polyline(pts);
             Rhino.Geometry.RevSurface rev = RevSurface.Create(poly, new Line(Point3d.Origin, Vector3d.ZAxis));
-            rev.Transform(Transform.PlaneToPlane(Plane.WorldXY, plane));
+            rev.Transform(Transform.PlaneToPlane(Plane.WorldXY, Workplane));
 
             Brep grooves = rev.ToBrep();
 
