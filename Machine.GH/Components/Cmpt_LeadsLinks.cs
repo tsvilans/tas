@@ -21,6 +21,8 @@ namespace tas.Machine.GH
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Toolpath", "T", "Toolpath.", GH_ParamAccess.item);
+            pManager.AddPlaneParameter("Retract plane", "R", "Extra place to retract to inbetween toolpaths.", GH_ParamAccess.item);
+            pManager[1].Optional = true;
 
         }
 
@@ -32,14 +34,16 @@ namespace tas.Machine.GH
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Toolpath tp = null;
+            Plane plane = Plane.Unset;
 
             DA.GetData("Toolpath", ref tp);
+            DA.GetData("Retract plane", ref plane);
 
             if (tp == null) return;
 
             Toolpath tp2 = tp.Duplicate();
 
-            tp2.CreateLeadsAndLinks();
+            tp2.CreateLeadsAndLinks(plane);
 
             DA.SetData("Toolpath", new GH_Toolpath(tp2));
         }

@@ -53,6 +53,11 @@ namespace tas.Machine
         public object Safety;
 
         /// <summary>
+        /// Plane to link to other toolpaths.
+        /// </summary>
+        public Plane LinkPlane;
+
+        /// <summary>
         /// Safety height.
         /// </summary>
         public double SafeZ { get; set; }
@@ -76,6 +81,7 @@ namespace tas.Machine
         {
             Id = Guid.NewGuid();
             Paths = new List<Path>();
+            LinkPlane = Plane.Unset;
         }
 
         public Toolpath(Toolpath tp)
@@ -89,6 +95,7 @@ namespace tas.Machine
             SafeZ = tp.SafeZ;
             Tool = tp.Tool;
             Safety = tp.Safety;
+            LinkPlane = tp.LinkPlane;
             IsPlanar = tp.IsPlanar;
             FlipWrist = tp.FlipWrist;
 
@@ -100,6 +107,11 @@ namespace tas.Machine
 
                 Paths.Add(p);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"Toolpath ({Name})";
         }
 
         public void Transform(Transform xform)
@@ -124,7 +136,7 @@ namespace tas.Machine
         /// </summary>
         public bool PlaneRetractVertical { get; set; }
 
-        public void CreateLeadsAndLinks()
+        public void CreateLeadsAndLinks(Plane retract)
         {
             Waypoint LastTarget = new Waypoint();
             bool last = false;

@@ -24,8 +24,14 @@ using Rhino.Geometry;
 
 namespace tas.Machine
 {
+    public enum ToolShape
+    {
+        Flat,
+        Ball
+    }
+
     /// <summary>
-    /// Simple class for holing tool information.
+    /// Simple class for holding tool information.
     /// </summary>
     public class MachineTool
     {
@@ -33,6 +39,11 @@ namespace tas.Machine
         /// Name of tool.
         /// </summary>
         public string Name;
+
+        /// <summary>
+        /// Shape of tool tip.
+        /// </summary>
+        public ToolShape Shape;
 
         /// <summary>
         /// Diameter of tool.
@@ -80,7 +91,7 @@ namespace tas.Machine
         public int SpindleSpeed;
 
         public MachineTool(string name = "MachineTool", double diameter=12, int tool_number=0, int offset_number=0,
-            double length = 0.0, int feed = 2000, int speed = 15000, int plunge = 600)
+            double length = 0.0, int feed = 2000, int speed = 15000, int plunge = 600, ToolShape shape = ToolShape.Flat)
         {
             Name = name;
             Diameter = diameter;
@@ -92,6 +103,7 @@ namespace tas.Machine
             OffsetNumber = offset_number;
             StepDown = Diameter / 2;
             StepOver = Diameter / 2;
+            Shape = shape;
         }
 
         public override bool Equals(object obj)
@@ -102,7 +114,8 @@ namespace tas.Machine
                 if (mt.Name == this.Name &&
                     mt.Number == this.Number &&
                     mt.OffsetNumber == this.OffsetNumber &&
-                    mt.Length == this.Length)
+                    mt.Length == this.Length &&
+                    mt.Shape == this.Shape)
                     return true;
             }
             return false;

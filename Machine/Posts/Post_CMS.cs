@@ -47,10 +47,9 @@ namespace tas.Machine.Posts
             PreComment = "(";
             PostComment = ")";
 
-
-            m_limits[0] = new Interval(0, 2600);
-            m_limits[1] = new Interval(0, 1500);
-            m_limits[2] = new Interval(0, 800);
+            m_limits[0] = new Interval(-2600, 0);
+            m_limits[1] = new Interval(-1500, 0);
+            m_limits[2] = new Interval(-975, 0);
             m_limits[3] = new Interval(-120, 120);
             m_limits[4] = new Interval(-330, 330);
 
@@ -62,6 +61,7 @@ namespace tas.Machine.Posts
             m_axis_id[0] = 'X';
             m_axis_id[1] = 'Y';
             m_axis_id[2] = 'Z';
+
             m_axis_id[3] = 'B';
             m_axis_id[4] = 'C';
         }
@@ -119,7 +119,7 @@ namespace tas.Machine.Posts
 
     #region Aarhus variables
 
-    public double MaterialThickness;
+        public double MaterialThickness;
         public bool HighSpeed = true;
         public double SikkerZ = 0; // original was -50
         public double SikkerZPlanskifte = 0; // original was 75.0
@@ -134,26 +134,61 @@ namespace tas.Machine.Posts
         List<bool> m_flipList = new List<bool>();
         #endregion
 
-
         private bool CheckAbsoluteLimits(Plane plane, MachineTool tool)
         {
-            Point3d abs = plane.Origin + plane.ZAxis * (tool.Length + 135.0);
-            double x = abs.X - 2549.027;
-            double y = abs.Y - 1141.193;
-            double z = abs.Z - 784.467;
+            Point3d abs = GetMachinePosition(plane, tool);
 
-            if (x > 0 || y > 0 || z > 0 ||
-                x < -2600 || y < -1600 || z < -800)
+            if (!m_limits[0].IncludesParameter(abs.X) || 
+                !m_limits[1].IncludesParameter(abs.Y) ||
+                !m_limits[2].IncludesParameter(abs.Z))
                 return false;
             return true;
+        }
+
+        public Point3d GetMachinePosition(Plane plane, MachineTool tool)
+        {
+            double C = 0;
+
+            if (plane.ZAxis * Vector3d.ZAxis > 0.99999)
+                C = Math.Atan2(plane.XAxis.Y, plane.XAxis.X);
+            else
+                C = Math.Atan2(plane.ZAxis.Y, plane.ZAxis.X);
+
+            double B = Math.Acos(plane.ZAxis * Vector3d.ZAxis);
+
+            double OFFSET_X = 0.04;
+            double OFFSET_Y = -59.889;
+            double OFFSET_Z = 134.985;
+
+            var p = plane.Origin + plane.ZAxis * (tool.Length + OFFSET_Z);
+            p.Z = plane.Origin.Z + Math.Cos(B) * tool.Length - Math.Sin(B) * OFFSET_Z;
+
+
+            double cx = p.X + OFFSET_X;
+            double cy = p.Y + OFFSET_Y;
+
+            double s = Math.Sin(C);
+            double c = Math.Cos(C);
+
+            // translate point back to origin:
+            p.X -= cx;
+            p.Y -= cy;
+
+            // rotate point
+            double xnew = p.X * c - p.Y * s;
+            double ynew = p.X * s + p.Y * c;
+
+            // translate point back:
+            p.X = xnew + cx;
+            p.Y = ynew + cy;
+
+            return p;
         }
 
         public void AddFlips(List<bool> flips)
         {
             m_flipList = flips;
         }
-
-
 
         public void GetBC(Vector3d v, out double B, out double C, bool flip = false)
         {
@@ -190,6 +225,7 @@ namespace tas.Machine.Posts
                 }
             }
 
+            Axes = new List<AxisValues>();
             Program = new List<string>();
             Errors = new List<string>();
 
@@ -207,8 +243,12 @@ namespace tas.Machine.Posts
             CreateHeader();
 
             Program.Add("");
-            Program.Add("");
 
+            Program.Add($"{PreComment} * * * * * WORK PLANE * * * * * {PostComment}");
+            Program.Add($"G{GWorkOffset} X{WorkOffset.X} Y{WorkOffset.Y} Z{WorkOffset.Z}");
+
+            /* Old CMS defaults and settings */
+            /*
             Program.Add($"{PreComment} * * * * * VARIABLES * * * * * {PostComment}");
             Program.Add($"#560 = {GWorkOffset}    {PreComment}ZERO POINT{PostComment}");
             Program.Add($"#561 = {WorkOffset.X}    {PreComment}OFFSET PROGRAM I X{PostComment}");
@@ -222,6 +262,8 @@ namespace tas.Machine.Posts
             Program.Add($"#569 = {60}");
 
             Program.Add("");
+            */
+
             Program.Add("");
 
             Program.Add($"{PreComment} * * * * * START * * * * * {PostComment}");
@@ -232,8 +274,8 @@ namespace tas.Machine.Posts
             // Reset offsets to 0
             Program.Add("G92.1 X0 Y0 Z0 B0 C0");
 
-            // CMS pressure clamping closing
-            Program.Add("M25");
+            // CMS pressure clamping closing (unnecessary)
+            //Program.Add("M25");
 
             // Set to mm (G20 is inches)
             Program.Add("G21");
@@ -241,10 +283,11 @@ namespace tas.Machine.Posts
             // Go home. G0 = rapid, G53 = move in absolute coords
             Program.Add("G0 G53 Z0");
             Program.Add("G0 B0 C0");
-            Program.Add("G#560");
+            //Program.Add("G#560");
 
-            // Work offset
-            Program.Add("G52 X#561 Y#562 Z#563");
+            // Set work offset
+            //Program.Add("G#560 X#561 Y#562 Z#563");
+            Program.Add($"G{GWorkOffset}");
 
 
             // Working variables
@@ -289,10 +332,13 @@ namespace tas.Machine.Posts
 
                 // Start spindle
                 Program.Add($"M3 S{Tools[TP.Tool.Name].SpindleSpeed}");
+                // Not sure what this does...
+                /*
                 Program.Add("#567 = #2255+135.0");
                 Program.Add("#568 = 0 + SQRT[#567*#567+625]+#566-135");
                 Program.Add("G#560");
 
+                */
                 Program.Add("");
                 //Program.Add("G0 G53 Z0 B-90");
 
@@ -315,11 +361,14 @@ namespace tas.Machine.Posts
                 prev.Type = (int)WaypointType.RAPID;
 
                 // Calculate B and C values
-                PlaneToCoords(prev.Plane, ref pCoords);
-                if (flip)
-                    FlipWrist(ref pCoords);
+                //PlaneToCoords(prev.Plane, ref pCoords);
+                //if (flip)
+                //    FlipWrist(ref pCoords);
 
                 PlaneToCoords(prev.Plane, ref pCoords);
+
+                if (TP.FlipWrist)
+                    FlipWrist(ref pCoords);
 
                 // Vector3d axisFirst = prev.Plane.ZAxis;
                 //axisFirst.Unitize();
@@ -329,7 +378,7 @@ namespace tas.Machine.Posts
 
                 //Program.Add($"G{(int)prev.Type} X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}  Z{prev.Plane.Origin.Z:F3} B{prevB:F3} C{prevC:F3}");
                 //Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} B{prevB:F3} C{prevC:F3} Z#568");
-                Program.Add($"G0 X{pCoords[0]:F3} Y{pCoords[1]:F3}");
+                Program.Add($"G0 X{pCoords[0]:F3} Y{pCoords[1]:F3}"); 
                 Program.Add($"G0 B{pCoords[3]:F3} C{pCoords[4]:F3}");
                 Program.Add($"G0 Z{pCoords[2]:F3}");
 
@@ -343,11 +392,14 @@ namespace tas.Machine.Posts
                     for (int k = 0; k < Subpath.Count; ++k)
                     {
                         write_feedrate = false;
+                        flags = 0;
 
                         Waypoint wp = Subpath[k];
 
                         PlaneToCoords(wp.Plane, ref coords);
-                        if (flip)
+                        //if (flip)
+                        //    FlipWrist(ref coords);
+                        if (TP.FlipWrist)
                             FlipWrist(ref coords);
 
                         // Deal with abrupt 180 to -180 switches
@@ -356,12 +408,13 @@ namespace tas.Machine.Posts
                         if (diff < -270) coords[4] += 360.0;
 
                         // Check limits
-                        if (!IsInMachineLimits(coords))
-                            Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}, {coords[3]}, {coords[4]}");
+                        //if (!IsInMachineLimits(coords))
+                        //    Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}, {coords[3]}, {coords[4]}");
 
                         if (!this.CheckAbsoluteLimits(wp.Plane, TP.Tool))
                         {
-                            Errors.Add(string.Format("Target {0} in toolpath {1} : {2} out of bounds.", k, j, i));
+                            var temp_pt = GetMachinePosition(wp.Plane, TP.Tool);
+                            Errors.Add($"Target {k} in toolpath {j} ({TP.Name}) out of bounds: {temp_pt.X:0.00} {temp_pt.Y:0.00} {temp_pt.Z:0.00}");
                         }
 
                         // Compose line
@@ -373,7 +426,11 @@ namespace tas.Machine.Posts
                             flags = flags | 1;
 
                             if (wp.IsRapid())
+                            {
                                 G_VALUE = 0;
+                                write_feedrate = false;
+                                tempFeedrate = int.MaxValue;
+                            }
                             else if (wp.IsArc())
                             {
                                 write_feedrate = true;
@@ -393,34 +450,38 @@ namespace tas.Machine.Posts
                         #region Parse movement on axes
                         for (int l = 0; l < m_dof; ++l)
                         {
-                            if (Math.Abs(coords[l] - pCoords[l]) > 0.00001)
+                            if (Math.Abs(coords[l] - pCoords[l]) > 0.001)
                                 flags = flags | (1 << (l + 1));
                         }
                         #endregion
 
                         #region Write feedrate if different
                         // If Plunge move, set current feedrate to PlungeRate
-                        if (wp.IsPlunge())
-                            tempFeedrate = Tools[TP.Tool.Name].PlungeRate;
-                        else
-                            tempFeedrate = Tools[TP.Tool.Name].FeedRate;
+                        if (write_feedrate)
+                        {
+                            if (wp.IsPlunge())
+                                tempFeedrate = Tools[TP.Tool.Name].PlungeRate;
+                            else
+                                tempFeedrate = Tools[TP.Tool.Name].FeedRate;
 
-                        // If new feedrate is different from old one, write F value
-                        if (tempFeedrate != currentFeedrate)
-                            write_feedrate = true;
+                            // If new feedrate is different from old one, write F value
+                            write_feedrate = tempFeedrate != currentFeedrate ? true : false;
+                        }
 
                         currentFeedrate = tempFeedrate;
                         #endregion
 
                         // If it is an arc move, then write I J K values
                         if (wp.IsArc())
-                            flags = flags | (1 << m_dof + 1);
+                            flags = flags | (1 << (m_dof + 1));
 
                         if (write_feedrate)
-                            flags = flags | (1 << m_dof + 2);
+                            flags = flags | (1 << (m_dof + 2));
 
                         // If there is no motion, skip this waypoint
                         if ((flags & m_NO_MOTION) < 1) continue;
+
+                        Axes.Add(new AxisValues(coords[0], coords[1], coords[2], coords[3], coords[4], currentFeedrate));
 
                         #region Construct NC code
 
@@ -429,20 +490,22 @@ namespace tas.Machine.Posts
 
                         for (int l = 0; l < m_dof; ++l)
                         {
-                            if ((flags & (1 << 1 + l)) > 0)
+                            if ((flags & (1 << (1 + l))) > 0)
                                 Line.Add($"{m_axis_id[l]}{coords[l]:F3}");
                         }
 
-                        if ((flags & (1 << m_dof + 1)) > 0)
+                        if ((flags & (1 << (m_dof + 1))) > 0)
                             Line.Add($"R{wp.Radius:F3}");
 
-                        if ((flags & (1 << m_dof + 2)) > 0)
+                        if ((flags & (1 << (m_dof + 2))) > 0)
                             Line.Add($"F{currentFeedrate}");
 
                         #endregion
 
                         // Add line to program
                         Program.Add(string.Join(" ", Line) + ";");
+                        prev = wp;
+                        Array.Copy(coords, pCoords, coords.Length);
                     }
                 }
 

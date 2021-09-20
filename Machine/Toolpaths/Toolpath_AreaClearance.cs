@@ -66,13 +66,13 @@ namespace tas.Machine.Toolpaths
         {
         }
 
-        public Toolpath_AreaClearance(List<Mesh> Geometry, List<Mesh> StockGeometry, MachineTool Tool)
+        public Toolpath_AreaClearance(List<Mesh> geometry, List<Mesh> stock_geometry, MachineTool tool)
         {
-            Tool = Tool;
+            Tool = tool;
             Workplane = Plane.WorldXY;
             StartEnd = false;
-            DriveGeometry = Geometry;
-            Stock = StockGeometry;
+            DriveGeometry = geometry;
+            Stock = stock_geometry;
             MaxDepth = double.MaxValue;
 
             SmallPathThreshold = Tool.Diameter;

@@ -51,6 +51,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Feature.cs" />
     <Compile Include="MachinePost.cs" />
     <Compile Include="MachineTool.cs" />
     <Compile Include="Posts\Post_RaptorBCN.cs" />

@@ -39,6 +39,7 @@ namespace tas.Machine.GH.Toolpaths
             base.RegisterInputParams(pManager);
             pManager.AddCurveParameter("Curves", "C", "Pocket curve.", GH_ParamAccess.list);
             pManager.AddNumberParameter("Depth", "D", "Pocket depth.", GH_ParamAccess.item, 0.0);
+            pManager.AddBooleanParameter("Face", "F", "Facing instead of pocket.", GH_ParamAccess.item, false);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -64,10 +65,12 @@ namespace tas.Machine.GH.Toolpaths
             if (DA.GetDataList("Curves", this._curves))
             {
                 DA.GetData("Depth", ref this._depth);
+                bool facing = false;
+                DA.GetData("Face", ref facing);
 
                 _debug = "";
 
-                Toolpath_Pocket pocket = new Toolpath_Pocket(_curves, 0.01);
+                Toolpath_Pocket pocket = new Toolpath_Pocket(_curves, 0.01, facing);
                 pocket.Tool = Tool;
                 pocket.Workplane = Workplane;
                 pocket.Depth = _depth;

@@ -51,6 +51,7 @@ namespace tas.Machine
         protected readonly char[] m_axis_id;
         protected readonly int m_dof;
         protected readonly int m_NO_MOTION;
+        public List<AxisValues> Axes { get; protected set; }
 
         public MachinePost(int dof)
         {

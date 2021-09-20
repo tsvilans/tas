@@ -63,6 +63,8 @@ namespace tas.Machine.GH.Posts
                 "If it's a Mesh or Brep, the tool will retract along its axis until it hits the geometry.", GH_ParamAccess.item);
             pManager.AddPlaneParameter(
                 "Frame", "F", "Optional workframe for all targets.", GH_ParamAccess.item);
+            pManager.AddBooleanParameter(
+                "All codes", "A", "Post all G-codes", GH_ParamAccess.item, false);
 
             PostParameter = pManager[0];
             pManager[2].Optional = true;
@@ -72,8 +74,9 @@ namespace tas.Machine.GH.Posts
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Gcode", "NC", "Output NC code for CMS machine.", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Targets", "Targets", "Robot targets as list.", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Path", "Path", "Output toolpath.", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Axes", "A", "Axis values for each waypoint.", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Speeds", "S", "Speeds for each waypoint.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Path", "P", "Output toolpath.", GH_ParamAccess.item);
             pManager.AddTextParameter("debug", "d", "debug info", GH_ParamAccess.item);
         }
 
@@ -82,6 +85,8 @@ namespace tas.Machine.GH.Posts
             List<Toolpath> tpIn = new List<Toolpath>();
             object safety = null;
             string post_name = "";
+            bool post_all = false;
+            Plane frame = Plane.WorldXY;
 
 
             DA.GetData("Machine", ref post_name);
@@ -89,6 +94,8 @@ namespace tas.Machine.GH.Posts
 
             DA.GetDataList("Toolpaths", tpIn);
             DA.GetData("Safety", ref safety);
+            DA.GetData("Frame", ref frame);
+            DA.GetData("All codes", ref post_all);
 
             List<Toolpath> TP = tpIn.Select(x => x.Duplicate()).ToList();
 
@@ -127,11 +134,20 @@ namespace tas.Machine.GH.Posts
             }
 
             post.StockModel = null;
+            
+            post.AlwaysWriteGCode = post_all;
 
             for (int i = 0; i < TP.Count; ++i)
             {
-                post.AddTool(TP[i].Tool);
-                post.AddPath(TP[i]);
+                var toolpath = TP[i];
+                post.AddTool(toolpath.Tool);
+
+                if (frame != Plane.WorldXY)
+                {
+                    toolpath.Transform(Transform.PlaneToPlane(Plane.WorldXY, frame));
+                }
+
+                post.AddPath(toolpath);
             }
 
             //cms.WorkOffset = new Point3d(0, 0, 0);
@@ -174,6 +190,18 @@ namespace tas.Machine.GH.Posts
 
             DA.SetDataList("Gcode", code);
             DA.SetDataList("Path", lines);
+            DA.SetDataList("debug", post.Errors);
+
+            if (post.Axes != null)
+            {
+                var axes = new List<string>();
+                foreach (var values in post.Axes)
+                {
+                    axes.Add($"{values.X:0.000}, {values.Y:0.000}, {values.Z:0.000}, {values.B:0.000}, {values.C:0.000}");
+                }
+                DA.SetDataList("Axes", axes);
+                DA.SetDataList("Speeds", post.Axes.Select(x => x.Speed));
+            }
 
         }
 

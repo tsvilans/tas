@@ -102,6 +102,7 @@ namespace tas.Machine.GH
 
                     PPolyline layer = new PPolyline(new_planes);
                     var clipped = ClipPathWithMesh(new_planes, M);
+                    if (clipped.Count < 1) continue;
 
                     if (JoinBrokenPaths)
                     {

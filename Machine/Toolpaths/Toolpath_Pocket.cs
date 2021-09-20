@@ -34,6 +34,7 @@ namespace tas.Machine.Toolpaths
     {
         public double Depth;
         public bool StartEnd;
+        public bool Facing;
 
         List<PocketLayer> Layers;
 
@@ -43,6 +44,7 @@ namespace tas.Machine.Toolpaths
         {
             public Plane Workplane;
             public List<PocketIsland> Islands;
+
             public void Calculate(double d)
             {
                 foreach (PocketIsland pi in Islands)
@@ -164,21 +166,23 @@ namespace tas.Machine.Toolpaths
             }
         }
 
-        public Toolpath_Pocket(IEnumerable<Polyline> drive_curves)
+        public Toolpath_Pocket(IEnumerable<Polyline> drive_curves, bool facing = false)
         {
             Workplane = Plane.WorldXY;
             Layers = new List<PocketLayer>();
             Tolerance = 0.5;
             StartEnd = false;
             DriveCurves = drive_curves.ToList();
+            Facing = facing;
         }
 
-        public Toolpath_Pocket(IEnumerable<Curve> drive_curves, double tolerance=0.01)
+        public Toolpath_Pocket(IEnumerable<Curve> drive_curves, double tolerance=0.01, bool facing = false)
         {
             Workplane = Plane.WorldXY;
             Layers = new List<PocketLayer>();
             Tolerance = tolerance;
             StartEnd = false;
+            Facing = facing;
 
             DriveCurves = Misc.CurvesToPolylines(drive_curves.ToList(), Tolerance);
         }
@@ -190,11 +194,17 @@ namespace tas.Machine.Toolpaths
             int N = (int)Math.Ceiling(Math.Min(MaxDepth, Depth) / Tool.StepDown);
             Plane temp = Workplane;
             List<Polyline> OffsetDriveCurves, DriveCurveContours;
-            Polyline3D.Offset(
-                DriveCurves, 
-                Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, 
-                Tool.Diameter / 2, Workplane, 0.01, 
-                out DriveCurveContours, out OffsetDriveCurves);
+
+            if (!Facing)
+            {
+                Polyline3D.Offset(
+                    DriveCurves,
+                    Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter,
+                    Tool.Diameter / 2, Workplane, 0.01,
+                    out DriveCurveContours, out OffsetDriveCurves);
+            }
+            else
+                OffsetDriveCurves = DriveCurves;
 
             for (int i = 0; i < N; ++i)
             {

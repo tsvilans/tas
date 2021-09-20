@@ -21,6 +21,82 @@ using Rhino.Geometry;
 
 namespace tas.Machine
 {
+
+    public struct AxisValues
+    {
+        public double X
+        {
+            get { return m_values[0]; }
+            set { m_values[0] = value; }
+        }
+        public double Y
+        {
+            get { return m_values[1]; }
+            set { m_values[1] = value; }
+        }
+        public double Z
+        {
+            get { return m_values[2]; }
+            set { m_values[2] = value; }
+        }
+
+        public double B
+        {
+            get { return m_values[4]; }
+            set { m_values[4] = value; }
+        }
+
+        public double C
+        {
+            get { return m_values[5]; }
+            set { m_values[5] = value; }
+        }
+
+        public double Speed
+        {
+            get { return m_values[6]; }
+            set { m_values[6] = value; }
+        }
+
+        double[] m_values;
+
+        public AxisValues(double x = 0, double y = 0, double z = 0, double b = 0, double c = 0, double speed = 0.0)
+        {
+            m_values = new double[7];
+            m_values[0] = x;
+            m_values[1] = y;
+            m_values[2] = z;
+            m_values[4] = b;
+            m_values[5] = c;
+            m_values[6] = speed;
+        }
+        public override bool Equals(object obj)
+        {
+            if (obj is AxisValues)
+            {
+                AxisValues av = (AxisValues)obj;
+                return X == av.X &&
+                    Y == av.Y &&
+                    Z == av.Z &&
+                    B == av.B &&
+                    C == av.C &&
+                    Speed == av.Speed;
+            }
+            return false;
+        }
+
+        public override string ToString() => $"AxisValues (X{X:0.00} Y{Y:0.00} Z{Z:0.00} B{B:0.00} C{C:0.00} Speed{Speed:0}";
+        public override int GetHashCode()
+        {
+            int hc = m_values.Length;
+            foreach (double val in m_values)
+            {
+                hc = unchecked(hc * 314159 + (int)(val * 1000));
+            }
+            return hc;
+        }
+
+    }
     public struct Waypoint
     {
         /// <summary>

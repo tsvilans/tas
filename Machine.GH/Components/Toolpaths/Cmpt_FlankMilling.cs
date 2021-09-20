@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using tas.Core;
 using tas.Core.Types;
 using tas.Core.GH;
 
@@ -24,8 +25,9 @@ namespace tas.Machine.GH.Toolpaths
 
             pManager.AddBrepParameter("Brep", "B", "Surface as a Brep.", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Side", "S", "Side of the surface to use for flank machining as a bitmask.", GH_ParamAccess.item, 0);
-            pManager.AddNumberParameter("PathExtension", "Pe", "Extend the path by an amount.", GH_ParamAccess.item, 10.0);
-            pManager.AddNumberParameter("DepthExtension", "De", "Extend the depth of the rules by an amount.", GH_ParamAccess.item, 3.0);
+            pManager.AddBooleanParameter("Zigzag", "Z", "Alternate the cutting direction of each pass.", GH_ParamAccess.item, false);
+            pManager.AddNumberParameter("PathExtension", "Pe", "Extend the path by an amount.", GH_ParamAccess.item, 0.0);
+            pManager.AddNumberParameter("DepthExtension", "De", "Extend the depth of the rules by an amount.", GH_ParamAccess.item, 0.0);
             pManager.AddNumberParameter("MaxDepth", "Md", "Maximum depth of the cut.", GH_ParamAccess.item, 50.0);
         }
 
@@ -50,11 +52,13 @@ namespace tas.Machine.GH.Toolpaths
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "MachineTool missing. Default used.");
             }
 
+            bool zigzag = false;
             DA.GetData("Brep", ref m_brep);
             DA.GetData("Side", ref m_side);
             DA.GetData("PathExtension", ref m_path_extension);
             DA.GetData("DepthExtension", ref m_depth_extension);
             DA.GetData("MaxDepth", ref m_max_depth);
+            DA.GetData("Zigzag", ref zigzag);
 
             if (m_brep == null) return;
 
@@ -168,7 +172,10 @@ namespace tas.Machine.GH.Toolpaths
                     path.Insert(0, pStart);
                     path.Add(pEnd);
                 }
-
+                if (zigzag && i.Modulus(2) > 0)
+                {
+                    path.Reverse();
+                }
                 paths.Add(path);
             }
 

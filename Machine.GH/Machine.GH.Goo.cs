@@ -75,6 +75,7 @@ namespace tas.Machine.GH
             //writer.SetByteArray("centreline", 0, centrelineBytes);
 
             writer.SetString("name", Value.Name);
+            writer.SetInt32("shape", (int)Value.Shape);
             writer.SetInt32("maxfeed", Value.FeedRate);
             writer.SetInt32("maxspeed", Value.SpindleSpeed);
             writer.SetInt32("plunge", Value.PlungeRate);
@@ -97,6 +98,9 @@ namespace tas.Machine.GH
             mt.Length = reader.GetDouble("length");
             mt.Number = reader.GetInt32("number");
             mt.OffsetNumber = reader.GetInt32("offset");
+            int shape = 0;
+            if (reader.TryGetInt32("shape", ref shape))
+                mt.Shape = (ToolShape)shape;
             return base.Read(reader);
         }
     }
@@ -158,8 +162,55 @@ namespace tas.Machine.GH
         {
             //byte[] centrelineBytes = GH_Convert.CommonObjectToByteArray(Value.Centreline);
             //writer.SetByteArray("centreline", 0, centrelineBytes);
-
             return base.Write(writer);
+        }
+    }
+
+    public class GH_Feature : GH_Goo<Feature>
+    {
+        public GH_Feature() { this.Value = null; }
+        public GH_Feature(GH_Feature goo) { this.Value = goo.Value.Duplicate(); }
+        public GH_Feature(Feature native) { this.Value = native.Duplicate(); }
+        public override IGH_Goo Duplicate() => new GH_Feature(this);
+        public override bool IsValid => true;
+        public override string TypeName => "FeatureGoo";
+        public override string TypeDescription => "FeatureGoo";
+        public override string ToString() => Value.ToString(); //this.Value.ToString();
+        public override object ScriptVariable() => Value;
+
+        public override bool CastFrom(object source)
+        {
+            if (source is Feature)
+            {
+                Value = (source as Feature).Duplicate();
+                return true;
+            }
+
+            return false;
+        }
+
+        public override bool CastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(Feature)))
+            {
+                object blank = Value;
+                target = (Q)blank;
+                return true;
+            }
+            else if (typeof(Q).IsAssignableFrom(typeof(GH_Brep)))
+            {
+                object blank = new GH_Brep(Value.ToBrep());
+
+                target = (Q)blank;
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(GH_Curve)))
+            {
+                object cl = new GH_Curve(Value.ToNurbsCurve());
+                target = (Q)cl;
+                return true;
+            }
+            return base.CastTo<Q>(ref target);
         }
     }
 }
