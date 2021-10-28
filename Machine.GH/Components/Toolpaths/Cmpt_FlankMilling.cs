@@ -144,7 +144,7 @@ namespace tas.Machine.GH.Toolpaths
 
                     Point3d origin = flank_pts[j]
                       + (directions[j] * (Math.Min(m_max_depth, lengths[j] + m_depth_extension) / passes * i)
-                      + (normal * Tool.StepOver / 2));
+                      + (normal * Tool.Diameter / 2));
 
                     path.Add(new Plane(origin, directions[j]));
 

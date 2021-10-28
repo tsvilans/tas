@@ -307,6 +307,8 @@ namespace tas.Machine.Posts
             int currentFeedrate = 0;
             int tempFeedrate = int.MaxValue;
 
+            int prevTool = -1;
+
             for (int i = 0; i < Paths.Count; ++i)
             {
                 bool flip = false;
@@ -330,8 +332,12 @@ namespace tas.Machine.Posts
                 // Tool change
                 Program.Add($"M6 T{Tools[TP.Tool.Name].Number}");
 
-                // Start spindle
-                Program.Add($"M3 S{Tools[TP.Tool.Name].SpindleSpeed}");
+                if (TP.Tool.Number != prevTool)
+                {
+                    // Start spindle
+                    Program.Add($"M3 S{Tools[TP.Tool.Name].SpindleSpeed}");
+                }
+                prevTool = TP.Tool.Number;
                 // Not sure what this does...
                 /*
                 Program.Add("#567 = #2255+135.0");
@@ -512,7 +518,7 @@ namespace tas.Machine.Posts
                 Program.Add("");
 
                 // Stop spindle
-                Program.Add("M5");
+                //Program.Add("M5");
 
                 // TODO: Find out what these G codes do
                 //Program.Add("G49 G53 G69");
@@ -541,20 +547,26 @@ namespace tas.Machine.Posts
             // and add if necessary
             //Program.Add("G53");
             Program.Add("G0 G53 Z0");
+            Program.Add("M5");
 
             //if (prevB >= 0)
             //    Program.Add("G0 G53 B90");
             //else if (prevB < 0)
             //    Program.Add("G0 G53 B-90");
 
-            Program.Add("G0 G53 B-90");
+            // This is the funny dance
+            //Program.Add("G0 G53 B-90");
+            //Program.Add("G0 G53 C0");
 
-            Program.Add("G0 G53 C0");
+            Program.Add("G0 G53 B0 C0");
+            Program.Add("G92.1 X0 Y0 Z0 B0 C0");
+
 
             Program.Add("G0 G53 Y0");
-            Program.Add("G0 G53 X-2500");
-            Program.Add("G0 G53 B0");
-            Program.Add("G0 G53 X-2600");
+            Program.Add("G0 G53 X0");
+            //Program.Add("G0 G53 X-2500");
+            //Program.Add("G0 G53 B0");
+            //Program.Add("G0 G53 X-2600");
 
             Program.Add($"{PreComment} * * * * *  END  * * * * * {PostComment}");
 

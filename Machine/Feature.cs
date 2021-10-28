@@ -91,4 +91,71 @@ namespace tas.Machine
             return $"Surfacing ({Name})";
         }
     }
+    public class Tracing : Feature
+    {
+        public Curve Path;
+        int Offset;
+
+        public Tracing(string name, Curve path, int offset = 0)
+        {
+            Name = name;
+            Path = path;
+            Offset = Math.Sign(offset);
+        }
+        public override Brep ToBrep()
+        {
+            return null;
+        }
+
+        public override Curve ToNurbsCurve()
+        {
+            return Path.DuplicateCurve();
+        }
+
+        public override Feature Duplicate()
+        {
+            return new Tracing(Name, Path.DuplicateCurve());
+        }
+
+        public override void Transform(Transform xform)
+        {
+            Path.Transform(xform);
+        }
+        public override string ToString()
+        {
+            return $"Tracing ({Name})";
+        }
+    }
+
+    public class Pocket : Feature
+    {
+        public Curve Outline;
+        public double Depth;
+        public Pocket(string name, Curve crv, double depth=0)
+        {
+            Name = name;
+            Outline = crv.DuplicateCurve();
+            Depth = depth;
+
+        }
+        public override Feature Duplicate()
+        {
+            return new Pocket(Name, Outline, Depth);
+        }
+
+        public override Brep ToBrep()
+        {
+            return Extrusion.Create(Outline, Depth, true).ToBrep();
+        }
+
+        public override Curve ToNurbsCurve()
+        {
+            return Outline.DuplicateCurve();
+        }
+
+        public override void Transform(Transform xform)
+        {
+            Outline.Transform(xform);
+        }
+    }
 }

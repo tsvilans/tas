@@ -121,6 +121,24 @@ namespace tas.Machine
             return false;
         }
 
+        public MachineTool Duplicate()
+        {
+            return new MachineTool
+            {
+                Diameter = Diameter,
+                FeedRate = FeedRate,
+                Length = Length,
+                Shape = Shape,
+                SpindleSpeed = SpindleSpeed,
+                StepDown = StepDown,
+                StepOver = StepOver,
+                Name = Name,
+                Number = Number,
+                OffsetNumber = OffsetNumber,
+                PlungeRate = PlungeRate
+            };
+        }
+
         public override string ToString()
         {
             return $"MachineTool ({Name}, Number: {Number}, Length: {Length})";
