@@ -325,9 +325,11 @@ namespace tas.Core
         /// <returns>Projected vector.</returns>
         public static Vector3d ProjectToPlane(this Vector3d v, Plane p)
         {
-            double dot = Vector3d.Multiply(p.ZAxis, v);
-            Vector3d v2 = p.ZAxis * dot;
-            return new Vector3d(v - v2);
+            return new Vector3d(v - (p.ZAxis * Vector3d.Multiply(p.ZAxis, v)));
+
+            //double dot = Vector3d.Multiply(p.ZAxis, v);
+            //Vector3d v2 = p.ZAxis * dot;
+            //return new Vector3d(v - v2);
         }
 
         /// <summary>

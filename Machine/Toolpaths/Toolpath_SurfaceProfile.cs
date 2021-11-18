@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using tas.Core;
-using tas.Core.Types;
+//using tas.Core.Types;
 
 using Rhino.Geometry;
 using tas.Core.Util;
@@ -39,7 +39,7 @@ namespace tas.Machine.Toolpaths
 
         public Surface DriveSurface;
         public List<Polyline> DriveCurves;
-        List<PPolyline> Paths;
+        List<Path> Paths;
 
         public Toolpath_SurfaceProfile(IEnumerable<Curve> c, Surface surface, double tolerance)
         {
@@ -68,7 +68,7 @@ namespace tas.Machine.Toolpaths
 
         public override void Calculate()
         {
-            Paths = new List<PPolyline>();
+            Paths = new List<Path>();
 
             foreach (Polyline P in DriveCurves)
             {
@@ -77,7 +77,7 @@ namespace tas.Machine.Toolpaths
 
                 if (StartEnd) P.Reverse();
 
-                PPolyline OP = new PPolyline();
+                Path OP = new Path();
                 Vector3d tan, x, t1, t2, nor;
                 Plane p;
                 Point3d OnSrf;
@@ -175,7 +175,7 @@ namespace tas.Machine.Toolpaths
             }
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         {
             return this.Paths;
         }

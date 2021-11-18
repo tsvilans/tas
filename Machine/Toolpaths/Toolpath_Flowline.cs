@@ -22,9 +22,7 @@ using System.Linq;
 
 using Rhino.Geometry;
 
-using tas.Core;
 using tas.Core.Util;
-using tas.Core.Types;
 
 namespace tas.Machine.Toolpaths
 {
@@ -33,7 +31,7 @@ namespace tas.Machine.Toolpaths
         Surface DriveSurface;
         bool Direction;
         public bool StartEnd;
-        List<PPolyline> Paths;
+        List<Path> Paths;
 
         public Toolpath_Flowline(Surface surf, bool direction = false)
         {
@@ -49,7 +47,7 @@ namespace tas.Machine.Toolpaths
             int U = Direction ? 1 : 0;
             int V = Direction ? 0 : 1;
 
-            Paths = new List<PPolyline>();
+            Paths = new List<Path>();
             Curve IsoFence;
 
             if (StartEnd)
@@ -68,7 +66,7 @@ namespace tas.Machine.Toolpaths
             {
                 Curve Iso = DriveSurface.IsoCurve(V, Uts[i]);
                 Polyline Pl = Misc.CurveToPolyline(Iso, Tolerance);
-                PPolyline OPl = new PPolyline();
+                Path OPl = new Path();
                 Vector3d nor, tan, x;
 
                 foreach (Point3d p in Pl)
@@ -95,7 +93,7 @@ namespace tas.Machine.Toolpaths
 
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         { 
             return Paths;
         }

@@ -24,7 +24,7 @@ using Rhino.Geometry;
 using tas.Core;
 using tas.Core.Util;
 
-using Path = System.Collections.Generic.List<tas.Machine.Waypoint>;
+using WPath = System.Collections.Generic.List<tas.Machine.Waypoint>;
 
 namespace tas.Machine
 {
@@ -36,7 +36,7 @@ namespace tas.Machine
         /// </summary>
         public Guid Id { get; private set; }
 
-        public List<Path> Paths;
+        public List<WPath> Paths;
         /// <summary>
         /// MachineTool to use for this toolpath.
         /// </summary>
@@ -80,14 +80,14 @@ namespace tas.Machine
         public Toolpath()
         {
             Id = Guid.NewGuid();
-            Paths = new List<Path>();
+            Paths = new List<WPath>();
             LinkPlane = Plane.Unset;
         }
 
         public Toolpath(Toolpath tp)
         {
             Id = Guid.NewGuid();
-            Paths = new List<Path>();
+            Paths = new List<WPath>();
 
             Name = tp.Name;
             PlaneRetractVertical = tp.PlaneRetractVertical;
@@ -101,7 +101,7 @@ namespace tas.Machine
 
             for (int i = 0; i < tp.Paths.Count; ++i)
             {
-                Path p = new Path();
+                WPath p = new WPath();
                 for (int j = 0; j < tp.Paths[i].Count; ++j)
                     p.Add(new Waypoint(tp.Paths[i][j]));
 
@@ -143,7 +143,7 @@ namespace tas.Machine
 
             for (int i = 0; i < Paths.Count; ++i)
             {
-                Path new_path = new Path();
+                WPath new_path = new WPath();
                 Plane p;
                 if (Paths[i].Count < 1) continue;
 
@@ -238,7 +238,7 @@ namespace tas.Machine
             return current;
         }
 
-        public Path LinkOnSafety(Waypoint A, Waypoint B)
+        public WPath LinkOnSafety(Waypoint A, Waypoint B)
         {
             double SkipDistance = 20.0;
             double minD = 10.0;
@@ -247,9 +247,9 @@ namespace tas.Machine
             int maxIter = 1000;
 
             if (A.Plane.Origin.DistanceTo(B.Plane.Origin) < SkipDistance)
-                return new Path();
+                return new WPath();
 
-            Path link_targets = new Path();
+            WPath link_targets = new WPath();
             List<Point3d> link_points = new List<Point3d>();
             List<Vector3d> normals = new List<Vector3d>();
 
@@ -398,7 +398,7 @@ namespace tas.Machine
         /// <param name="height"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        private static Path CreateRamp(Path poly, Plane pl, double height, double length)//, ref string debug)
+        private static WPath CreateRamp(WPath poly, Plane pl, double height, double length)//, ref string debug)
         {
             poly.Reverse();
             int N = poly.Count;
@@ -408,7 +408,7 @@ namespace tas.Machine
             double td = 0.0;
             int i = 0;
             int next = 1;
-            Path rpts = new Path();
+            WPath rpts = new WPath();
 
             while (th < length)
             {
@@ -458,7 +458,7 @@ namespace tas.Machine
         {
             for (int i = 0; i < Paths.Count; ++i)
             {
-                Path ramp = CreateRamp(Paths[i], Paths[i].First(), height, length);
+                WPath ramp = CreateRamp(Paths[i], Paths[i].First(), height, length);
                 Paths[i].RemoveAt(0);
                 Paths[i].InsertRange(0, ramp);
             }

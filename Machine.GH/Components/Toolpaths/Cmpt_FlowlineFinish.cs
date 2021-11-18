@@ -73,7 +73,7 @@ namespace tas.Machine.GH.Toolpaths
 
                 if (Surfaces.Count < 1) return;
 
-            List<PPolyline> Paths = new List<PPolyline>();
+            List<Path> Paths = new List<Path>();
             for (int i = 0; i < Surfaces.Count; ++i)
             {
                 Toolpath_Flowline2 fl = new Toolpath_Flowline2(Surfaces[i], UV, boundary);
@@ -86,10 +86,10 @@ namespace tas.Machine.GH.Toolpaths
 
                 fl.Calculate();
 
-                List<PPolyline> paths = fl.GetPaths();
+                List<Path> paths = fl.GetPaths();
                 if (ZigZag)
                 {
-                    PPolyline zz_path = new PPolyline();
+                    Path zz_path = new Path();
                     for (int j = 0; j < paths.Count; ++j)
                     {
                         if (j.Modulus(2) > 0)
@@ -103,7 +103,7 @@ namespace tas.Machine.GH.Toolpaths
             }
 
             if (Paths != null)
-                DA.SetDataList("Paths", GH_PPolyline.MakeGoo(Paths));
+                DA.SetDataList("Paths", GH_tasPath.MakeGoo(Paths));
             //DA.SetData("debug", "");
 
         }

@@ -6,9 +6,7 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 using System.Linq;
 
-using tas.Core;
-using tas.Core.Types;
-using tas.Core.GH;
+
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 using tas.Core.Util;
@@ -70,10 +68,10 @@ namespace tas.Machine.GH
                 return;
             }
 
-            List<PPolyline> paths = new List<PPolyline>();
+            List<Path> paths = new List<Path>();
             for (int i = 0; i < OP.Count; ++i)
             {
-                PPolyline op = (OP[i] as GH_PPolyline).Value;
+                Path op = (OP[i] as GH_tasPath).Value;
                 if (op == null) continue;
                 paths.Add(op);
             }
@@ -81,7 +79,7 @@ namespace tas.Machine.GH
             if (paths.Count < 1)
                 return;
 
-            DataTree<PPolyline> layers = new DataTree<PPolyline>();
+            DataTree<Path> layers = new DataTree<Path>();
             //List<PPolyline> layers = new List<PPolyline>();
             GH_Path path;
             int path_counter = 0;
@@ -90,7 +88,7 @@ namespace tas.Machine.GH
                 path = new GH_Path(path_counter);
                 path_counter++;
 
-                foreach (PPolyline op in paths)
+                foreach (Path op in paths)
                 {
                     List<Plane> new_planes = new List<Plane>();
                     for (int j = 0; j < op.Count; ++j)
@@ -100,13 +98,13 @@ namespace tas.Machine.GH
                         new_planes.Add(p);
                     }
 
-                    PPolyline layer = new PPolyline(new_planes);
+                    Path layer = new Path(new_planes);
                     var clipped = ClipPathWithMesh(new_planes, M);
                     if (clipped.Count < 1) continue;
 
                     if (JoinBrokenPaths)
                     {
-                        PPolyline joined = new PPolyline();
+                        Path joined = new Path();
                         for (int j = 0; j < clipped.Count; ++j)
                         {
                             List<Plane> temp = clipped[j];
@@ -122,7 +120,7 @@ namespace tas.Machine.GH
                     {
                         for (int j = 0; j < clipped.Count; ++j)
                         {
-                            layers.Add(new PPolyline(clipped[j]), path);
+                            layers.Add(new Path(clipped[j]), path);
                         }
                         //layers.AddRange(clipped.Select(x => new PPolyline(x)), path);
                     }
@@ -130,13 +128,13 @@ namespace tas.Machine.GH
             }
 
             layers.AddRange(paths, new GH_Path(path_counter));
-            DataTree<GH_PPolyline> gh_layers = new DataTree<GH_PPolyline>();
+            DataTree<GH_tasPath> gh_layers = new DataTree<GH_tasPath>();
             for (int i = 0; i < layers.BranchCount; ++i)
             {
                 path = new GH_Path(i);
                 for (int j = 0; j < layers.Branches[i].Count; ++j)
                 {
-                    gh_layers.Add(new GH_PPolyline(layers.Branches[i][j]), path);
+                    gh_layers.Add(new GH_tasPath(layers.Branches[i][j]), path);
                 }
             }
             DA.SetDataTree(0, gh_layers);

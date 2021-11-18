@@ -32,7 +32,7 @@ namespace tas.Machine.GH.Toolpaths
         double _depth;
 
         string _debug = "";
-        List<PPolyline> _paths;
+        List<Path> _paths;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -80,7 +80,7 @@ namespace tas.Machine.GH.Toolpaths
                 _paths = pocket.GetPaths();
 
                 if (_paths != null)
-                    DA.SetDataList("Paths", GH_PPolyline.MakeGoo(this._paths));
+                    DA.SetDataList("Paths", GH_tasPath.MakeGoo(this._paths));
             }
 
         }

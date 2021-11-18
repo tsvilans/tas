@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-
 namespace tas.Machine.GH.Toolpaths
 {
     public class CircularFingerJoint_Component : ToolpathBase_Component

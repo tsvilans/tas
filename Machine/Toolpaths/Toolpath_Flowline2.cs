@@ -22,8 +22,6 @@ using System.Linq;
 
 using Rhino.Geometry;
 
-using tas.Core;
-using tas.Core.Types;
 using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
@@ -34,7 +32,7 @@ namespace tas.Machine.Toolpaths
         bool Direction;
         public bool OffsetSides;
         public bool StartEnd;
-        List<PPolyline> Paths;
+        List<Path> Paths;
         Curve Boundary;
 
         public Toolpath_Flowline2(Brep surf, bool direction = false, Curve boundary = null)
@@ -52,7 +50,7 @@ namespace tas.Machine.Toolpaths
             int U = Direction ? 1 : 0;
             int V = Direction ? 0 : 1;
 
-            Paths = new List<PPolyline>();
+            Paths = new List<Path>();
             Curve IsoFence;
 
             if (StartEnd)
@@ -111,7 +109,7 @@ namespace tas.Machine.Toolpaths
 
                 Polyline Pl = Misc.CurveToPolyline(Iso, Tolerance);
 
-                PPolyline OPl = new PPolyline();
+                Path OPl = new Path();
                 Vector3d nor, tan, x;
 
                 foreach (Point3d p in Pl)
@@ -233,7 +231,7 @@ namespace tas.Machine.Toolpaths
             return planes;
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         { 
             return Paths;
         }

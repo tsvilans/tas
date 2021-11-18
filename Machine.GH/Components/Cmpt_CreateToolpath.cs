@@ -4,8 +4,6 @@ using System.Linq;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
-using tas.Core.GH;
-using tas.Core.Types;
 
 namespace tas.Machine.GH
 {
@@ -80,14 +78,14 @@ namespace tas.Machine.GH
 
             for (int i = 0; i < iToolpaths.Count; ++i)
             {
-                PPolyline poly;
-                if (iToolpaths[i] is PPolyline)
-                    poly = iToolpaths[i] as PPolyline;
-                else if (iToolpaths[i] is GH_PPolyline)
-                    poly = (iToolpaths[i] as GH_PPolyline).Value;
+                Path poly;
+                if (iToolpaths[i] is Path)
+                    poly = iToolpaths[i] as Path;
+                else if (iToolpaths[i] is GH_tasPath)
+                    poly = (iToolpaths[i] as GH_tasPath).Value;
                 else
                 {
-                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Error in PPolyline wrangling.");
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Error in Path wrangling.");
                     continue;
                 }
 

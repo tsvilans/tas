@@ -54,12 +54,14 @@
     <Compile Include="Feature.cs" />
     <Compile Include="MachinePost.cs" />
     <Compile Include="MachineTool.cs" />
+    <Compile Include="Posts\Post_CncStep.cs" />
     <Compile Include="Posts\Post_RaptorBCN.cs" />
     <Compile Include="Posts\Post_Shopbot.cs" />
     <Compile Include="Posts\Post_Basic3Axis.cs" />
     <Compile Include="Posts\Post_CMS.cs" />
     <Compile Include="Posts\Post_Haas.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Toolpaths\Toolpath_StandardDrill.cs" />
     <Compile Include="Toolpaths\Toolpath_HelicalDrill.cs" />
     <Compile Include="ToolSettings.cs" />
     <Compile Include="Toolpath.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Toolpaths\Toolpath_Profile.cs" />
     <Compile Include="Toolpaths\Toolpath_Raster.cs" />
     <Compile Include="Toolpaths\Toolpath_SurfaceProfile.cs" />
+    <Compile Include="Types.cs" />
     <Compile Include="Waypoint.cs" />
   </ItemGroup>
   <ItemGroup>

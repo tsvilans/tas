@@ -27,10 +27,11 @@ using WPath = System.Collections.Generic.List<tas.Machine.Waypoint>;
 namespace tas.Machine.Posts
 {
     /// <summary>
-    /// Post to convert to G-code for basic 3-axis mill.
+    /// Post to convert to G-code for Haas 3-axis mill.
     /// </summary>
-    public class Basic3AxisPost : MachinePost
+    public class CncStepPost : tas.Machine.MachinePost
     {
+
         const int DOF = 3;
 
         #region Machine limits
@@ -40,21 +41,18 @@ namespace tas.Machine.Posts
         public Interval LimitZ { get { return m_limits[2]; } }
         #endregion
 
-        public Basic3AxisPost() : base(DOF)
+        public CncStepPost() : base(DOF)
         {
+            Brand = "CNC-STEP";
+            Model = "High-Z 1400/T-105";
+
             PreComment = "(";
             PostComment = ")";
 
-            m_limits[0] = new Interval(0, 1016);
-            m_limits[1] = new Interval(0, 508);
-            m_limits[2] = new Interval(0, 406);
-
-            // Spindle nose to table (max): 508 mm
-            // Spindle nose to table (min): 102 mm
-
-            // Table
-            //    length 1467 mm
-            //    width 368 mm
+            m_limits[0] = new Interval(0, 1400);
+            m_limits[1] = new Interval(0, 1050);
+            m_limits[2] = new Interval(0, 110);
+            // Clearance under frame: 109 mm
 
             m_axis_id[0] = 'X';
             m_axis_id[1] = 'Y';
@@ -67,7 +65,6 @@ namespace tas.Machine.Posts
             coords[1] = plane.Origin.Y;
             coords[2] = plane.Origin.Z;
         }
-
 
         public override object Compute()
         {
@@ -86,45 +83,19 @@ namespace tas.Machine.Posts
                 }
             }
 
-            List<string> Program = new List<string>();
+            Program = new List<string>();
             Errors = new List<string>();
 
-            BoundingBox bbox = BoundingBox.Unset;
+            BoundingBox = BoundingBox.Empty;
 
             if (StockModel != null)
-                bbox = StockModel.GetBoundingBox(true);
-
-            // Create headers
-            Program.Add("O01001;"); // Program number / name
-
-            Program.Add($"{PreComment}{PostComment};");
-            Program.Add($"{PreComment} Revision      : 1 {PostComment};");
-            Program.Add($"{PreComment}{PostComment}");
-            Program.Add($"{PreComment} File name      : {Name} {PostComment};");
-            Program.Add($"{PreComment} Programmed by  : {Author} {PostComment};");
-            Program.Add($"{PreComment} Date           : {Date} {PostComment};");
-            Program.Add($"{PreComment} Program length : {ProgramTime} {PostComment}");
-            Program.Add($"{PreComment} Bounds min.    : {bbox.Min.X} {bbox.Min.Y} {bbox.Min.Z} {PostComment};");
-            Program.Add($"{PreComment} Bounds max.    : {bbox.Max.X} {bbox.Max.Y} {bbox.Max.Z} {PostComment};");
-            Program.Add($"{PreComment}{PostComment};");
-
-            Program.Add($"{PreComment}Tool #    Offset #    Name    Diameter    Length {PostComment};");
-
-            foreach (var d in Tools)
-            {
-                MachineTool mt = d.Value;
-                Program.Add($"{PreComment} {mt.Number}    {mt.OffsetNumber}    {mt.Name}    {mt.Diameter:0.0}    {mt.Length:0.000} {PostComment};");
-            }
-            Program.Add($"{PreComment}{PostComment};");
-
-
-
-            Program.Add("G0 Z12");
+                BoundingBox = StockModel.GetBoundingBox(true);
 
             // Working variables
             int G_VALUE = -1;
+            bool write_feedrate = false;
             int flags = 0;
-            bool write_feedrate = true;
+            int tempFeedrate = 0;
 
             // Initialize coordinates
             double[] coords = new double[DOF];
@@ -136,66 +107,98 @@ namespace tas.Machine.Posts
                 pCoords[i] = double.MaxValue;
 
             int currentFeedrate = 0;
-            int tempFeedrate = int.MaxValue;
 
+            EOL = "";
+
+            // Create headers
+            CreateHeader();
+
+            Program.Add($"G90{EOL}"); // Absolute coordinates
+            Program.Add($"G64{EOL}"); // ???
+            Program.Add($"G21{EOL}"); // Metric coordinates
+            Program.Add($"M7{EOL}"); // Coolant on
+            Program.Add($"M8{EOL}"); // Coolant on
+
+            // Loop through Toolpaths
             for (int i = 0; i < Paths.Count; ++i)
             {
 
                 Toolpath TP = Paths[i];
 
-                Program.Add("");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment} START Toolpath: {TP.Name} {PostComment}{EOL}");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
 
                 // Tool change
-                Program.Add($"M6 T{Tools[TP.Tool.Name].Number}");
+                // TODO: Change so that it only changes the tool if necessary, though the machine should ignore this anyway
+                Program.Add($"T{Tools[TP.Tool.Name].Number} M06{EOL}");
 
                 // Move to first waypoint
                 Waypoint prev = new Waypoint(TP.Paths[0][0]);
                 prev.Type = (int)WaypointType.RAPID;
 
-                //if (prev.Type != (int)WaypointType.RAPID)
-                //    throw new Exception("First waypoint must be rapid. Check code.");
+                /* G00 - Rapid motion
+                 * G90 - Absolute positioning (G91 is incremental)
+                 * G21 - Metric programming (G20 is inch)
+                 * G54 - First work offset
+                 * S, M03 - Start spindle clockwise
+                 */
+                //Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
 
-                Program.Add($"G0 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}");
+                Program.Add($"G00 G53 G49 Z0.{EOL}"); // Retract Z
+                Program.Add($"G00 G90 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
+                //Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08{EOL}");
+
+                Program.Add($"S{TP.Tool.SpindleSpeed} M03{EOL}");
 
 
-                // Go through waypoints
-
+                // Loop through subpaths
                 for (int j = 0; j < TP.Paths.Count; ++j)
                 {
-                    // Parse sub-paths
                     WPath Subpath = TP.Paths[j];
+
+                    // Loop through individual waypoints
                     for (int k = 0; k < Subpath.Count; ++k)
                     {
+                        // Reset working variables
                         write_feedrate = false;
                         flags = 0;
 
                         Waypoint wp = Subpath[k];
 
+                        // Convert waypoint targets to axis coordinates
                         PlaneToCoords(wp.Plane, ref coords);
+                        PlaneToCoords(prev.Plane, ref pCoords);
 
                         // Check limits
                         if (!IsInMachineLimits(coords))
                             Errors.Add($"Waypoint outside of machine limits: toolpath {i} subpath {j} waypoint {k} : {wp}");
 
-                        // Compose line
+                        // Compose NC line
                         List<string> Line = new List<string>();
 
+                        #region Parse movement (G code)
                         if (wp.Type != prev.Type || AlwaysWriteGCode)
                         {
                             flags = flags | 1;
-                            if ((wp.Type & 1) == 1)
+
+                            if (wp.IsRapid())
                                 G_VALUE = 0;
-                            else if ((wp.Type & 4) == 1)
-                                if ((wp.Type & 12) == 1)
+                            else if (wp.IsArc())
+                            {
+                                write_feedrate = true;
+                                if (wp.IsClockwise())
                                     G_VALUE = 3;
                                 else
                                     G_VALUE = 2;
+                            }
                             else
                             {
                                 G_VALUE = 1;
                                 write_feedrate = true;
                             }
                         }
+                        #endregion
 
                         #region Parse movement on axes
                         for (int l = 0; l < m_dof; ++l)
@@ -205,6 +208,7 @@ namespace tas.Machine.Posts
                         }
                         #endregion
 
+                        #region Write feedrate if different
                         // If Plunge move, set current feedrate to PlungeRate
                         if (wp.IsPlunge())
                             tempFeedrate = Tools[TP.Tool.Name].PlungeRate;
@@ -212,23 +216,22 @@ namespace tas.Machine.Posts
                             tempFeedrate = Tools[TP.Tool.Name].FeedRate;
 
                         // If new feedrate is different from old one, write F value
-                        if (tempFeedrate == currentFeedrate)
-                            write_feedrate = false;
+                        if (tempFeedrate != currentFeedrate)
+                            write_feedrate = true;
 
                         currentFeedrate = tempFeedrate;
+                        #endregion
 
-
-                        // If it is an arc move, then write R value
+                        // If it is an arc move, then write I J K values
                         if (wp.IsArc())
-                            flags = flags | (1 << 4);
+                            flags = flags | (1 << m_dof + 1);
+
 
                         if (write_feedrate)
-                            flags = flags | (1 << 5);
-
+                            flags = flags | (1 << m_dof + 2);
 
                         // If there is no motion, skip this waypoint
                         if ((flags & m_NO_MOTION) < 1) continue;
-
 
                         #region Construct NC code
 
@@ -250,7 +253,7 @@ namespace tas.Machine.Posts
                         #endregion
 
                         // Add line to program
-                        Program.Add(string.Join(" ", Line));
+                        Program.Add(string.Join(" ", Line) + EOL);
 
                         // Update previous waypoint
                         prev = new Waypoint(wp);
@@ -258,19 +261,29 @@ namespace tas.Machine.Posts
                 }
 
 
-                Program.Add("");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"G53 G49 G0 Z0.{EOL}"); // Retract Z
+                //Program.Add("G53 X0. Y0.");
 
+                //Program.Add("G0 Z12");
 
-                Program.Add("G0 Z12");
-
-                Program.Add("");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment} END Toolpath: {TP.Name} {PostComment}{EOL}");
+                Program.Add($"{PreComment}{PostComment}{EOL}");
             }
+            //Program.Add($"G00 Z10.");
 
-            Program.Add("G0 Z0");
-            Program.Add("G0 X0 Y0");
+            Program.Add($"{PreComment} End of program {PostComment}{EOL}");
 
-            Program.Add("M30");
+            Program.Add($"G53 G49 G0 Z0.{EOL}"); // Retract Z
+            //Program.Add($"G0 X0 Y0{EOL}"); // Return home
 
+            Program.Add($"M9{EOL}"); // Coolant stop
+            Program.Add($"M5{EOL}"); // Spindle stop
+            Program.Add($"M30{EOL}");
+            Program.Add($"{PreComment} End of program {PostComment}{EOL}");
+
+            //Program.Add("%");
             return Program;
         }
     }

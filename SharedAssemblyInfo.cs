@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("tomsvilans")]
 [assembly: AssemblyProduct("tas")]
-[assembly: AssemblyCopyright("Copyright © Tom Svilans 2020")]
+[assembly: AssemblyCopyright("Copyright © Tom Svilans 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.1.*")]

@@ -6,7 +6,6 @@ using Rhino.Geometry;
 
 using System.Windows.Forms;
 
-using tas.Core.GH;
 using tas.Machine.Toolpaths;
 
 using GH_IO.Serialization;
@@ -70,7 +69,7 @@ namespace tas.Machine.GH.Toolpaths
             ac.Calculate();
             var paths = ac.GetPaths();
 
-            DA.SetDataList("Paths", GH_PPolyline.MakeGoo(paths));
+            DA.SetDataList("Paths", GH_tasPath.MakeGoo(paths));
             //DA.SetData("debug", debug);
         }
 

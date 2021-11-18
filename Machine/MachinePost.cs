@@ -41,6 +41,19 @@ namespace tas.Machine
         public Mesh StockModel = null;
         public bool AlwaysWriteGCode = false;
 
+
+        public string Brand
+        {
+            get;
+            protected set;
+        }
+
+        public string Model
+        {
+            get;
+            protected set;
+        }
+
         public Point3d WorkOffset = Point3d.Origin;
         public List<string> Program = new List<string>();
         public BoundingBox BoundingBox = BoundingBox.Empty;

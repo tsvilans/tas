@@ -6,8 +6,6 @@ using Grasshopper.Kernel;
 using Rhino.Geometry;
 
 using tas.Core;
-using tas.Core.Types;
-using tas.Core.GH;
 using Grasshopper.Kernel.Types;
 using tas.Core.Util;
 
@@ -50,17 +48,17 @@ namespace tas.Machine.GH.Toolpaths
             if (iObjs == null || iObjs.Count < 1)
                return;
 
-            List<PPolyline> ppolys = new List<PPolyline>();
+            List<Path> ppolys = new List<Path>();
             for (int i = 0; i < iObjs.Count; ++i)
             {
                 if (iObjs[i] is Curve)
-                    ppolys.Add((PPolyline)Misc.CurveToPolyline(iObjs[i] as Curve, 1.0));
+                    ppolys.Add(new Path(Misc.CurveToPolyline(iObjs[i] as Curve, 1.0)));
                 else if (iObjs[i] is GH_Curve)
-                    ppolys.Add((PPolyline)Misc.CurveToPolyline((iObjs[i] as GH_Curve).Value, 1.0));
-                else if (iObjs[i] is PPolyline)
-                    ppolys.Add(iObjs[i] as PPolyline);
-                else if (iObjs[i] is GH_PPolyline)
-                    ppolys.Add((iObjs[i] as GH_PPolyline).Value);
+                    ppolys.Add(new Path(Misc.CurveToPolyline((iObjs[i] as GH_Curve).Value, 1.0)));
+                else if (iObjs[i] is Path)
+                    ppolys.Add(iObjs[i] as Path);
+                else if (iObjs[i] is GH_tasPath)
+                    ppolys.Add((iObjs[i] as GH_tasPath).Value);
             }
 
             //List<Polyline> in_paths = Util.CurvesToPolylines(in_crvs, 1.0);
@@ -70,13 +68,13 @@ namespace tas.Machine.GH.Toolpaths
             DA.GetData("Ramp Length", ref length);
 
             string debug = "";
-            List<PPolyline> ramps = new List<PPolyline>();
+            List<Path> ramps = new List<Path>();
             for (int i = 0; i < ppolys.Count; ++i)
             {
-                ramps.Add(Misc.CreateRamp(ppolys[i], p, height, length));//, ref debug));
+                ramps.Add(Path.CreateRamp(ppolys[i], p, height, length));//, ref debug));
             }
 
-            DA.SetDataList("PPolyline", ramps.Select(x => new GH_PPolyline(x)));
+            DA.SetDataList("PPolyline", ramps.Select(x => new GH_tasPath(x)));
             DA.SetData("debug", debug);
 
         }

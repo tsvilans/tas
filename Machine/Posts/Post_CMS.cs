@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Rhino.Geometry;
 
-using Path = System.Collections.Generic.List<tas.Machine.Waypoint>;
+using WPath = System.Collections.Generic.List<tas.Machine.Waypoint>;
 
 namespace tas.Machine.Posts
 {
@@ -394,7 +394,7 @@ namespace tas.Machine.Posts
                 for (int j = 0; j < TP.Paths.Count; ++j)
                 {
                     // Parse sub-paths
-                    Path Subpath = TP.Paths[j];
+                    WPath Subpath = TP.Paths[j];
                     for (int k = 0; k < Subpath.Count; ++k)
                     {
                         write_feedrate = false;

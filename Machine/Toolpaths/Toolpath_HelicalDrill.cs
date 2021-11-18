@@ -19,13 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Rhino.Geometry;
-
-using tas.Core;
-using tas.Core.Types;
-using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
 {
@@ -38,7 +33,7 @@ namespace tas.Machine.Toolpaths
         public double DepthPass;
         public int Resolution;
 
-        List<PPolyline> Paths;
+        List<Path> Paths;
 
         public Toolpath_HelicalDrill(Circle c, double depth, MachineTool tool, double depth_pass = 30, int resolution = 36)
         {
@@ -52,7 +47,7 @@ namespace tas.Machine.Toolpaths
 
         public override void Calculate()
         {
-            Paths = new List<PPolyline>();
+            Paths = new List<Path>();
 
             int passes = (int)Math.Ceiling(Depth / DepthPass);
             double currentDepth = 0;
@@ -124,14 +119,14 @@ namespace tas.Machine.Toolpaths
                 }
 
                 helix.Transform(Transform.PlaneToPlane(Plane.WorldXY, Workplane));
-                var ppoly = new PPolyline(helix, Workplane);
+                var ppoly = new Path(helix, Workplane);
 
                 Paths.Add(ppoly);
             }
         }
 
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         {
             return Paths;
         }

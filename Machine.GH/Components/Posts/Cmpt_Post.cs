@@ -27,7 +27,7 @@ namespace tas.Machine.GH.Posts
         Guid LastValueList = Guid.Empty;
         IGH_Param PostParameter = null;
 
-        string[] AvailablePosts = new string[] { "Haas", "CMS", "Shopbot", "Raptor" };
+        string[] AvailablePosts = new string[] { "Haas", "CMS", "Shopbot", "Raptor", "CNC-STEP" };
 
         protected override void BeforeSolveInstance()
         {
@@ -113,6 +113,9 @@ namespace tas.Machine.GH.Posts
                     break;
                 case ("Raptor"):
                     post = new RaptorBCNPost();
+                    break;
+                case ("CNC-STEP"):
+                    post = new CncStepPost();
                     break;
                 default:
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Machine {post_name} not found.");

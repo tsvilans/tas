@@ -27,10 +27,9 @@ using StudioAvw.Geometry;
 using Rhino.Geometry;
 
 using tas.Core;
-using tas.Core.Types;
 
-using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
-using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
+using CPath = System.Collections.Generic.List<ClipperLib.IntPoint>;
+using CPaths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
 
 namespace tas.Machine.Toolpaths
@@ -106,10 +105,10 @@ namespace tas.Machine.Toolpaths
             top_xform.Transform(Transform.PlaneToPlane(Plane.WorldXY, Workplane));
             CuttingPlane.Origin = top_xform;
 
-            Tuple<Paths, Paths, Paths> Polygons;
+            Tuple<CPaths, CPaths, CPaths> Polygons;
             Polygons = GeneratePolygons(CuttingPlane);
 
-            Paths Shadow = new Paths(Polygons.Item1);
+            CPaths Shadow = new CPaths(Polygons.Item1);
             double Area = PathsArea(Shadow);
 
             for (int i = 0; i <= N; ++i)
@@ -123,7 +122,7 @@ namespace tas.Machine.Toolpaths
                 double AreaNew = PathsArea(Polygons.Item1);
                 if (AreaNew > Area)
                 {
-                    Shadow = new Paths(Polygons.Item1);
+                    Shadow = new CPaths(Polygons.Item1);
                     Area = AreaNew;
                 }
 
@@ -133,7 +132,7 @@ namespace tas.Machine.Toolpaths
                 PolyTree tree = new PolyTree();
                 offset.Execute(ref tree, -(Tool.Diameter / 2 + RestHorizontal) / Tolerance);
 
-                Paths WorkingPaths = new Paths();
+                CPaths WorkingPaths = new CPaths();
 
                 List<Polyline> Output = new List<Polyline>();
 
@@ -170,16 +169,16 @@ namespace tas.Machine.Toolpaths
             }
 
             ShadowPolylines = new List<Polyline>();
-            foreach (Path p in Shadow)
+            foreach (CPath p in Shadow)
             {
                 ShadowPolylines.Add(p.ToPolyline(CuttingPlane, Tolerance, true));
             }
 
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         {
-            List<PPolyline> OPs = new List<PPolyline>();
+            List<Path> OPs = new List<Path>();
             if (ResultPaths == null || ResultPaths.Count < 1)
                 throw new Exception("Calculation did not succeed! No paths to yield.");
                 //return OPs;
@@ -195,18 +194,18 @@ namespace tas.Machine.Toolpaths
                 if (RemoveSmallPaths)
                 {
                     if (p.Length > SmallPathThreshold)
-                        OPs.Add(new PPolyline(p, Workplane));
+                        OPs.Add(new Path(p, Workplane));
                 }
                 else
-                    OPs.Add(new PPolyline(p, Workplane));
+                    OPs.Add(new Path(p, Workplane));
             }
             return OPs;
         }
 
-        private double PathsArea(Paths P)
+        private double PathsArea(CPaths P)
         {
             double area = 0.0;
-            foreach (Path path in P)
+            foreach (CPath path in P)
             {
                 area += Clipper.Area(path);
             }
@@ -257,7 +256,7 @@ namespace tas.Machine.Toolpaths
             ResultPaths = NewResultPaths;
         }
 
-        private Tuple<Paths, Paths, Paths> GeneratePolygons(Plane P, Paths Shadow = null)
+        private Tuple<CPaths, CPaths, CPaths> GeneratePolygons(Plane P, CPaths Shadow = null)
         {
             if (DriveGeometry == null || DriveGeometry.Count < 1) return null;
             if (Stock == null || Stock.Count < 1) return null;
@@ -318,7 +317,7 @@ namespace tas.Machine.Toolpaths
                 SolutionPolygon = SolutionStock;
             }
 
-            return new Tuple<Paths, Paths, Paths>(SolutionMesh, SolutionStock, SolutionPolygon);
+            return new Tuple<CPaths, CPaths, CPaths>(SolutionMesh, SolutionStock, SolutionPolygon);
         }
 
         private class ACLayer

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Grasshopper.Kernel;
@@ -6,7 +7,6 @@ using Rhino.Geometry;
 using Grasshopper.Kernel.Types;
 
 using Robots;
-using tas.Core.Types;
 using GH_IO.Serialization;
 using tas.Core;
 
@@ -137,18 +137,18 @@ namespace tas.Machine.GH
 
             // polyline conversion to targets
 
-            List<PPolyline> polys = new List<PPolyline>();
+            List<Path> polys = new List<Path>();
             foreach (object obj in paths)
             {
                 if (obj is tas.Core.GH.GH_PPolyline)
-                    polys.Add((obj as tas.Core.GH.GH_PPolyline).Value);
+                    polys.Add((obj as GH_tasPath).Value);
                 else if (obj is GH_Curve)
                 {
                     GH_Curve crv_ref = obj as GH_Curve;
                     if (crv_ref.Value.IsPolyline())
                     {
                         Polyline pl;
-                        if (crv_ref.Value.TryGetPolyline(out pl)) polys.Add((PPolyline)pl);
+                        if (crv_ref.Value.TryGetPolyline(out pl)) polys.Add(new Path(pl.Select(x => new Plane(x, Vector3d.XAxis, Vector3d.YAxis))));
                     }
                 }
             }
@@ -166,7 +166,7 @@ namespace tas.Machine.GH
             {
                 Mesh m = new Mesh();
 
-                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep);
+                Mesh[] converted = Mesh.CreateFromBrep(Safety as Brep, MeshingParameters.QualityRenderMesh);
                 foreach (Mesh cm in converted)
                 {
                     m.Append(cm);
@@ -188,7 +188,7 @@ namespace tas.Machine.GH
             Plane LastTarget = new Plane();
             bool last = false;
             
-            foreach(PPolyline poly in polys)
+            foreach(Path poly in polys)
             {
 
                 if (poly.Count < 1) continue;
@@ -255,7 +255,7 @@ namespace tas.Machine.GH
             
             DA.SetData("debug", debug);
             DA.SetDataList("Targets", targets);
-            DA.SetData("Path", new tas.Core.GH.GH_PPolyline(new PPolyline(path_planes)));
+            DA.SetData("Path", new GH_tasPath(new Path(path_planes)));
         }
 
         private Plane RetractToSafety(Plane current)

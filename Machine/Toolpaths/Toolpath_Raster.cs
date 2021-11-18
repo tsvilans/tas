@@ -24,7 +24,6 @@ using System.Linq;
 using Rhino.Geometry;
 
 using tas.Core;
-using tas.Core.Types;
 using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
@@ -38,7 +37,7 @@ namespace tas.Machine.Toolpaths
         public int ToolOffset = 0;
 
         public List<Polyline> DriveCurves;
-        List<PPolyline> Paths;
+        List<Path> Paths;
 
         public Toolpath_Raster(IEnumerable<Curve> c, double tolerance)
         {
@@ -65,7 +64,7 @@ namespace tas.Machine.Toolpaths
 
         public override void Calculate()
         {
-            Paths = new List<PPolyline>();
+            Paths = new List<Path>();
 
             foreach (Polyline P in DriveCurves)
             {
@@ -74,7 +73,7 @@ namespace tas.Machine.Toolpaths
 
                 if (StartEnd) P.Reverse();
 
-                PPolyline OP = new PPolyline();
+                Path OP = new Path();
                 Vector3d tan, x, t1, t2;
                 Plane p;
                 double angle;
@@ -152,7 +151,7 @@ namespace tas.Machine.Toolpaths
             }
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         {
             return Paths;
         }

@@ -4,8 +4,6 @@ using System.Linq;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
-using tas.Core.GH;
-using tas.Core.Types;
 
 namespace tas.Machine.GH
 {

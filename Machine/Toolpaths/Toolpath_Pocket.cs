@@ -25,7 +25,6 @@ using Rhino.Geometry;
 using StudioAvw.Geometry;
 
 using tas.Core;
-using tas.Core.Types;
 using tas.Core.Util;
 
 namespace tas.Machine.Toolpaths
@@ -222,9 +221,9 @@ namespace tas.Machine.Toolpaths
             }
         }
 
-        public override List<PPolyline> GetPaths()
+        public override List<Path> GetPaths()
         {
-            List<PPolyline> paths = new List<PPolyline>();
+            List<Path> paths = new List<Path>();
             List<Polyline> polylines = new List<Polyline>();
 
             foreach (PocketLayer layer in Layers)
@@ -236,7 +235,7 @@ namespace tas.Machine.Toolpaths
             {
                 if (StartEnd)
                     p.Reverse();
-                paths.Add(new PPolyline(p, Workplane));
+                paths.Add(new Path(p, Workplane));
             }
 
             return paths;

@@ -7,8 +7,6 @@ using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 using tas.Core;
-using tas.Core.Types;
-using tas.Core.GH;
 
 namespace tas.Machine.GH
 {
@@ -80,23 +78,23 @@ namespace tas.Machine.GH
                 {
                     RawOutput.Add(new GH_Plane(OrientPlane((obj as GH_Plane).Value)));
                 }
-                else if (obj is PPolyline)
+                else if (obj is Path)
                 {
-                    PPolyline pp = obj as PPolyline;
+                    Path pp = obj as Path;
                     for (int i = 0; i < pp.Count; ++i)
                     {
                         pp[i] = OrientPlane(pp[i]);
                     }
-                    RawOutput.Add(new GH_PPolyline(pp));
+                    RawOutput.Add(new GH_tasPath(pp));
                 }
-                else if (obj is GH_PPolyline)
+                else if (obj is GH_tasPath)
                 {
-                    PPolyline pp = (obj as GH_PPolyline).Value;
+                    Path pp = (obj as GH_tasPath).Value;
                     for (int i = 0; i < pp.Count; ++i)
                     {
                         pp[i] = OrientPlane(pp[i]);
                     }
-                    RawOutput.Add(new GH_PPolyline(pp));
+                    RawOutput.Add(new GH_tasPath(pp));
                 }
             }
 

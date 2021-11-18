@@ -40,6 +40,6 @@ namespace tas.Machine.Toolpaths
         }
 
         public abstract void Calculate();
-        public abstract List<PPolyline> GetPaths();
+        public abstract List<Path> GetPaths();
     }
 }
