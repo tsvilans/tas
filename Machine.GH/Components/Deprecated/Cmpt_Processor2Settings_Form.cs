@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if OBSOLETE
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -66,3 +67,4 @@ namespace tas.Machine.GH
 
     }
 }
+#endif

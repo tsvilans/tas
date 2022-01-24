@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if OBSOLETE
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -423,3 +424,4 @@ namespace tas.Machine.GH
     }
 #endif
 }
+#endif

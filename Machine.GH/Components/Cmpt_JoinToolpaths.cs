@@ -30,7 +30,7 @@ namespace tas.Machine.GH
         {
             List<Toolpath> tpIn = new List<Toolpath>();
 
-            DA.GetDataList("Toolpath", tpIn);
+            DA.GetDataList("Toolpaths", tpIn);
 
             if (tpIn.Count < 1) return;
 

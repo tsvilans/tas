@@ -1,4 +1,5 @@
-﻿namespace tas.Machine.GH
+﻿#if OBSOLETE
+namespace tas.Machine.GH
 {
     partial class tasTP_Processor2Settings_Form
     {
@@ -227,3 +228,4 @@
         private System.Windows.Forms.CheckBox ext_axis_checkbox;
     }
 }
+#endif

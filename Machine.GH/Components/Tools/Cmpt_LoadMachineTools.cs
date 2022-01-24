@@ -13,7 +13,7 @@ namespace tas.Machine.GH
         public Cmpt_LoadMachineTools()
           : base("Load Machine Tools", "LoadMT",
               "Load machine tool definitions from XML file.",
-              "tasMachine", "Machining")
+              "tasMachine", "Tools")
         {
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if EXTRA
+using System;
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
@@ -209,3 +210,4 @@ namespace tas.Machine.GH.Toolpaths
         }
     }
 }
+#endif

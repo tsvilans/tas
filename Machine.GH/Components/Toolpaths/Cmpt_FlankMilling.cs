@@ -13,7 +13,7 @@ namespace tas.Machine.GH.Toolpaths
     public class Cmpt_FlankMilling : ToolpathBase_Component
     {
         public Cmpt_FlankMilling()
-          : base("Finishing - Flank Milling", "Flank",
+          : base("Flanking", "Flank",
               "Machine a ruled surface with the side of the tool.",
               "tasMachine", "Toolpaths")
         {

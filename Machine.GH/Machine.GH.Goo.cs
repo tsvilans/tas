@@ -222,9 +222,9 @@ namespace tas.Machine.GH
         public GH_tasPath(Path native) { this.Value = new Path(native); }
         public override IGH_Goo Duplicate() => new GH_tasPath(this);
         public override bool IsValid => true;
-        public override string TypeName => "tPath";
+        public override string TypeName => "Path";
         public override string TypeDescription => "Polyline with planes";
-        public override string ToString() => "tPath"; //this.Value.ToString();
+        public override string ToString() => "Path"; //this.Value.ToString();
         public override object ScriptVariable() => Value;
 
         public static IEnumerable<GH_tasPath> MakeGoo(List<Path> Paths)
@@ -359,7 +359,7 @@ namespace tas.Machine.GH
 
     public class tasPathParameter : GH_PersistentParam<GH_tasPath>
     {
-        public tasPathParameter() : base("tasPath parameter", "tPath", "This is a polyline with planes.", "tasMachine", "Parameters") { }
+        public tasPathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Parameters") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         //protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
         public override System.Guid ComponentGuid => new Guid("{eba2ae1c-5c0c-4553-9fae-411e0905ce23}");

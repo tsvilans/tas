@@ -21,7 +21,7 @@ namespace tas.Machine.GH.Toolpaths
     {
 
         public Cmpt_Pocket()
-          : base("Roughing - Pocket Machining", "Pocket",
+          : base("Pocket", "Pocket",
               "Simple area clearance toolpath strategy.",
               "tasMachine", "Toolpaths")
         {

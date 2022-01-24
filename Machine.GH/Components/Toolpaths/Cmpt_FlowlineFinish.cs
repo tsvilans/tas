@@ -17,7 +17,7 @@ namespace tas.Machine.GH.Toolpaths
     {
 
         public Cmpt_Flowline()
-          : base("Finish - Flowline", "Flowline",
+          : base("Flowline", "Flowline",
               "Finish strategy that follows UV coordinates of surface.",
               "tasMachine", "Toolpaths")
         {

@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tas.Machine.GH</RootNamespace>
     <AssemblyName>tas.Machine.GH</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
@@ -62,7 +62,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Components\Cmpt_JoinToolpaths.cs" />
-    <Compile Include="Components\Cmpt_CreateMachineTool.cs" />
+    <Compile Include="Components\Tools\Cmpt_CreateMachineTool.cs" />
     <Compile Include="Components\Cmpt_LeadsLinks.cs" />
     <Compile Include="Components\Cmpt_SimulateToolpath.cs" />
     <Compile Include="Components\Posts\Cmpt_Post.cs" />
@@ -76,24 +76,22 @@
     <Compile Include="Components\Toolpaths\Cmpt_FlatFinish.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_FlowlineFinish.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_LinearFingerJoint.cs" />
-    <Compile Include="Components\Cmpt_LoadMachineTools.cs" />
+    <Compile Include="Components\Tools\Cmpt_LoadMachineTools.cs" />
     <Compile Include="Components\Cmpt_OffsetClip.cs" />
     <Compile Include="Components\Cmpt_OrientPlanesToPoint.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_Pocket.cs" />
-    <Compile Include="Components\Cmpt_Processor2Settings_Form.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Components\Cmpt_Processor2Settings_Form.designer.cs">
+    <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.cs" />
+    <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.designer.cs">
       <DependentUpon>Cmpt_Processor2Settings_Form.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\Cmpt_Processor2.cs" />
-    <Compile Include="Components\Cmpt_Processor.cs" />
+    <Compile Include="Components\Deprecated\Cmpt_Processor2.cs" />
+    <Compile Include="Components\Deprecated\Cmpt_Processor.cs" />
     <Compile Include="Components\Cmpt_ShowToolpath.cs" />
     <Compile Include="Components\Toolpaths\Cmpt_SurfOffsetFinish.cs" />
-    <Compile Include="Components\Cmpt_ToolSettings_Form.cs">
+    <Compile Include="Components\Deprecated\Cmpt_ToolSettings_Form.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Components\Cmpt_ToolSettings_Form.designer.cs">
+    <Compile Include="Components\Deprecated\Cmpt_ToolSettings_Form.designer.cs">
       <DependentUpon>Cmpt_ToolSettings_Form.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\Toolpaths\Cmpt_ToolpathBase.cs" />
@@ -109,10 +107,10 @@
     <Compile Include="ToolSettingsForm.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Components\Cmpt_Processor2Settings_Form.resx">
+    <EmbeddedResource Include="Components\Deprecated\Cmpt_Processor2Settings_Form.resx">
       <DependentUpon>Cmpt_Processor2Settings_Form.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Components\Cmpt_ToolSettings_Form.resx">
+    <EmbeddedResource Include="Components\Deprecated\Cmpt_ToolSettings_Form.resx">
       <DependentUpon>Cmpt_ToolSettings_Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

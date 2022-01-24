@@ -16,7 +16,7 @@ namespace tas.Machine.GH.Toolpaths
     {
 
         public Cmpt_SurfOffsetFinish()
-          : base("Finishing - Surface Offset ", "Surf Offset Finish",
+          : base("Surface Offset ", "Srf Offset",
               "Simple surface offset finishing toolpath strategy.",
               "tasMachine", "Toolpaths")
         {
