@@ -106,10 +106,10 @@ namespace tas.Machine.Posts
             int currentFeedrate = 0;
             int tempFeedrate = int.MaxValue;
 
-            EOL = " ;";
+            EOL = " ";
 
             Program.Add("%");
-            Program.Add($"O01001 ({Name})"); // Program number / name
+            //Program.Add($"O01001 ({Name})"); // Program number / name
 
             CreateHeader();
 
@@ -174,13 +174,17 @@ namespace tas.Machine.Posts
                         // Compose NC line
                         List<string> Line = new List<string>();
 
+
                         #region Parse movement (G code)
-                        if (wp.Type != prev.Type || AlwaysWriteGCode)
+                        if (wp.Type != prev.Type || AlwaysWriteGCode || true)
                         {
                             flags = flags | 1;
 
                             if (wp.IsRapid())
+                            {
                                 G_VALUE = 0;
+                                write_feedrate = false;
+                            }
                             else if (wp.IsArc())
                             {
                                 write_feedrate = true;
@@ -192,16 +196,9 @@ namespace tas.Machine.Posts
                             else
                             {
                                 G_VALUE = 1;
-                                write_feedrate = true;
+                                if (prev.Type == (int)WaypointType.RAPID)
+                                    write_feedrate = true;
                             }
-                        }
-                        #endregion
-
-                        #region Parse movement on axes
-                        for (int l = 0; l < m_dof; ++l)
-                        {
-                            if (Math.Abs(coords[l] - pCoords[l]) > 0.00001)
-                                flags = flags | (1 << (l + 1));
                         }
                         #endregion
 
@@ -219,6 +216,16 @@ namespace tas.Machine.Posts
                         currentFeedrate = tempFeedrate;
                         #endregion
 
+                        #region Parse movement on axes
+                        for (int l = 0; l < m_dof; ++l)
+                        {
+                            if (Math.Abs(coords[l] - pCoords[l]) > 0.00001)
+                                flags = flags | (1 << (l + 1));
+                        }
+                        #endregion
+
+
+
                         // If it is an arc move, then write I J K values
                         if (wp.IsArc())
                             flags = flags | (1 << m_dof + 1);
@@ -233,11 +240,11 @@ namespace tas.Machine.Posts
                         #region Construct NC code
 
                         if ((flags & 1) > 0)
-                            Line.Add($"G{G_VALUE:00}");
+                            Line.Add($"G{G_VALUE:0}");
 
                         for (int l = 0; l < m_dof; ++l)
                         {
-                            if ((flags & (1 << 1 + l)) > 0)
+                            //if ((flags & (1 << 1 + l)) > 0)
                                 Line.Add($"{m_axis_id[l]}{coords[l]:F3}");
                         }
 
@@ -258,23 +265,21 @@ namespace tas.Machine.Posts
                 }
 
 
-                Program.Add($"{PreComment}{PostComment}{EOL}");
-                Program.Add($"G53 G49 G0 Z0.{EOL}");
+                //Program.Add($"{PreComment}{PostComment}{EOL}");
+                //Program.Add($"G53 G49 G0 Z0.{EOL}");
                 //Program.Add("G53 X0. Y0.");
 
                 //Program.Add("G0 Z12");
 
-                Program.Add($"{PreComment}{PostComment}{EOL}");
-                Program.Add($"{PreComment} END Toolpath: {TP.Name} {PostComment}{EOL}");
-                Program.Add($"{PreComment}{PostComment}{EOL}");
+                Program.Add($"{PreComment} ---- END Toolpath: {TP.Name} ---- {PostComment}{EOL}");
             }
             //Program.Add($"G00 Z10.");
 
             Program.Add($"{PreComment} End of program {PostComment}{EOL}");
             Program.Add($"M9");
-            Program.Add($"M05{EOL}"); // Spindle stop
+            Program.Add($"M5{EOL}"); // Spindle stop
             Program.Add($"M30{EOL}");
-            Program.Add("%");
+            //Program.Add("%");
             return Program;
         }
     }
