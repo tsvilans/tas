@@ -43,7 +43,7 @@ namespace tas.Machine.GH.Components
 
             this.Message = string.Format("Got {0} toolpaths.", m_toolpaths.Count);
 
-            PPolyline path = new PPolyline();
+            Path path = new Path();
             m_types = new List<int>();
 
             for (int i = 0; i < m_toolpaths.Count; ++i)

@@ -359,7 +359,7 @@ namespace tas.Machine.GH
 
     public class tasPathParameter : GH_PersistentParam<GH_tasPath>
     {
-        public tasPathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Parameters") { }
+        public tasPathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Path") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         //protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
         public override System.Guid ComponentGuid => new Guid("{eba2ae1c-5c0c-4553-9fae-411e0905ce23}");

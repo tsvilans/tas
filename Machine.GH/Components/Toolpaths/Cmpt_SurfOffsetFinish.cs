@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
@@ -29,7 +30,7 @@ namespace tas.Machine.GH.Toolpaths
         bool _simplify;
 
         string _debug;
-        List<Polyline> _paths;
+        List<Path> _paths;
 
         // Plane Workplane, Mesh Stock, Mesh Geometry, double MaxDepth, 
         // double Stepover, double Stepdown, bool Calculate, ref object Toolpath
@@ -80,7 +81,7 @@ namespace tas.Machine.GH.Toolpaths
 
             this._debug = "Begin...";
 
-            this._paths = new List<Polyline>();
+            this._paths = new List<Path>();
             Mesh[] meshes;
             Mesh mesh = new Mesh();
             List<Polyline> boundaries = new List<Polyline>();
@@ -149,7 +150,7 @@ namespace tas.Machine.GH.Toolpaths
             //ppaths.AddRange(area);
             ppaths.AddRange(tas.Core.Util.Misc.InsetUntilNone(area, Tool.StepOver, Workplane));
 
-            Polyline pl = new Polyline();
+            //Path pl = new Path();
 
             // for every polyline in ppaths, project it back onto the geometry
             for (int i = 0; i < ppaths.Count; ++i)
@@ -197,12 +198,13 @@ namespace tas.Machine.GH.Toolpaths
                 if (this._simplify)
                     temp_pl = temp_pl.SimplifyPolyline(0.00001);
 
-                this._paths.Add(temp_pl);
+                Path new_path = new Path(temp_pl, Plane.WorldXY);
+                this._paths.Add(new_path);
             }
 
                     // output data
             if (this._paths != null)
-                DA.SetDataList("Paths", this._paths);
+                DA.SetDataList("Paths", _paths.Select(x => new GH_tasPath(x)));
             DA.SetData("debug", this._debug);
         }
 

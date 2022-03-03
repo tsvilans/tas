@@ -19,7 +19,7 @@ namespace tas.Machine.GH
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Name", "N", "Name of toolpath.", GH_ParamAccess.item, "Toolpath");
-            pManager.AddGenericParameter("Toolpaths", "T", "Toolpaths as PPolylines (from machine strategy components).", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Toolpaths", "T", "Toolpaths as Paths (from machine strategy components).", GH_ParamAccess.list);
             pManager.AddGenericParameter("Machine Tool", "MT", "Machine tool from library.", GH_ParamAccess.item);
             pManager.AddPlaneParameter("Safety", "S", "Safety plane for rapid movements.", GH_ParamAccess.item, Plane.WorldXY);
             pManager.AddNumberParameter("RapidZ", "Rz", "Z-height for rapids.", GH_ParamAccess.item, 20.0);

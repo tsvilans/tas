@@ -120,7 +120,7 @@ namespace tas.Machine.GH.Toolpaths
             int passes = (int)Math.Ceiling(deepest / Tool.StepDown);
 
 
-            List<PPolyline> paths = new List<PPolyline>();
+            List<Path> paths = new List<Path>();
 
             // Declare variables for Brep closest point calculation
             double u, v;
@@ -129,7 +129,7 @@ namespace tas.Machine.GH.Toolpaths
             // Create paths for each pass
             for (int i = 0; i <= passes; ++i)
             {
-                PPolyline path = new PPolyline();
+                Path path = new Path();
                 for (int j = 0; j < N; ++j)
                 {
                     // Find closest normal
@@ -302,8 +302,7 @@ namespace tas.Machine.GH.Toolpaths
                         #endregion
                         */
 
-
-            DA.SetDataList("Paths", paths.Select(x => new GH_PPolyline(x)));
+            DA.SetDataList("Paths", paths.Select(x => new GH_tasPath(x)));
         }
 
         protected override System.Drawing.Bitmap Icon

@@ -61,6 +61,9 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Components\Cmpt_ConstructPath.cs" />
+    <Compile Include="Components\Cmpt_DeconstructPath.cs" />
+    <Compile Include="Components\Cmpt_JoinPaths.cs" />
     <Compile Include="Components\Cmpt_JoinToolpaths.cs" />
     <Compile Include="Components\Tools\Cmpt_CreateMachineTool.cs" />
     <Compile Include="Components\Cmpt_LeadsLinks.cs" />

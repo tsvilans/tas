@@ -126,6 +126,8 @@ namespace tas.Machine
 
         public new Path Duplicate()
         {
+            return new Path(this);
+
             List<Plane> p = new List<Plane>();
             for (int i = 0; i < this.Count; ++i)
             {
@@ -156,6 +158,11 @@ namespace tas.Machine
             {
                 this.AddRange(op);
             }
+        }
+
+        public List<Plane> ToPlanes()
+        {
+            return this.ToList<Plane>();
         }
 
     }

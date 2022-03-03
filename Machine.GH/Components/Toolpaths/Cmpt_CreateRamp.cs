@@ -23,7 +23,7 @@ namespace tas.Machine.GH.Toolpaths
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
 
-            pManager.AddCurveParameter("PPolyline", "PPoly", "Input polyline.", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Path", "P", "Input polyline.", GH_ParamAccess.list);
             pManager.AddPlaneParameter("Workplane", "WP", "Active workplane for ramp.", GH_ParamAccess.item, Plane.WorldXY);
             pManager.AddNumberParameter("Ramp Height", "H", "Ramp height.", GH_ParamAccess.item, 6.0);
             pManager.AddNumberParameter("Ramp Length", "L", "Ramp length.", GH_ParamAccess.item, 18.0);
@@ -31,7 +31,7 @@ namespace tas.Machine.GH.Toolpaths
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("PPolyline", "PPoly", "Output ramp.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Path", "P", "Output ramp.", GH_ParamAccess.list);
             pManager.AddTextParameter("debug", "d", "Debugging output.", GH_ParamAccess.item);
         }
 
@@ -43,7 +43,7 @@ namespace tas.Machine.GH.Toolpaths
             List<Curve> in_crvs = new List<Curve>();
             List<object> iObjs = new List<object>();
 
-            if (!DA.GetDataList("PPolyline", iObjs))
+            if (!DA.GetDataList("Path", iObjs))
                 return;
             if (iObjs == null || iObjs.Count < 1)
                return;
@@ -74,7 +74,7 @@ namespace tas.Machine.GH.Toolpaths
                 ramps.Add(Path.CreateRamp(ppolys[i], p, height, length));//, ref debug));
             }
 
-            DA.SetDataList("PPolyline", ramps.Select(x => new GH_tasPath(x)));
+            DA.SetDataList("Path", ramps.Select(x => new GH_tasPath(x)));
             DA.SetData("debug", debug);
 
         }
