@@ -79,11 +79,13 @@ namespace tas.Machine
         /// Tool feed rate.
         /// </summary>
         public int FeedRate;
+        public double FeedRateIPM { get { return (double)FeedRate / 25.4; } set { FeedRate = (int)(value * 25.4); } }
 
         /// <summary>
         /// Tool plunge rate.
         /// </summary>
         public int PlungeRate;
+        public double PlungeRateIPM { get { return (double)PlungeRate / 25.4; } set { PlungeRate = (int)(value * 25.4); } }
 
         /// <summary>
         /// Tool spindle speed.

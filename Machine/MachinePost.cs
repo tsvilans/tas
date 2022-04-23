@@ -60,21 +60,26 @@ namespace tas.Machine
 
         public List<Toolpath> Paths = new List<Toolpath>();
 
-        protected readonly Interval[] m_limits;
-        protected readonly char[] m_axis_id;
-        protected readonly int m_dof;
-        protected readonly int m_NO_MOTION;
+        protected /*readonly*/ Interval[] m_limits;
+        protected /*readonly*/ char[] m_axis_id;
+        protected /*readonly*/ int m_dof;
+        protected /*readonly*/ int m_NO_MOTION;
         public List<AxisValues> Axes { get; protected set; }
 
-        public MachinePost(int dof)
+        protected void Initialize()
         {
-            m_dof = dof;
-            m_limits = new Interval[dof];
-            m_axis_id = new char[dof];
+            m_limits = new Interval[m_dof];
+            m_axis_id = new char[m_dof];
 
             m_NO_MOTION = 0;
-            for (int i = 1; i <= dof; ++i)
+            for (int i = 1; i <= m_dof; ++i)
                 m_NO_MOTION = m_NO_MOTION | (1 << i);
+        }
+
+        public MachinePost(int dof=3)
+        {
+            m_dof = dof;
+            Initialize();
         }
 
         public abstract void PlaneToCoords(Plane plane, ref double[] coords);

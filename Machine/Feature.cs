@@ -21,6 +21,7 @@ namespace tas.Machine
     {
         public Line Path;
         public double Diameter;
+        public double Radius { get { return Diameter * 0.5; } set { Diameter = value * 2; } }
 
         public Drilling(string name, Line line, double diameter = 10.0)
         {
@@ -94,6 +95,9 @@ namespace tas.Machine
     public class Tracing : Feature
     {
         public Curve Path;
+        /// <summary>
+        /// Side of curve to offset tool on (- = left; 0 = centred; + = right).
+        /// </summary>
         int Offset;
 
         public Tracing(string name, Curve path, int offset = 0)
@@ -131,13 +135,29 @@ namespace tas.Machine
     {
         public Curve Outline;
         public double Depth;
+        public Vector3d ToolAxis;
+
         public Pocket(string name, Curve crv, double depth=0)
         {
             Name = name;
             Outline = crv.DuplicateCurve();
             Depth = depth;
 
+            Plane pocket_plane;
+            Outline.TryGetPlane(out pocket_plane);
+
+            ToolAxis = pocket_plane.ZAxis;
         }
+
+        public Pocket(string name, Curve crv, Vector3d tool_axis, double depth = 0)
+        {
+            Name = name;
+            Outline = crv.DuplicateCurve();
+            Depth = depth;
+
+            ToolAxis = tool_axis;
+        }
+
         public override Feature Duplicate()
         {
             return new Pocket(Name, Outline, Depth);
@@ -156,6 +176,44 @@ namespace tas.Machine
         public override void Transform(Transform xform)
         {
             Outline.Transform(xform);
+        }
+    }
+
+    public class EndCut : Feature
+    {
+        public static Interval CutterInterval = new Interval(-500, 500);
+        public Plane CutPlane;
+
+        public EndCut(string name, Plane cut_plane)
+        {
+            Name = name;
+            CutPlane = cut_plane;
+        }
+
+        public override Feature Duplicate()
+        {
+            return new EndCut(Name, CutPlane);
+        }
+
+        public override Brep ToBrep()
+        {
+            return Brep.CreateFromCornerPoints(
+                CutPlane.PointAt(CutterInterval.Min, CutterInterval.Min),
+                CutPlane.PointAt(CutterInterval.Max, CutterInterval.Min),
+                CutPlane.PointAt(CutterInterval.Max, CutterInterval.Max),
+                CutPlane.PointAt(CutterInterval.Min, CutterInterval.Max),
+                0.01
+                );
+        }
+
+        public override Curve ToNurbsCurve()
+        {
+            return new Rectangle3d(CutPlane, CutterInterval, CutterInterval).ToNurbsCurve();
+        }
+
+        public override void Transform(Transform xform)
+        {
+            CutPlane.Transform(xform);
         }
     }
 }

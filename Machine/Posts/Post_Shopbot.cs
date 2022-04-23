@@ -216,8 +216,9 @@ namespace tas.Machine.Posts
 
                         currentFeedrate = tempFeedrate;
 
+
                         if (write_feedrate)
-                            Program.Add($"MS,{ActiveTool.FeedRate},{ActiveTool.PlungeRate}");
+                            Program.Add($"MS,{ActiveTool.FeedRateIPM},{ActiveTool.PlungeRateIPM}");
 
                         // If it is an arc move, then write R value
                         if (wp.IsArc())
