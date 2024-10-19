@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <TargetExt>.gha</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug32</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
@@ -45,9 +48,11 @@
     </Reference>
     <Reference Include="Robots">
       <HintPath>..\include_extended\Robots.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="RobotsGH">
       <HintPath>..\include_extended\RobotsGH.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -70,19 +75,11 @@
     <Compile Include="Components\Cmpt_SimulateToolpath.cs" />
     <Compile Include="Components\Posts\Cmpt_Post.cs" />
     <Compile Include="Components\Posts\Cmpt_HaasPost.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_AreaClearance2.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_CircularFingerJoint.cs" />
     <Compile Include="Components\Posts\Cmpt_CmsPost.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_CreateRamp.cs" />
     <Compile Include="Components\Cmpt_CreateToolpath.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_FlankMilling.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_FlatFinish.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_FlowlineFinish.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_LinearFingerJoint.cs" />
     <Compile Include="Components\Tools\Cmpt_LoadMachineTools.cs" />
     <Compile Include="Components\Cmpt_OffsetClip.cs" />
     <Compile Include="Components\Cmpt_OrientPlanesToPoint.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_Pocket.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.designer.cs">
       <DependentUpon>Cmpt_Processor2Settings_Form.cs</DependentUpon>
@@ -90,14 +87,12 @@
     <Compile Include="Components\Deprecated\Cmpt_Processor2.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor.cs" />
     <Compile Include="Components\Cmpt_ShowToolpath.cs" />
-    <Compile Include="Components\Toolpaths\Cmpt_SurfOffsetFinish.cs" />
     <Compile Include="Components\Deprecated\Cmpt_ToolSettings_Form.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Components\Deprecated\Cmpt_ToolSettings_Form.designer.cs">
       <DependentUpon>Cmpt_ToolSettings_Form.cs</DependentUpon>
     </Compile>
-    <Compile Include="Components\Toolpaths\Cmpt_ToolpathBase.cs" />
     <Compile Include="GH_Writer.cs" />
     <Compile Include="Machine.GH.Goo.cs" />
     <Compile Include="Machine.GHInfo.cs" />
@@ -138,36 +133,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_FlatsFinish_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_FlowlineFinish_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_Pocket_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_Ramp_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_RobotTargets_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icons\tasTools_icons_OrientTargets_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>6.22.20028.13281</Version>
+      <Version>8.12.24282.7001</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>6.22.20028.13281</Version>
+      <Version>8.12.24282.7001</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Icons\tasTools_icons_AreaClearance_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_CreateMachineTool_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_CreateToolpath_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_FinishingFlats_24x24.png" />
     <None Include="Resources\Icons\tas_icons_SurfaceOffset_24x24.png" />
     <None Include="Resources\Icons\tas_icons_ShowToolpath_24x24.png" />
     <None Include="Resources\Icons\tas_icons_RobotTargets_24x24.png" />
@@ -185,14 +164,9 @@
     <None Include="Resources\Icons\tas_icons_CreateToolpath_24x24.png" />
     <None Include="Resources\Icons\tas_icons_CreateMachineTool_24x24.png" />
     <None Include="Resources\Icons\tas_icons_AreaClearance_24x24.png" />
-    <None Include="Resources\Icons\tasTools_icons_LoadMachineTools_24x24.png" />
-    <None Include="Resources\Icons\tasTools_icons_PostHaas_24x24.png" />
-    <None Include="Resources\Icons\tasTools_icons_PostCMS_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_PostGeneric3Axis_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_PostHaas-32_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_PostHaas-33_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_SurfaceOffset_24x24.png" />
-    <Content Include="Resources\Icons\tasTools_icons_ViewToolpath_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Goo\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -203,8 +177,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>::Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
-:: Erase "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>

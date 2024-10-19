@@ -89,10 +89,10 @@ namespace tas.Machine.Posts
             Program = new List<string>();
             Errors = new List<string>();
 
-            BoundingBox = BoundingBox.Empty;
-
             if (StockModel != null)
                 BoundingBox = StockModel.GetBoundingBox(true);
+            else
+                ComputeBounds();
 
             // Working variables
             int G_VALUE = -1;

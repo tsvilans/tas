@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using Rhino.Geometry;
 
 namespace tas.Machine
@@ -82,6 +81,12 @@ namespace tas.Machine
         public double FeedRateIPM { get { return (double)FeedRate / 25.4; } set { FeedRate = (int)(value * 25.4); } }
 
         /// <summary>
+        /// Tool rapid rate.
+        /// </summary>
+        public int RapidRate;
+        public double RapidRateIPM { get { return (double)RapidRate / 25.4; } set { RapidRate = (int)(value * 25.4); } }
+
+        /// <summary>
         /// Tool plunge rate.
         /// </summary>
         public int PlungeRate;
@@ -92,6 +97,25 @@ namespace tas.Machine
         /// </summary>
         public int SpindleSpeed;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public MachineTool()
+        {
+            Name = "DefaultTool";
+            Diameter = 12;
+            Length = 100;
+            Number = 1;
+            RapidRate = 10000;
+            FeedRate = 2000;
+            PlungeRate = 1000;
+            SpindleSpeed = 18000;
+            OffsetNumber = 1;
+            StepDown = Diameter / 2;
+            StepOver = Diameter / 2;
+            Shape = ToolShape.Flat;
+        }
+
         public MachineTool(string name = "MachineTool", double diameter=12, int tool_number=0, int offset_number=0,
             double length = 0.0, int feed = 2000, int speed = 15000, int plunge = 600, ToolShape shape = ToolShape.Flat)
         {
@@ -99,6 +123,7 @@ namespace tas.Machine
             Diameter = diameter;
             Length = length;
             Number = tool_number;
+            RapidRate = 10000;
             FeedRate = feed;
             PlungeRate = plunge;
             SpindleSpeed = speed;

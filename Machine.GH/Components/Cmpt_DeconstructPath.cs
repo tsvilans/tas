@@ -7,7 +7,7 @@ using Rhino.Geometry;
 using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Data;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_DeconstructPath : GH_Component
     {
@@ -20,55 +20,38 @@ namespace tas.Machine.GH
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Path", "P", "Path to deconstruct.", GH_ParamAccess.tree);
+            pManager.AddGenericParameter("Path", "P", "Paths to deconstruct.", GH_ParamAccess.tree);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddPlaneParameter("Planes", "P", "List of planes.", GH_ParamAccess.tree);
+            pManager.AddPlaneParameter("Planes", "P", "Tree of planes.", GH_ParamAccess.tree);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            GH_Structure<GH_Plane> plane_tree = null;
-            GH_Structure<GH_tasPath> path_tree = null;
+            GH_Structure<GH_Plane> plane_tree = new GH_Structure<GH_Plane>();
 
-            DA.GetDataTree<GH_tasPath>(0, out path_tree);
+            DA.GetDataTree<IGH_Goo>(0, out GH_Structure<IGH_Goo> input_tree);
 
-            foreach (var path in path_tree.Paths)
+            foreach (var tree_path in input_tree.Paths)
             {
-                for (int i = 0; i < path_tree[path].Count; ++i)
+                for (int i = 0; i < input_tree[tree_path].Count; ++i)
                 {
-                    var npath = path.AppendElement(i);
+                    var path = input_tree[tree_path][i] as GH_tasPath;
+                    if (path == null) continue;
+
+                    var npath = tree_path.AppendElement(i);
                     plane_tree.EnsurePath(npath);
-                    plane_tree[npath].AddRange(path_tree[path][i].Value.ToList().Select(x => new GH_Plane(x)));
+                    plane_tree[npath].AddRange(path.Value.ToList().Select(x => new GH_Plane(x)));
                 }
             }
 
             DA.SetDataTree(0, plane_tree);
         }
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_CreateToolpath_24x24;
-            }
-        }
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_CreateToolpath_24x24;
 
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("36abf236-a2af-46d4-9f24-3985007469b5"); }
-        }
+        public override Guid ComponentGuid => new Guid("36abf236-a2af-46d4-9f24-3985007469b5"); 
     }
 }

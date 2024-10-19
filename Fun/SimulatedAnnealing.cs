@@ -159,10 +159,10 @@ namespace tas.Extra
                     }
                     //else
                     //    continue;
-                    //else
-                    //{
-                    //    mutateDistances();
-                    //}
+                    else
+                    {
+                        mutateDistances();
+                    }
                     //cooling process on every iteration
 
                 }

@@ -84,10 +84,10 @@ namespace tas.Machine.Posts
             Errors = new List<string>();
             MachineTool ActiveTool;
 
-            BoundingBox = BoundingBox.Empty;
-
             if (StockModel != null)
                 BoundingBox = StockModel.GetBoundingBox(true);
+            else
+                ComputeBounds();
 
             // Working variables
             int G_VALUE = -1;

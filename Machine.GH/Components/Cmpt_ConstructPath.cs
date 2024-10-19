@@ -7,7 +7,7 @@ using Rhino.Geometry;
 using Grasshopper.Kernel.Types;
 using Grasshopper.Kernel.Data;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_CreatePath : GH_Component
     {
@@ -28,27 +28,23 @@ namespace tas.Machine.GH
             pManager.AddGenericParameter("Path", "P", "Path", GH_ParamAccess.tree);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             GH_Structure<GH_Plane> plane_tree = null;
-            GH_Structure<GH_tasPath> path_tree = null;
+            GH_Structure<GH_tasPath> path_tree = new GH_Structure<GH_tasPath>();
 
             DA.GetDataTree(0, out plane_tree);
 
-            foreach (var path in plane_tree.Paths)
+            foreach (var tree_path in plane_tree.Paths)
             {
-                path_tree.EnsurePath(path);
+                path_tree.EnsurePath(tree_path);
 
-                if (plane_tree[path].Count > 1)
+                if (plane_tree[tree_path].Count > 1)
                 {
-                    path_tree[path].Add(
+                    path_tree[tree_path].Add(
                         new GH_tasPath(
                             new Path(
-                                plane_tree[path].Select(x => x.Value))
+                                plane_tree[tree_path].Select(x => x.Value))
                             )
                         );
                 }
@@ -57,23 +53,8 @@ namespace tas.Machine.GH
             DA.SetDataTree(0, path_tree);
         }
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_CreateToolpath_24x24;
-            }
-        }
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_CreateToolpath_24x24;
 
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("8b3cbf53-f05d-4fdd-b582-913330497f72"); }
-        }
+        public override Guid ComponentGuid =>  new Guid("8b3cbf53-f05d-4fdd-b582-913330497f72");
     }
 }

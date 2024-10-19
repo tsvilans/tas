@@ -5,7 +5,7 @@ using System.Linq;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_CreateMachineTool : GH_Component
     {

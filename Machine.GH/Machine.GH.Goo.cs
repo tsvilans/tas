@@ -25,6 +25,7 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using System.Drawing;
 using GH_IO.Serialization;
+using System.IO;
 
 namespace tas.Machine.GH
 {
@@ -105,11 +106,57 @@ namespace tas.Machine.GH
         }
     }
 
-    public class GH_Toolpath : GH_Goo<Toolpath>, IGH_PreviewData
+    public class GH_Toolpath : GH_GeometricGoo<Toolpath>, IGH_PreviewData
     {
-        public GH_Toolpath() { this.Value = null; }
-        public GH_Toolpath(GH_Toolpath goo) { this.Value = new Toolpath(goo.Value); }
-        public GH_Toolpath(Toolpath native) { this.Value = new Toolpath(native); }
+
+        public GH_Toolpath() 
+        { 
+            Value = null; 
+        }
+
+        public GH_Toolpath(GH_Toolpath goo) 
+        { 
+            Value = new Toolpath(goo.Value);
+            CreatePreviewData(goo.Value);
+        }
+
+        public GH_Toolpath(Toolpath native) 
+        { 
+            Value = new Toolpath(native);
+            CreatePreviewData(native);
+        }
+
+        private void CreatePreviewData(Toolpath toolpath)
+        {
+            var rapidLines = new List<Line>();
+            var feedLines = new List<Line>();
+            var plungeLines = new List<Line>();
+            var unknownLines = new List<Line>();
+
+            for (int i = 0; i < toolpath.Paths.Count; ++i)
+            {
+                for (int j = 1; j < toolpath.Paths[i].Count; ++j)
+                {
+                    var wp = toolpath.Paths[i][j];
+                    var line = new Line(
+                        toolpath.Paths[i][j-1].Plane.Origin,
+                        wp.Plane.Origin);
+
+                    if (wp.IsRapid()) rapidLines.Add(line);
+                    else if (wp.IsFeed()) feedLines.Add(line);
+                    else if (wp.IsPlunge()) plungeLines.Add(line);
+                    else unknownLines.Add(line);
+                }
+            }
+
+            PreviewFeeds = feedLines.ToArray();
+            PreviewRapids = rapidLines.ToArray();
+            PreviewPlunges = plungeLines.ToArray();
+            PreviewUnknown = unknownLines.ToArray();
+        }
+
+        Line[] PreviewRapids = null, PreviewFeeds = null, PreviewPlunges = null, PreviewUnknown = null;
+
         public override IGH_Goo Duplicate() => new GH_Toolpath(this);
         public override bool IsValid => true;
         public override string TypeName => "ToolpathGoo";
@@ -119,9 +166,15 @@ namespace tas.Machine.GH
 
         public override bool CastFrom(object source)
         {
-            if (source is Toolpath)
+            if (source is Toolpath toolpath)
             {
-                Value = new Toolpath(source as Toolpath);
+                Value = new Toolpath(toolpath);
+                return true;
+            }
+
+            if (source is GH_Toolpath gh_toolpath)
+            {
+                Value = new Toolpath(gh_toolpath.Value);
                 return true;
             }
 
@@ -132,8 +185,38 @@ namespace tas.Machine.GH
         {
             if (typeof(Q).IsAssignableFrom(typeof(Toolpath)))
             {
-                object blank = Value;
-                target = (Q)blank;
+                object toolpath = Value;
+                target = (Q)toolpath;
+                return true;
+            }
+
+            if (typeof(Q).IsAssignableFrom(typeof(GH_Curve)))
+            {
+                var points = new List<Point3d>();
+                for (int i = 0; i < Value.Paths.Count; ++i)
+                {
+                    points.AddRange(Value.Paths[i].Select(x => x.Plane.Origin));
+                }
+                object curve = new GH_Curve(new Polyline(points).ToNurbsCurve());
+
+                target = (Q)curve;
+                return true;
+            }
+
+            if (typeof(Q).IsAssignableFrom(typeof(IEnumerable<GH_Plane>)))
+            {
+                var planes = new List<GH_Plane>();
+                for (int i = 0; i < Value.Paths.Count; ++i)
+                {
+                    for (int j = 0; j < Value.Paths[i].Count; ++j)
+                    {
+                        planes.AddRange(Value.Paths[i].Select(x => new GH_Plane(x.Plane)));
+                    }
+                }
+
+                object o = planes;
+                target = (Q)o;
+
                 return true;
             }
 
@@ -144,19 +227,22 @@ namespace tas.Machine.GH
         {
             get
             {
-                //return new BoundingBox(Value.Paths.SelectMany(x => x.Select(y => y.Plane.Origin)));
-                return new BoundingBox(Value.Paths.SelectMany(x => x.Select(y => y.Plane.Origin)));
+                return Boundingbox;
             }
         }
 
-    public void DrawViewportMeshes(GH_PreviewMeshArgs args)
+        public override BoundingBox Boundingbox => new BoundingBox(Value.Paths.SelectMany(x => x.Select(y => y.Plane.Origin)));
+
+        public void DrawViewportMeshes(GH_PreviewMeshArgs args)
         {
         }
 
         public void DrawViewportWires(GH_PreviewWireArgs args)
         {
-            //for (int i = 0; i < Value.Paths.Count; ++i)
-            //    args.Pipeline.DrawPolyline(Value.Paths[i].Select(x => x.Plane.Origin), Color.Black);
+            if (PreviewFeeds != null) { args.Pipeline.DrawLines(PreviewFeeds, Color.LightBlue); }
+            if (PreviewRapids != null) { args.Pipeline.DrawLines(PreviewRapids, Color.Red); }
+            if (PreviewPlunges != null) { args.Pipeline.DrawLines(PreviewPlunges, Color.LimeGreen); }
+            if (PreviewUnknown != null) { args.Pipeline.DrawLines(PreviewUnknown, Color.Purple); }
         }
 
         public override bool Write(GH_IWriter writer)
@@ -164,6 +250,31 @@ namespace tas.Machine.GH
             //byte[] centrelineBytes = GH_Convert.CommonObjectToByteArray(Value.Centreline);
             //writer.SetByteArray("centreline", 0, centrelineBytes);
             return base.Write(writer);
+        }
+
+        public override IGH_GeometricGoo DuplicateGeometry()
+        {
+            return new GH_Toolpath(Value.Duplicate());
+        }
+
+        public override BoundingBox GetBoundingBox(Transform xform)
+        {
+            var bb = ClippingBox;
+            bb.Transform(xform);
+            return bb;
+        }
+
+        public override IGH_GeometricGoo Transform(Transform xform)
+        {
+            var transformed = Value.Duplicate();
+            transformed.Transform(xform);
+
+            return new GH_Toolpath(transformed);
+        }
+
+        public override IGH_GeometricGoo Morph(SpaceMorph xmorph)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -330,13 +441,13 @@ namespace tas.Machine.GH
             }
             if (typeof(Q).IsAssignableFrom(typeof(IEnumerable<GH_Plane>)))
             {
-                List<GH_Plane> cl = new List<GH_Plane>();
+                var planes = new List<GH_Plane>();
                 foreach (Plane p in Value)
                 {
-                    cl.Add(new GH_Plane(p));
+                    planes.Add(new GH_Plane(p));
                 }
 
-                object o = cl;
+                object o = planes;
                 target = (Q)o;
                 return true;
             }
@@ -357,12 +468,67 @@ namespace tas.Machine.GH
         }
     }
 
-    public class tasPathParameter : GH_PersistentParam<GH_tasPath>
+    public class ToolpathParameter : GH_PersistentParam<GH_Toolpath>, IGH_PreviewObject
     {
-        public tasPathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Path") { }
+        public ToolpathParameter() : base("Toolpath parameter", "Toolpath", "This is a toolpath.", "tasMachine", "Toolpath") { }
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+        private BoundingBox BoundingBox = BoundingBox.Unset;
+
+        public override System.Guid ComponentGuid => new Guid("DA2E3425-9FD4-43FD-8BD8-A0619EEC16CD");
+
+        public bool Hidden { get; set; }
+
+        public bool IsPreviewCapable => VolatileDataCount > 0;
+
+        public BoundingBox ClippingBox => BoundingBox;
+
+        protected override GH_GetterResult Prompt_Singular(ref GH_Toolpath value)
+        {
+            value = new GH_Toolpath();
+            return GH_GetterResult.success;
+        }
+        protected override GH_GetterResult Prompt_Plural(ref List<GH_Toolpath> values)
+        {
+            values = new List<GH_Toolpath>();
+            return GH_GetterResult.success;
+        }
+
+        public void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            Preview_DrawWires(args);
+        }
+
+        protected override void OnVolatileDataCollected()
+        {
+            BoundingBox = BoundingBox.Empty;
+            foreach (GH_Toolpath toolpath in VolatileData.AllData(true))
+            {
+                BoundingBox.Union(toolpath.Boundingbox);
+            }
+        }
+
+        public void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+        }
+    }
+
+    public class PathParameter : GH_PersistentParam<GH_tasPath>, IGH_PreviewObject
+    {
+        public PathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Path") { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         //protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
+
+        private BoundingBox BoundingBox = BoundingBox.Unset;
+
         public override System.Guid ComponentGuid => new Guid("{eba2ae1c-5c0c-4553-9fae-411e0905ce23}");
+
+        public bool Hidden { get; set ; }
+
+        public bool IsPreviewCapable => VolatileDataCount > 0;
+
+        public BoundingBox ClippingBox => BoundingBox;
+
         protected override GH_GetterResult Prompt_Singular(ref GH_tasPath value)
         {
             value = new GH_tasPath();
@@ -372,6 +538,27 @@ namespace tas.Machine.GH
         {
             values = new List<GH_tasPath>();
             return GH_GetterResult.success;
+        }
+
+        public void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            Preview_DrawWires(args);                
+        }
+
+        protected override void OnVolatileDataCollected()
+        {
+            BoundingBox = BoundingBox.Empty;
+            foreach (GH_tasPath path in VolatileData.AllData(true))
+            {
+                foreach(var plane in path.Value)
+                {
+                    BoundingBox.Union(plane.Origin);
+                }
+            }
+        }
+
+        public void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
         }
     }
 

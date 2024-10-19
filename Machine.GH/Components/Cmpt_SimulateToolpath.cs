@@ -12,7 +12,7 @@ using tas.Core.Util;
 using tas.Machine;
 using tas.Machine.GH;
 
-namespace tas.Projects.DMI.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_SimulateToolpath : GH_Component
     {

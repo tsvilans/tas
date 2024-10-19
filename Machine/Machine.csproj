@@ -61,6 +61,7 @@
     <Compile Include="Posts\Post_CMS.cs" />
     <Compile Include="Posts\Post_Haas.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Toolpaths\Toolpath_AreaClearance2.cs" />
     <Compile Include="Toolpaths\Toolpath_StandardDrill.cs" />
     <Compile Include="Toolpaths\Toolpath_HelicalDrill.cs" />
     <Compile Include="ToolSettings.cs" />
@@ -73,7 +74,7 @@
     <Compile Include="Toolpaths\Toolpath_Profile.cs" />
     <Compile Include="Toolpaths\Toolpath_Raster.cs" />
     <Compile Include="Toolpaths\Toolpath_SurfaceProfile.cs" />
-    <Compile Include="Types.cs" />
+    <Compile Include="Path.cs" />
     <Compile Include="Waypoint.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -85,9 +86,13 @@
   <ItemGroup>
     <PackageReference Include="Grasshopper">
       <Version>6.22.20028.13281</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
       <Version>6.22.20028.13281</Version>
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

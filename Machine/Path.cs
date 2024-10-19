@@ -11,7 +11,6 @@ namespace tas.Machine
 {
     public class Path : RhinoList<Plane>, ICloneable
     {
-        Polyline p;
         public Path()
         {
 
@@ -41,11 +40,26 @@ namespace tas.Machine
             }
         }
 
+        public static Path JoinPaths(IEnumerable<Path> paths)
+        {
+            var path = new Path();
+            foreach (var  p in paths)
+            {
+                path.AddRange(p);
+            }
+
+            return path;
+        }
+
         public static Path CreateRamp(Path poly, Plane pl, double height, double length)//, ref string debug)
         {
-            poly.Reverse();
-            int N = poly.Count;
-            if (poly.IsClosed)
+            if (poly.Count < 1) return null;
+
+            var path = new Path(poly);
+
+            path.Reverse();
+            int N = path.Count;
+            if (path.IsClosed)
                 N--;
             double th = 0.0;
             double td = 0.0;
@@ -56,18 +70,18 @@ namespace tas.Machine
             while (th < length)
             {
                 // distance between i and next
-                td = poly[next].Origin.DistanceTo(poly[i].Origin);
+                td = path[next].Origin.DistanceTo(path[i].Origin);
 
                 if (th + td >= length)
                 {
                     double t = ((th + td) - length) / td; // get t value for lerp
-                    rpts.Add(poly[i]);
-                    rpts.Add(tas.Core.Util.Interpolation.InterpolatePlanes(poly[i], poly[next], 1.0 - t));
+                    rpts.Add(path[i]);
+                    rpts.Add(tas.Core.Util.Interpolation.InterpolatePlanes(path[i], path[next], 1.0 - t));
 
                     break;
                 }
                 th += td;
-                rpts.Add(poly[i]);
+                rpts.Add(path[i]);
                 i = (i + 1) % N;
                 next = (i + 1) % N;
             }

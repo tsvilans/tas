@@ -20,7 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Grasshopper;
 using Rhino.Geometry;
+using Rhino.PlugIns;
 using tas.Core;
 using tas.Core.Util;
 
@@ -127,6 +129,38 @@ namespace tas.Machine
             }
         }
 
+        public double GetTotalTime()
+        {
+            double time = 0;
+            var previous = Paths[0][0];
+
+            for (int i = 0; i < Paths.Count; ++i)
+            {
+                for (int j = 0; j < Paths[i].Count; ++j)
+                {
+                    var current = Paths[i][j];
+                    var speed = 0;
+                    if (current.IsRapid())
+                    {
+                        speed = Tool.RapidRate;
+                    }
+                    else if (current.IsFeed())
+                    {
+                        speed = Tool.FeedRate;
+                    }
+                    else if (current.IsPlunge())
+                    {
+                        speed = Tool.PlungeRate;
+                    }
+
+                    time += current.Plane.Origin.DistanceTo(previous.Plane.Origin) / speed;
+                    previous = current;
+                }
+            }
+
+            return time;
+        }
+
         /// <summary>
         /// If true, the tool will retract along the safety plane's
         /// Z-axis vector to the plane. This only works if the Safety is a 
@@ -160,7 +194,7 @@ namespace tas.Machine
                         new_path.AddRange(LinkOnSafety(LastTarget, temp));
                 
                 new_path.Add(temp);
-                new_path.Add(new Waypoint(p, (int)WaypointType.FEED));
+                new_path.Add(new Waypoint(p, (int)WaypointType.RAPID));
 
                 p = Paths[i][0].Plane;
                 new_path.Add(new Waypoint(p, (int)WaypointType.PLUNGE));
@@ -194,16 +228,30 @@ namespace tas.Machine
 
             if (Safety is Plane)
             {
+                var retractPlane = current.Plane;
+                /*
                 if (PlaneRetractVertical)
                 {
-                    Plane p = current.Plane;
                     Plane sp = (Plane)Safety;
-                    Vector3d v = sp.Origin - p.Origin;
-                    p.Origin = p.Origin + sp.ZAxis * (sp.ZAxis * v);
-                    Waypoint wp = new Waypoint(p, (int)WaypointType.RAPID);
+                    Vector3d v = sp.Origin - retractPlane.Origin;
+                    retractPlane.Origin = retractPlane.Origin + sp.ZAxis * (sp.ZAxis * v);
+                    Waypoint wp = new Waypoint(retractPlane, (int)WaypointType.RAPID);
                     return wp;
                 }
+                */
+                var safetyPlane = (Plane)Safety;
+                var projection = PlaneRetractVertical? safetyPlane.ProjectAlongVector(safetyPlane.ZAxis): safetyPlane.ProjectAlongVector(current.Plane.ZAxis);
+                
+                var retractPoint = retractPlane.Origin;
+                retractPoint.Transform(projection);
 
+                retractPlane.Origin = retractPoint;
+
+                // retractPlane.Transform(projection);
+
+                return new Waypoint(retractPlane, (int)WaypointType.RAPID);
+
+                /*
                 double t;
                 Line line = new Line(current.Plane.Origin, current.Plane.ZAxis);
                 if (Rhino.Geometry.Intersect.Intersection.LinePlane(line, (Plane)Safety, out t))
@@ -213,6 +261,7 @@ namespace tas.Machine
                     Waypoint wp = new Waypoint(p, (int)WaypointType.RAPID);
                     return wp;
                 }
+                */
             }
             else if (Safety is Mesh)
             {

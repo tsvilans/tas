@@ -30,11 +30,11 @@ using tas.Core;
 
 using CPath = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using CPaths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
-
+using System.Threading;
 
 namespace tas.Machine.Toolpaths
 {
-    public class Toolpath_AreaClearance : ToolpathStrategy
+    public class Toolpath_AreaClearance2 : ToolpathStrategy
     {
         private int LOOP_LIMIT = 500;
 
@@ -50,28 +50,35 @@ namespace tas.Machine.Toolpaths
 
         public List<Mesh> Stock;
         public List<Mesh> DriveGeometry;
+        public List<Mesh> Bounds;
 
         // debug
         public List<Polyline> ShadowPolylines;
 
         List<Polyline> ResultPaths;
 
-        public Toolpath_AreaClearance(Mesh Geometry) : this(new List<Mesh> { Geometry }, new List<Mesh> { Mesh.CreateFromBox(Geometry.GetBoundingBox(true), 1, 1, 1) })
+        public Toolpath_AreaClearance2(Mesh Geometry) : this(new List<Mesh> { Geometry }, new List<Mesh> { Mesh.CreateFromBox(Geometry.GetBoundingBox(true), 1, 1, 1) })
         {
         }
 
-        public Toolpath_AreaClearance(List<Mesh> Geometry, List<Mesh> StockGeometry) :
-            this (Geometry, StockGeometry, new MachineTool())
+        public Toolpath_AreaClearance2(List<Mesh> Geometry, List<Mesh> StockGeometry) :
+            this(Geometry, StockGeometry, new List<Mesh>(), new MachineTool())
         {
         }
 
-        public Toolpath_AreaClearance(List<Mesh> geometry, List<Mesh> stock_geometry, MachineTool tool)
+        public Toolpath_AreaClearance2(List<Mesh> Geometry, List<Mesh> StockGeometry, List<Mesh> Bounds) :
+            this(Geometry, StockGeometry, Bounds, new MachineTool())
+        {
+        }
+
+        public Toolpath_AreaClearance2(List<Mesh> geometry, List<Mesh> stock_geometry, List<Mesh> bounds, MachineTool tool)
         {
             Tool = tool;
             Workplane = Plane.WorldXY;
             StartEnd = false;
             DriveGeometry = geometry;
             Stock = stock_geometry;
+            Bounds = bounds;
             MaxDepth = double.MaxValue;
 
             SmallPathThreshold = Tool.Diameter;
@@ -86,10 +93,20 @@ namespace tas.Machine.Toolpaths
             if (Stock == null || Stock.Count < 1 || DriveGeometry == null || DriveGeometry.Count < 1)
                 throw new Exception("Stock or drive geometry not set!");
 
-            BoundingBox bb = Stock[0].GetBoundingBox(Workplane);
-            foreach (Mesh m in Stock)
+            BoundingBox bb = BoundingBox.Empty;
+            if (Bounds != null && Bounds.Count > 0)
             {
-                bb = BoundingBox.Union(bb, m.GetBoundingBox(Workplane));
+                foreach (Mesh m in Bounds)
+                {
+                    bb.Union(m.GetBoundingBox(Workplane));
+                }
+            }
+            else
+            {
+                foreach (Mesh m in Stock)
+                {
+                    bb.Union(m.GetBoundingBox(Workplane));
+                }
             }
 
             if (bb.IsDegenerate(0.1) > 0)
@@ -100,9 +117,17 @@ namespace tas.Machine.Toolpaths
             //double TotalDepth = top.DistanceTo(bottom);
             double TotalDepth = bb.Max.Z - bb.Min.Z;
 
-            int N = (int)(Math.Ceiling(Math.Min(MaxDepth, TotalDepth) / Tool.StepDown));
+            TotalDepth = Math.Min(MaxDepth, TotalDepth);
+
+            int N = (int)(Math.Ceiling(TotalDepth / Tool.StepDown));
+
+            double difference = N * Tool.StepDown - TotalDepth;
+
             Plane CuttingPlane = new Plane(Workplane);
+
             Point3d top_xform = new Point3d(top);
+            top_xform.Transform(Transform.Translation(0, 0, difference));
+
             top_xform.Transform(Transform.PlaneToPlane(Plane.WorldXY, Workplane));
             CuttingPlane.Origin = top_xform;
 
@@ -112,7 +137,7 @@ namespace tas.Machine.Toolpaths
             CPaths Shadow = new CPaths(Polygons.Item1);
             double Area = PathsArea(Shadow);
 
-            for (int i = 0; i <= N; ++i)
+            for (int i = 0; i < N; ++i)
             {
                 // for each layer
                 CuttingPlane.Origin = CuttingPlane.Origin - Workplane.ZAxis * Tool.StepDown;
@@ -133,39 +158,18 @@ namespace tas.Machine.Toolpaths
                 PolyTree tree = new PolyTree();
                 offset.Execute(ref tree, -(Tool.Diameter / 2 + RestHorizontal) / Tolerance);
 
-                CPaths WorkingPaths = new CPaths();
-
                 List<Polyline> Output = new List<Polyline>();
+                var OutputRaw = new List<CPath>();
 
-                foreach (PolyNode pn in tree.Childs)
+                foreach (PolyNode child in tree.Childs)
                 {
-                    if (pn.Contour.Count > 0)
-                    {
-                        Output.Add(pn.Contour.ToPolyline(CuttingPlane, Tolerance, true));
-                        WorkingPaths.Add(pn.Contour);
-                    }
+                    OffsetChild(child, OutputRaw, -Tool.StepOver / Tolerance, LOOP_LIMIT);
                 }
-                
-                int counter = 0;
-                do
-                {
-                    offset.Clear();
-                    offset.AddPaths(WorkingPaths, JoinType.jtMiter, EndType.etClosedPolygon);
-                    offset.Execute(ref tree, -Tool.StepOver / Tolerance);
 
-                    WorkingPaths = new List<List<IntPoint>>();
-                    foreach (PolyNode pn in tree.Iterate())
-                    {
-                        if (pn.Contour.Count > 0)
-                        {
-                            Output.Add(pn.Contour.ToPolyline(CuttingPlane, Tolerance, true));
-                            WorkingPaths.Add(pn.Contour);
-                        }
-                    }
-                
-                    counter++;
+                foreach (var path in OutputRaw)
+                {
+                    Output.Add(path.ToPolyline(CuttingPlane, Tolerance, true));
                 }
-                while (tree.Total > 0 && counter < LOOP_LIMIT);
 
                 ResultPaths.AddRange(Output);
             }
@@ -174,6 +178,29 @@ namespace tas.Machine.Toolpaths
             foreach (CPath p in Shadow)
             {
                 ShadowPolylines.Add(p.ToPolyline(CuttingPlane, Tolerance, true));
+            }
+
+        }
+
+        void OffsetChild(PolyNode node, List<CPath> results, double distance, int iteration = 500)
+        {
+            if (iteration < 1) return;
+            var offset = new ClipperOffset(0.25, 0.25);
+            var tree = new PolyTree();
+
+            var paths = new List<CPath>() { node.Contour };
+            paths.AddRange(node.Childs.Select(x => x.Contour));
+
+            offset.AddPaths(paths, JoinType.jtMiter, EndType.etClosedPolygon);
+            results.AddRange(paths);
+
+            offset.Execute(ref tree, distance);
+
+            if (tree.Childs.Count < 1) return;
+
+            foreach (var child in tree.Childs)
+            {
+                OffsetChild(child, results, distance, iteration - 1);
             }
         }
 
@@ -260,10 +287,22 @@ namespace tas.Machine.Toolpaths
             if (Stock == null || Stock.Count < 1) return null;
 
             List<Polyline> Polygon = new List<Polyline>();
-            List<List<IntPoint>> SolutionMesh = new List<List<IntPoint>>();
-            List<List<IntPoint>> SolutionStock = new List<List<IntPoint>>();
-            List<List<IntPoint>> SolutionPolygon = new List<List<IntPoint>>();
+
+            CPaths SolutionMesh = new CPaths(),
+                SolutionStock = new CPaths (),
+                SolutionPolygon = new CPaths(),
+                SolutionBounds = new CPaths(); ;
+
             Clipper clipper;
+
+            var BoundsSlices = new List<Polyline>();
+            if (Bounds != null && Bounds.Count > 0)
+                foreach(Mesh m in Bounds)
+                {
+                    Polyline[] x = Rhino.Geometry.Intersect.Intersection.MeshPlane(m, P);
+                    if (x == null) continue;
+                    BoundsSlices.AddRange(x);
+                }
 
             // DO GEO
             List<Polyline> GeoSlices = new List<Polyline>();
@@ -298,10 +337,23 @@ namespace tas.Machine.Toolpaths
                 clipper.AddPaths(StockSlices.Select(x => x.ToPath2D(P, Tolerance)).ToList(), PolyType.ptClip, true);
                 clipper.Execute(ClipType.ctUnion, SolutionStock, PolyFillType.pftNonZero, PolyFillType.pftNonZero);
 
+                if (BoundsSlices.Count > 0)
+                {
+                    clipper = new Clipper(0);
+                    clipper.AddPaths(BoundsSlices.Select(x => x.ToPath2D(P, Tolerance)).ToList(), PolyType.ptClip, true);
+                    clipper.Execute(ClipType.ctUnion, SolutionBounds, PolyFillType.pftNonZero, PolyFillType.pftNonZero);
+
+                    clipper = new Clipper(0);
+                    clipper.AddPaths(SolutionStock, PolyType.ptClip, true);
+                    clipper.AddPaths(SolutionBounds, PolyType.ptSubject, true);
+
+                    clipper.Execute(ClipType.ctIntersection, SolutionStock, PolyFillType.pftNonZero, PolyFillType.pftNonZero);
+                }
 
                 ClipperOffset stock_offset = new ClipperOffset(0.25, 0.25);
                 stock_offset.AddPaths(SolutionStock, JoinType.jtMiter, EndType.etClosedPolygon);
                 stock_offset.Execute(ref SolutionStock, (Tool.Diameter / 2 + RestHorizontal) / Tolerance);
+
             }
 
             if (SolutionStock.Count > 0 && SolutionMesh.Count > 0)
@@ -316,128 +368,17 @@ namespace tas.Machine.Toolpaths
                 SolutionPolygon = SolutionStock;
             }
 
+            /*
+            for (int i = 0; i < SolutionPolygon.Count; ++i)
+            {
+                if (Clipper.Orientation(SolutionPolygon[i]))
+                {
+                    SolutionPolygon.Reverse();
+                }
+            }
+            */
+
             return new Tuple<CPaths, CPaths, CPaths>(SolutionMesh, SolutionStock, SolutionPolygon);
-        }
-
-        private class ACLayer
-        {
-            public Plane Workplane;
-            public List<ACIsland> Islands;
-
-            public void Calculate(double d)
-            {
-                foreach (ACIsland pi in Islands)
-                {
-                    pi.Calculate(Workplane, d);
-                }
-            }
-
-            public ACLayer(IEnumerable<Polyline> drive_curves, Plane plane)
-            {
-                Islands = new List<ACIsland>();
-                Workplane = plane;
-                foreach (Polyline poly in drive_curves)
-                {
-                    // project curve onto workplane
-                    List<Point3d> points = new List<Point3d>();
-                    foreach (Point3d p in poly)
-                    {
-                        points.Add(p.ProjectToPlane(Workplane));
-                    }
-                    Islands.Add(new ACIsland(new Polyline(points)));
-                }
-            }
-            public List<Polyline> GetPaths()
-            {
-                List<Polyline> polylines = new List<Polyline>();
-                foreach (ACIsland island in Islands)
-                {
-                    polylines.AddRange(island.GetPaths());
-                }
-                return polylines;
-            }
-        }
-
-        private class ACIsland
-        {
-            public List<ACIsland> Children;
-            public Polyline DriveCurve;
-            public List<Polyline> Paths;
-
-            public ACIsland(Polyline poly)
-            {
-                DriveCurve = poly;
-                Children = new List<ACIsland>();
-                Paths = new List<Polyline>();
-            }
-
-            public void Calculate(Plane p, double d)
-            {
-                List<Polyline> offC, offH;
-                offH = new List<Polyline>() { DriveCurve };
-
-                while (offH.Count == 1)
-                {
-                    Polyline3D.Offset(offH, Polyline3D.OpenFilletType.Butt, Polyline3D.ClosedFilletType.Miter, d, p, 0.01, out offC, out offH);
-                    // if there is only one offset, then it is still part of the same island
-                    if (offH.Count == 1)
-                    {
-                        Paths.Add(offH[0]);
-                    }
-                    // if there is more than 1 offset, then we create two new layers / islands
-                    else if (offH.Count > 1)
-                    {
-                        for (int i = 0; i < offH.Count; ++i)
-                        {
-                            Children.Add(new ACIsland(offH[i]));
-                        }
-                    }
-                }
-
-                foreach (ACIsland pl in Children)
-                {
-                    pl.Calculate(p, d);
-                }
-            }
-
-            public Polyline Link()
-            {
-                Polyline LinkedPath = new Polyline();
-                LinkedPath.AddRange(DriveCurve);
-
-                int index;
-                Point3d ClosestPoint = LinkedPath.Last;
-                for (int i = 0; i < Paths.Count; ++i)
-                {
-                    ClosestPoint = Paths[i].ClosestPoint(ClosestPoint);
-                    LinkedPath.Add(ClosestPoint);
-
-                    index = Paths[i].ClosestIndex(ClosestPoint);
-                    int real_index;
-                    int count = Paths[i].Count;
-                    for (int j = 0; j < Paths[i].Count; ++j)
-                    {
-                        real_index = (j + index) % count;
-                        LinkedPath.Add(Paths[i][real_index]);
-                    }
-                    LinkedPath.Add(ClosestPoint);
-                }
-
-                LinkedPath.Reverse();
-                LinkedPath.DeleteShortSegments(0.1);
-
-                return LinkedPath;
-            }
-            public List<Polyline> GetPaths()
-            {
-                List<Polyline> polylines = new List<Polyline>();
-                foreach (ACIsland island in Children)
-                {
-                    polylines.AddRange(island.GetPaths());
-                }
-                polylines.Add(Link());
-                return polylines;
-            }
         }
     }
 }

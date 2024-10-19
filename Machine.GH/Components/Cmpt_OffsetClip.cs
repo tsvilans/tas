@@ -11,7 +11,7 @@ using Grasshopper;
 using Grasshopper.Kernel.Data;
 using tas.Core.Util;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class tasTP_OffsetClip : GH_Component
     {

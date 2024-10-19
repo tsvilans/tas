@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_LoadMachineTools : GH_Component
     {

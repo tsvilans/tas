@@ -8,7 +8,7 @@ using Rhino.Geometry;
 
 using tas.Core;
 
-namespace tas.Machine.GH
+namespace tas.Machine.GH.Components
 {
     public class Cmpt_OrientPlanesToPoint : GH_Component
     {

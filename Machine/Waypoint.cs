@@ -242,6 +242,7 @@ namespace tas.Machine
         FEED = 0,
         PLUNGE = 2,
         ARC_CW = 4,
-        ARC_CCW = 12
+        ARC_CCW = 12,
+        UNKNOWN = 255
     }
 }

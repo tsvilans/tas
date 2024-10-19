@@ -101,6 +101,20 @@ namespace tas.Machine
         public Dictionary<string, MachineTool> Tools = new Dictionary<string, MachineTool>();
         public List<string> Errors = new List<string>();
 
+        public void ComputeBounds()
+        {
+            BoundingBox = BoundingBox.Empty;
+
+            foreach (var toolpath in Paths)
+            {
+                foreach(var path in toolpath.Paths)
+                {
+                    foreach (var wp in path)
+                        BoundingBox.Union(wp.Plane.Origin);
+                }
+            }
+        }
+
         public void CreateHeader()
         {
             // Create headers

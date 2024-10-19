@@ -235,10 +235,10 @@ namespace tas.Machine.Posts
             Program.Add("%");
             Program.Add("O0001");
 
-            BoundingBox = BoundingBox.Empty;
-
             if (StockModel != null)
                 BoundingBox = StockModel.GetBoundingBox(true);
+            else
+                ComputeBounds();
 
             CreateHeader();
 

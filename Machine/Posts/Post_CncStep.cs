@@ -66,6 +66,28 @@ namespace tas.Machine.Posts
             coords[2] = plane.Origin.Z;
         }
 
+        public void AddG54Macro(List<string> program)
+        {
+            program.Add("M98 P999");
+        }
+
+        public void AddG54MacroDefinition(List<string> program)
+        {
+            program.Add("O999:");
+            program.Add("PRINT \"G\"; 53+#909;\" : \";#900; \", \";#901;\", \";#902;");
+            program.Add("#1=#900");
+            program.Add("#2=#901");
+            program.Add("#3=#902");
+            program.Add("G54");
+            program.Add("PRINT \"Setting G54 to temporary offset...\"");
+            program.Add("#900=#1");
+            program.Add("#901=#2");
+            program.Add("#902=#3");
+            program.Add("G4 H0.5");
+            program.Add("PRINT \"G\"; 53+#909;\" : \";#900; \", \";#901;\", \";#902;");
+            program.Add("M99");
+        }
+
         public override object Compute()
         {
             if (Paths.Count < 1)
@@ -86,10 +108,10 @@ namespace tas.Machine.Posts
             Program = new List<string>();
             Errors = new List<string>();
 
-            BoundingBox = BoundingBox.Empty;
-
             if (StockModel != null)
                 BoundingBox = StockModel.GetBoundingBox(true);
+            else
+                ComputeBounds();
 
             // Working variables
             int G_VALUE = -1;
@@ -112,12 +134,14 @@ namespace tas.Machine.Posts
 
             // Create headers
             CreateHeader();
+            Program.Add($"%{EOL}");
 
             Program.Add($"G90{EOL}"); // Absolute coordinates
             Program.Add($"G64{EOL}"); // ???
             Program.Add($"G21{EOL}"); // Metric coordinates
             Program.Add($"M7{EOL}"); // Coolant on
-            Program.Add($"M8{EOL}"); // Coolant on
+            Program.Add($"M8{EOL}"); // Coolant pump on
+            //AddG54Macro(Program);
 
             // Loop through Toolpaths
             for (int i = 0; i < Paths.Count; ++i)
@@ -127,6 +151,7 @@ namespace tas.Machine.Posts
 
                 Program.Add($"{PreComment}{PostComment}{EOL}");
                 Program.Add($"{PreComment} START Toolpath: {TP.Name} {PostComment}{EOL}");
+                Program.Add($"PRINT \"Starting toolpath: {TP.Name}\"{EOL}");
                 Program.Add($"{PreComment}{PostComment}{EOL}");
 
                 // Tool change
@@ -145,11 +170,18 @@ namespace tas.Machine.Posts
                  */
                 //Program.Add($"G00 G90 G21 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
 
-                Program.Add($"G00 G53 G49 Z0.{EOL}"); // Retract Z
-                Program.Add($"G00 G90 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3} S{TP.Tool.SpindleSpeed} M03{EOL}");
+                Program.Add($"G00 Z{TP.RapidZ}{EOL}"); // Retract Z
+                Program.Add($"G00 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}");
+
+                /* Uncomment to do machine absolute retract
+                Program.Add($"G00 G53 G43 Z0.{EOL}"); // Retract Z 
+                Program.Add($"G00 G43 G90 G54 X{prev.Plane.Origin.X:F3} Y{prev.Plane.Origin.Y:F3}");
+                */
+
                 //Program.Add($"G43 H{Tools[TP.Tool.Name].OffsetNumber:00} M08{EOL}");
 
-                Program.Add($"S{TP.Tool.SpindleSpeed} M03{EOL}");
+                Program.Add($"S{TP.Tool.SpindleSpeed}{EOL}");
+                Program.Add($"M03{EOL}");
 
 
                 // Loop through subpaths
@@ -273,7 +305,7 @@ namespace tas.Machine.Posts
             }
             //Program.Add($"G00 Z10.");
 
-            Program.Add($"{PreComment} End of program {PostComment}{EOL}");
+            //Program.Add($"{PreComment} End of program {PostComment}{EOL}");
 
             Program.Add($"G53 G49 G0 Z0.{EOL}"); // Retract Z
             //Program.Add($"G0 X0 Y0{EOL}"); // Return home
@@ -282,6 +314,8 @@ namespace tas.Machine.Posts
             Program.Add($"M5{EOL}"); // Spindle stop
             Program.Add($"M30{EOL}");
             Program.Add($"{PreComment} End of program {PostComment}{EOL}");
+
+            //AddG54MacroDefinition(Program);
 
             //Program.Add("%");
             return Program;
