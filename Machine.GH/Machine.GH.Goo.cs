@@ -470,7 +470,7 @@ namespace tas.Machine.GH
 
     public class ToolpathParameter : GH_PersistentParam<GH_Toolpath>, IGH_PreviewObject
     {
-        public ToolpathParameter() : base("Toolpath parameter", "Toolpath", "This is a toolpath.", "tasMachine", "Toolpath") { }
+        public ToolpathParameter() : base("Toolpath parameter", "Toolpath", "This is a toolpath.", "tasMachine", UiNames.ToolpathSection) { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
 
         private BoundingBox BoundingBox = BoundingBox.Unset;
@@ -515,7 +515,7 @@ namespace tas.Machine.GH
 
     public class PathParameter : GH_PersistentParam<GH_tasPath>, IGH_PreviewObject
     {
-        public PathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", "Path") { }
+        public PathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", UiNames.PathSection) { }
         public override GH_Exposure Exposure => GH_Exposure.secondary;
         //protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
 
