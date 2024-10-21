@@ -14,7 +14,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_JoinPaths()
           : base("Join Paths", "Path",
               "Join orientated paths together.",
-              "tasMachine", "Path")
+              "tasMachine", UiNames.PathSection)
         {
         }
 

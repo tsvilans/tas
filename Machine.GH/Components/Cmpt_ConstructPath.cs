@@ -14,7 +14,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_CreatePath()
           : base("Create Path", "Path",
               "Create an orientated path.",
-              "tasMachine", "Path")
+              "tasMachine", UiNames.PathSection)
         {
         }
 

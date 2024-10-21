@@ -23,7 +23,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_Pocket()
           : base("Pocket", "Pocket",
               "Simple area clearance toolpath strategy.",
-              "tasMachine", "Toolpaths")
+              "tasMachine", UiNames.StrategySection)
         {
         }
 

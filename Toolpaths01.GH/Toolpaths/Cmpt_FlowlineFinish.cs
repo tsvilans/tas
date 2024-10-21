@@ -19,7 +19,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_Flowline()
           : base("Flowline", "Flowline",
               "Finish strategy that follows UV coordinates of surface.",
-              "tasMachine", "Toolpaths")
+              "tasMachine", UiNames.StrategySection)
         {
         }
 

@@ -55,9 +55,9 @@ namespace tas.Machine
         {
             if (poly.Count < 1) return null;
 
-            var path = new Path(poly);
+            var path = poly.Duplicate();
 
-            path.Reverse();
+            //path.Reverse();
             int N = path.Count;
             if (path.IsClosed)
                 N--;
@@ -133,6 +133,7 @@ namespace tas.Machine
             get
             {
                 if (Count < 3) return false;
+                else if (First == Last) return true;
                 else if (First.Origin.DistanceTo(Last.Origin) < Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance) return true;
                 return false;
             }
@@ -177,6 +178,20 @@ namespace tas.Machine
         public List<Plane> ToPlanes()
         {
             return this.ToList<Plane>();
+        }
+
+        public double GetLength()
+        {
+            double length = 0;
+            if (this.Count < 2) return 0;
+
+            for (int i = 1; i < this.Count; ++i)
+            {
+                length += this[i].Origin.DistanceTo(
+                    this[i - 1].Origin);
+            }
+
+            return length;
         }
 
     }

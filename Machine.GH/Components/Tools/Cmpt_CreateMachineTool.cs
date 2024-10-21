@@ -12,7 +12,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_CreateMachineTool()
           : base("Create Machine Tool", "Machine Tool",
               "Create a machine tool from tool data.",
-              "tasMachine", "Tools")
+              "tasMachine", UiNames.ToolSection)
         {
         }
 

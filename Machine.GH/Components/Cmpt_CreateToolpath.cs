@@ -13,7 +13,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_CreateToolpath()
           : base("Create Toolpath", "Toolpath",
               "Create a machining toolpath with tool data.",
-              "tasMachine", "Machining")
+              "tasMachine", UiNames.ToolpathSection)
         {
         }
 
@@ -26,17 +26,20 @@ namespace tas.Machine.GH.Components
             pManager.AddTextParameter("Name", "N", "Name of toolpath.", GH_ParamAccess.item, "Toolpath");
             pManager.AddGenericParameter("Toolpaths", "T", "Toolpaths as Paths (from machine strategy components).", GH_ParamAccess.list);
             pManager.AddGenericParameter("Machine Tool", "MT", "Machine tool from library.", GH_ParamAccess.item);
-            pManager.AddPlaneParameter("Safety", "S", "Safety plane for rapid movements.", GH_ParamAccess.item, Plane.WorldXY);
+            pManager.AddPlaneParameter("Safety", "S", "Safety plane for rapid movements.", GH_ParamAccess.item);
             pManager.AddNumberParameter("RapidZ", "Rz", "Z-height for rapids.", GH_ParamAccess.item, 20.0);
             pManager.AddNumberParameter("SafeZ", "Sz", "Z-height for safe movements.", GH_ParamAccess.item, 10.0);
             pManager.AddBooleanParameter("VertRetract", "VRet", "Retract vertically (true) or along tool (false).", GH_ParamAccess.item, true);
             pManager.AddBooleanParameter("FlipWrist", "FW", "Optionally specify to flip the wrist of a multi-axis machine.", GH_ParamAccess.item, false);
             pManager.AddBooleanParameter("Link", "L", "Create toolpath links.", GH_ParamAccess.item, false);
+
+            pManager[3].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Toolpath", "T", "Toolpath with tool and machining data.", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Duration", "D", "Duration of toolpath in seconds.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -47,7 +50,7 @@ namespace tas.Machine.GH.Components
         {
             List<object> ToolpathObjects = new List<object>();
             object ToolObject = null;
-            Plane SafetyPlane = Plane.WorldXY;
+            Plane? SafetyPlane = null;
             double RapidZ = 20, iSafeZ = 10;
             bool VerticalRetract = true;
             string Name = "Toolpath";
@@ -119,6 +122,7 @@ namespace tas.Machine.GH.Components
             }
 
             DA.SetData("Toolpath", new GH_Toolpath(tp));
+            DA.SetData("Duration", tp.GetTotalTime());
 
             // Create visualization data
 

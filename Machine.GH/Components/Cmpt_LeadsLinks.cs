@@ -10,7 +10,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_LeadsLinks()
           : base("Create Leads and Links", "LeadsLinks",
               "Create leads and links for a toolpath.",
-              "tasMachine", "Machining")
+              "tasMachine", UiNames.ToolpathSection)
         {
         }
 

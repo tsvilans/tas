@@ -12,7 +12,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_JoinToolpaths()
           : base("Join Toolpaths", "Join",
               "Join two or more toolpaths into one. Tool and safety data will be taken from the first toolpath in the list.",
-              "tasMachine", "Machining")
+              "tasMachine", UiNames.ToolpathSection)
         {
         }
 

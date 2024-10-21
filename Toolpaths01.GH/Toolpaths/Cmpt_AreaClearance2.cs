@@ -16,7 +16,7 @@ namespace tas.Machine.GH.Components
         public AreaClearance2_Component()
           : base("Area Clearance", "Area Clr",
               "Area clearance toolpath strategy.",
-              "tasMachine", "Toolpaths")
+              "tasMachine", UiNames.StrategySection)
         {
         }
 

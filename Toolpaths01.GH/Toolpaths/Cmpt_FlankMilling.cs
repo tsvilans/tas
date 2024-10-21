@@ -15,7 +15,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_FlankMilling()
           : base("Flanking", "Flank",
               "Machine a ruled surface with the side of the tool.",
-              "tasMachine", "Toolpaths")
+              "tasMachine", UiNames.StrategySection)
         {
         }
 

@@ -14,7 +14,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_DeconstructPath()
           : base("Deconstruct Path", "DePath",
               "Convert path to planes.",
-              "tasMachine", "Path")
+              "tasMachine", UiNames.PathSection)
         {
         }
 

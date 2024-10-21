@@ -1325,8 +1325,61 @@ namespace tas.Core
             bf.ClosestPoint(testPoint, out u, out v);
             return bf.NormalAt(u, v);
         }
+    }
 
+    public static class TransformExtensionMethods
+    {
+        public static Transform FromDoubleArray(double[] arr)
+        {
+            var transform = new Transform();
+            transform.M00 = arr[0];
+            transform.M01 = arr[1];
+            transform.M02 = arr[2];
+            transform.M03 = arr[3];
 
+            transform.M10 = arr[4];
+            transform.M11 = arr[5];
+            transform.M12 = arr[6];
+            transform.M13 = arr[7];
+
+            transform.M20 = arr[8];
+            transform.M21 = arr[9];
+            transform.M22 = arr[10];
+            transform.M23 = arr[11];
+
+            transform.M30 = arr[12];
+            transform.M31 = arr[13];
+            transform.M32 = arr[14];
+            transform.M33 = arr[15];
+
+            return transform;
+        }
+
+        public static Transform FromFloatArray(float[] arr)
+        {
+            var transform = new Transform();
+            transform.M00 = arr[0];
+            transform.M01 = arr[1];
+            transform.M02 = arr[2];
+            transform.M03 = arr[3];
+
+            transform.M10 = arr[4];
+            transform.M11 = arr[5];
+            transform.M12 = arr[6];
+            transform.M13 = arr[7];
+
+            transform.M20 = arr[8];
+            transform.M21 = arr[9];
+            transform.M22 = arr[10];
+            transform.M23 = arr[11];
+
+            transform.M30 = arr[12];
+            transform.M31 = arr[13];
+            transform.M32 = arr[14];
+            transform.M33 = arr[15];
+
+            return transform;
+        }
     }
 
     public static class MiscExtensionMethods

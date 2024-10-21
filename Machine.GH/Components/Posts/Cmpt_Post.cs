@@ -20,7 +20,7 @@ namespace tas.Machine.GH.Posts
         public Cmpt_Post()
           : base("Post to machine", "Post",
               "Postprocess toolpaths to CNC machine.",
-              "tasMachine", "Posts")
+              "tasMachine", UiNames.ToolpathSection)
         {
         }
 

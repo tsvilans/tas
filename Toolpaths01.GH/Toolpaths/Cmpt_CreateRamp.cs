@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if EXTRA
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -93,3 +94,4 @@ namespace tas.Machine.GH.Components
         }
     }
 }
+#endif

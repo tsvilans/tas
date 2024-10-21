@@ -18,8 +18,8 @@ namespace tas.Machine.GH.Components
 
         public tasTP_OffsetClip()
           : base("Offset and clip", "OffsetClip",
-              "Offset toolpaths and clip with bounding mesh.",
-              "tasMachine", "Machining")
+              "Offset path and clip with bounding mesh.",
+              "tasMachine", UiNames.PathSection)
         {
         }
 
@@ -27,11 +27,11 @@ namespace tas.Machine.GH.Components
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Toolpaths", "TP", "Toolpaths as OrientedPolylines", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Path", "P", "Path to offset and clip.", GH_ParamAccess.list);
             pManager.AddIntegerParameter("NumLayers", "N", "Number of times to offset.", GH_ParamAccess.item, 4);
             pManager.AddNumberParameter("Distance", "D", "Offset distance between layers.", GH_ParamAccess.item, 6.0);
-            pManager.AddMeshParameter("Mesh", "M", "Bounding mesh to clip toolpaths to.", GH_ParamAccess.item);
-            pManager.AddBooleanParameter("Join", "J", "Don't retract between paths on the same layer.", GH_ParamAccess.item, true);
+            pManager.AddMeshParameter("Mesh", "M", "Bounding mesh to clip path to.", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Join", "J", "Join paths on the same layer.", GH_ParamAccess.item, true);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;

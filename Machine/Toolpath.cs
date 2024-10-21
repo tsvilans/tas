@@ -158,7 +158,7 @@ namespace tas.Machine
                 }
             }
 
-            return time;
+            return time * 60;
         }
 
         /// <summary>
@@ -222,7 +222,17 @@ namespace tas.Machine
         public Waypoint RetractToSafety(Waypoint current)
         {
             if (Safety == null)
-                throw new Exception("No safety defined!");
+            {
+
+                //throw new Exception("No safety defined!");
+                var currentPlane = current.Plane;
+                return new Waypoint(
+                    new Plane(
+                        current.Plane.Origin + current.Plane.ZAxis * (SafeZ + RapidZ),
+                        current.Plane.XAxis, 
+                        current.Plane.YAxis),
+                    (int)WaypointType.RAPID);
+            }
 
             Ray3d ray = new Ray3d(current.Plane.Origin, current.Plane.ZAxis);
 

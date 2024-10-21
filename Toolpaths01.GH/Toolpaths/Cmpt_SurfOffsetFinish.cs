@@ -19,7 +19,7 @@ namespace tas.Machine.GH.Components
         public Cmpt_SurfOffsetFinish()
           : base("Surface Offset ", "Srf Offset",
               "Simple surface offset finishing toolpath strategy.",
-              "tasMachine", "Toolpaths")
+              "tasMachine", UiNames.StrategySection)
         {
         }
 
