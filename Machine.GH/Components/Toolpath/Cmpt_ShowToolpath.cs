@@ -1,4 +1,5 @@
-﻿using System;
+﻿# if OBSOLETE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper.Kernel;
@@ -17,7 +18,6 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.ToolpathSection)
         {
         }
-
 
         List<Line> m_lines = new List<Line>();
         List<int> m_types = new List<int>();
@@ -111,3 +111,4 @@ namespace tas.Machine.GH.Components
         }
     }
 }
+#endif

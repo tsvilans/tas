@@ -19,9 +19,13 @@ namespace tas.Machine.GH.Components
         public Cmpt_SimulateToolpath()
           : base("Simulate Toolpath", "SimTP",
               "Simulate the current position of the machine tool at a specific time parameter.",
-              "tasMachine", UiNames.ToolpathSection)
+              "tasMachine", UiNames.OutputSection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_SimulateToolpath;
+        public override Guid ComponentGuid => new Guid("{a773f757-c628-4613-ad77-56a38aa473b1}");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -170,20 +174,6 @@ namespace tas.Machine.GH.Components
                 index--;
             }
             return m_toolpaths[index];
-        }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                //return tas.Projects.DMI.GH.Properties.Resources.icon_oriented_polyline_component_24x24;
-                return null;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{a773f757-c628-4613-ad77-56a38aa473b1}"); }
         }
     }
 }

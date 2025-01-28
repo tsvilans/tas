@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if OBSOLETE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Grasshopper;
@@ -23,6 +25,10 @@ namespace tas.Machine.GH.Posts
               "tasMachine", UiNames.ToolpathSection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_PostCMS_24x24;
+        public override Guid ComponentGuid => new Guid("54ef7bba-a5c3-424e-8f3c-79ec62ddee07");
+        public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
         Guid LastValueList = Guid.Empty;
         IGH_Param PostParameter = null;
@@ -219,17 +225,6 @@ namespace tas.Machine.GH.Posts
             writer.SetGuid("ValueListGuid", LastValueList);
             return base.Write(writer);
         }
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_PostCMS_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("54ef7bba-a5c3-424e-8f3c-79ec62ddee07"); }
-        }
     }
 }
+#endif

@@ -17,6 +17,9 @@ namespace tas.Machine.GH.Components
         {
         }
 
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_CreateToolpath;
+        public override Guid ComponentGuid => new Guid("0f44ae1d-5506-4655-92cb-72ee7dbf7c5b");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
 
         Line[][] VisualizationLines = new Line[0][];
         WaypointType[][] VisualizationTypes = new WaypointType[0][];
@@ -179,10 +182,5 @@ namespace tas.Machine.GH.Components
             }
 
         }
-
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_CreateToolpath_24x24;
-
-        public override Guid ComponentGuid => new Guid("0f44ae1d-5506-4655-92cb-72ee7dbf7c5b");
-
     }
 }

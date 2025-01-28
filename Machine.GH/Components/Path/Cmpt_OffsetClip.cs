@@ -1,4 +1,4 @@
-﻿
+﻿#if !LITE
 using System;
 using System.Collections.Generic;
 
@@ -22,6 +22,10 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.PathSection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_ClipOffsetPath;
+        public override Guid ComponentGuid => new Guid("4130c839-b946-4382-8a8f-98bb56a5e3d1");
+        public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
         bool JoinBrokenPaths = true;
 
@@ -51,7 +55,7 @@ namespace tas.Machine.GH.Components
             int N = 0;
             double D = 0;
 
-            DA.GetDataList("Toolpaths", OP);
+            DA.GetDataList("Path", OP);
             DA.GetData("NumLayers", ref N);
             DA.GetData("Distance", ref D);
             DA.GetData("Join", ref JoinBrokenPaths);
@@ -71,9 +75,12 @@ namespace tas.Machine.GH.Components
             List<Path> paths = new List<Path>();
             for (int i = 0; i < OP.Count; ++i)
             {
-                Path op = (OP[i] as GH_tasPath).Value;
-                if (op == null) continue;
-                paths.Add(op);
+                if (OP[i] is GH_tasPath ghPath)
+                {
+                    Path op = ghPath.Value;
+                    if (op == null) continue;
+                    paths.Add(op);
+                }
             }
 
             if (paths.Count < 1)
@@ -217,20 +224,6 @@ namespace tas.Machine.GH.Components
 
             return planes;
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                // return Resources.IconForThisComponent;
-                return null;
-            }
-        }
-
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("4130c839-b946-4382-8a8f-98bb56a5e3d1"); }
-        }
     }
 }
+#endif

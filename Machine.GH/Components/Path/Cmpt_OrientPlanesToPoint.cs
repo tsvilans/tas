@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !LITE
+using System;
 using System.Threading;
 using System.Collections.Generic;
 
@@ -18,6 +19,10 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.PathSection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_OrientPathToPoint;
+        public override Guid ComponentGuid => new Guid("{2f8c0c15-8c48-40d3-bfa2-94ee6bdfaaed}");
+        public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
         Point3d Focus = Point3d.Origin;
         double Twist = 0;
@@ -101,18 +106,6 @@ namespace tas.Machine.GH.Components
             DA.SetDataList("Planes", RawOutput);
             DA.SetData("debug", debug);
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_OrientTargets_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{2f8c0c15-8c48-40d3-bfa2-94ee6bdfaaed}"); }
-        }
     }
 }
+#endif

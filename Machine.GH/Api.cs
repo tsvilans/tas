@@ -13,5 +13,6 @@ namespace tas.Machine.GH
         public static string ToolSection = "3. Tool";
         public static string UtilitiesSection = "4. Utilities";
         public static string StrategySection = "5. Strategy";
+        public static string OutputSection = "6. Output";
     }
 }

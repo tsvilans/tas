@@ -67,30 +67,33 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Api.cs" />
-    <Compile Include="Components\Cmpt_ConstructPath.cs" />
-    <Compile Include="Components\Cmpt_DeconstructPath.cs" />
-    <Compile Include="Components\Cmpt_JoinPaths.cs" />
-    <Compile Include="Components\Cmpt_JoinToolpaths.cs" />
-    <Compile Include="Components\Cmpt_AddRamp.cs" />
-    <Compile Include="Components\Cmpt_RetractToolpath.cs" />
-    <Compile Include="Components\Cmpt_OrientPath.cs" />
+    <Compile Include="Components\Path\Cmpt_ConstructPath.cs" />
+    <Compile Include="Components\Path\Cmpt_DeconstructPath.cs" />
+    <Compile Include="Components\Path\Cmpt_JoinPaths.cs" />
+    <Compile Include="Components\Path\Cmpt_ClipPath.cs" />
+    <Compile Include="Components\Path\Cmpt_ReversePath.cs" />
+    <Compile Include="Components\Posts\Cmpt_SpmPost.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_JoinToolpaths.cs" />
+    <Compile Include="Components\Path\Cmpt_AddRamp.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_RetractToolpath.cs" />
+    <Compile Include="Components\Path\Cmpt_OrientPath.cs" />
     <Compile Include="Components\Tools\Cmpt_CreateMachineTool.cs" />
-    <Compile Include="Components\Cmpt_LeadsLinks.cs" />
-    <Compile Include="Components\Cmpt_SimulateToolpath.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_LeadsLinks.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_SimulateToolpath.cs" />
     <Compile Include="Components\Posts\Cmpt_Post.cs" />
     <Compile Include="Components\Posts\Cmpt_HaasPost.cs" />
     <Compile Include="Components\Posts\Cmpt_CmsPost.cs" />
-    <Compile Include="Components\Cmpt_CreateToolpath.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_CreateToolpath.cs" />
     <Compile Include="Components\Tools\Cmpt_LoadMachineTools.cs" />
-    <Compile Include="Components\Cmpt_OffsetClip.cs" />
-    <Compile Include="Components\Cmpt_OrientPlanesToPoint.cs" />
+    <Compile Include="Components\Path\Cmpt_OffsetClip.cs" />
+    <Compile Include="Components\Path\Cmpt_OrientPlanesToPoint.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor2Settings_Form.designer.cs">
       <DependentUpon>Cmpt_Processor2Settings_Form.cs</DependentUpon>
     </Compile>
     <Compile Include="Components\Deprecated\Cmpt_Processor2.cs" />
     <Compile Include="Components\Deprecated\Cmpt_Processor.cs" />
-    <Compile Include="Components\Cmpt_ShowToolpath.cs" />
+    <Compile Include="Components\Toolpath\Cmpt_ShowToolpath.cs" />
     <Compile Include="Components\Deprecated\Cmpt_ToolSettings_Form.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -138,13 +141,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>8.12.24282.7001</Version>
+      <Version>8.9.24194.18121</Version>
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>8.12.24282.7001</Version>
+      <Version>8.9.24194.18121</Version>
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -171,6 +174,72 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Goo\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_AreaClearance.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_ClipOffsetPath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_ClipPath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_CreatePath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_CreateRamp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_CreateTool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_CreateToolpath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_DeconstructPath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Hole.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_JoinPaths.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_JoinToolpaths.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_LoadTool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_PathParameter.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Pocket.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Post.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_RetractToolpath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_SimulateToolpath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_SurfaceOffset.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_OrientPath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_OrientPathToPoint.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_ToolpathParameter.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_ReversePath.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

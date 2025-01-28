@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !LITE
+using System;
 using System.Threading;
 using System.Collections.Generic;
 
@@ -19,9 +20,9 @@ namespace tas.Machine.GH.Components
         {
         }
 
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_OrientTargets_24x24;
-
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_OrientPath;
         public override Guid ComponentGuid => new Guid("2F9A10B5-857A-45D5-AEFE-4DF59AE49ED2");
+        public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -69,3 +70,4 @@ namespace tas.Machine.GH.Components
         }
     }
 }
+#endif

@@ -41,31 +41,6 @@
     <Reference Include="ClipperTools">
       <HintPath>..\include\ClipperTools.dll</HintPath>
     </Reference>
-    <Reference Include="Eto, Version=2.5.0.0, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
-      <HintPath>..\packages\RhinoCommon.6.22.20028.13281\lib\net45\Eto.dll</HintPath>
-      <Private>False</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </Reference>
-    <Reference Include="GH_IO, Version=6.22.20028.13280, Culture=neutral, PublicKeyToken=6a29997d2e6b4f97, processorArchitecture=MSIL">
-      <HintPath>..\packages\Grasshopper.6.22.20028.13281\lib\net45\GH_IO.dll</HintPath>
-      <Private>False</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </Reference>
-    <Reference Include="Grasshopper, Version=6.22.20028.13280, Culture=neutral, PublicKeyToken=dda4f5ec2cd80803, processorArchitecture=MSIL">
-      <HintPath>..\packages\Grasshopper.6.22.20028.13281\lib\net45\Grasshopper.dll</HintPath>
-      <Private>False</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </Reference>
-    <Reference Include="Rhino.UI, Version=6.22.20028.13280, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
-      <HintPath>..\packages\RhinoCommon.6.22.20028.13281\lib\net45\Rhino.UI.dll</HintPath>
-      <ExcludeAssets>runtime</ExcludeAssets>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RhinoCommon, Version=6.22.20028.13280, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
-      <HintPath>..\packages\RhinoCommon.6.22.20028.13281\lib\net45\RhinoCommon.dll</HintPath>
-      <ExcludeAssets>runtime</ExcludeAssets>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -86,12 +61,15 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Toolpaths\Cmpt_AreaClearance2.cs" />
+    <Compile Include="Toolpaths\Cmpt_AreaClearance1.cs" />
     <Compile Include="Toolpaths\Cmpt_CircularFingerJoint.cs" />
     <Compile Include="Toolpaths\Cmpt_CreateRamp.cs" />
     <Compile Include="Toolpaths\Cmpt_FlankMilling.cs" />
     <Compile Include="Toolpaths\Cmpt_FlatFinish.cs" />
     <Compile Include="Toolpaths\Cmpt_FlowlineFinish.cs" />
     <Compile Include="Toolpaths\Cmpt_LinearFingerJoint.cs" />
+    <Compile Include="Toolpaths\Cmpt_Drilling.cs" />
+    <Compile Include="Toolpaths\Cmpt_Contour.cs" />
     <Compile Include="Toolpaths\Cmpt_Pocket.cs" />
     <Compile Include="Toolpaths\Cmpt_SurfOffsetFinish.cs" />
     <Compile Include="Toolpaths\Cmpt_ToolpathBase.cs" />
@@ -153,8 +131,29 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>8.12.24282.7001</Version>
+      <Version>8.9.24194.18121</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_AreaClearance.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_CreateRamp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Hole.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Pocket.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_SurfaceOffset.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_AreaClearance2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tasMachine_Contour.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

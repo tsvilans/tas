@@ -20,9 +20,9 @@ namespace tas.Machine.GH.Components
         {
         }
 
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_OrientTargets_24x24;
-
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_RetractToolpath;
         public override Guid ComponentGuid => new Guid("0956D817-0851-4FBC-8989-1D01EDABF3BA");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {

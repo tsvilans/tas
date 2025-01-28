@@ -129,6 +129,20 @@ namespace tas.Machine
             }
         }
 
+        public BoundingBox GetBoundingBox()
+        {
+            var bb = BoundingBox.Empty;
+            foreach (var path in Paths)
+            {
+                foreach (var wp in path)
+                {
+                    bb.Union(wp.Plane.Origin);
+                }
+            }
+
+            return bb;
+        }
+
         public double GetTotalTime()
         {
             double time = 0;

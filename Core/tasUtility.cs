@@ -442,6 +442,34 @@ namespace tas.Core.Util
             return frames;
         }
 
+        public static Point3d GetXYArcCentre(Point3d p0, Point3d p1, double radius)
+        {
+            double x = p1.X - p0.X, y = p1.Y - p0.Y;
+
+            // get orientation angle
+            var θ = Math.Atan2(y, x);
+
+            // length between A and B
+            var l = Math.Sqrt(x * x + y * y);
+            if (2 * radius >= l)
+            {
+                // find the sweep angle (actually half the sweep angle)
+                var theta = Math.Asin(l / (2 * radius));
+                // triangle height from the chord to the center
+                var h = radius * Math.Cos(theta);
+
+                // get center point. 
+                // Use sin(θ)=y/l and cos(θ)=x/l
+                Point3d C = new Point3d(
+                    (p0.X + x / 2 - h * (y / l)),
+                    (p0.Y + y / 2 + h * (x / l)),
+                    (p0.Z + p1.Z) / 2);
+                return C;
+            }
+
+            return Point3d.Unset;
+        }
+
 
     }
 

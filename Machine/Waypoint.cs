@@ -222,7 +222,7 @@ namespace tas.Machine
             return false;
         }
 
-        public override string ToString() => $"Waypoint ({this.Plane.ToString()}, {this.Type.ToString()}";
+        public override string ToString() => $"Waypoint ({this.Plane.ToString()}, {this.Type.ToString()})";
 
         public override int GetHashCode() => this.Plane.GetHashCode();
 

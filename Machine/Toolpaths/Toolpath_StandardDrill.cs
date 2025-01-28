@@ -35,14 +35,14 @@ namespace tas.Machine.Toolpaths
 
         public double Depth;
         public double DepthPass;
-        public int Resolution;
+        //public int Resolution;
 
         List<Path> Paths;
 
-        public Toolpath_StandardDrill(Plane p, double depth, MachineTool tool, double depth_pass = 30, int resolution = 36)
+        public Toolpath_StandardDrill(Plane p, double depth, MachineTool tool, double depth_pass = 30)
         {
             Workplane = p;
-            Resolution = resolution;
+            //Resolution = resolution;
             Depth = depth;
             DepthPass = depth_pass;
             Tool = tool;
@@ -55,13 +55,19 @@ namespace tas.Machine.Toolpaths
             int passes = (int)Math.Ceiling(Depth / DepthPass);
             double currentDepth = 0;
 
-            for (int k = 0; k < passes; ++k)
+            for (int k = 0; k <= passes; ++k)
             {
                 currentDepth = k * -DepthPass;
-                double passDepth = Math.Min(DepthPass, Depth + currentDepth);
+                //double passDepth = Math.Min(DepthPass, Depth + currentDepth);
+                double passDepth = Math.Min(Depth, k * DepthPass);
 
-                Point3d tip = Workplane.Origin + Workplane.ZAxis * passDepth;
-                Paths.Add(new Path(new Plane[] { Workplane, new Plane(tip, Workplane.XAxis, Workplane.YAxis)}));
+                //Point3d tip = Workplane.Origin + Workplane.ZAxis * passDepth;
+                Paths.Add(
+                    new Path() { 
+                        Workplane, 
+                        new Plane(
+                            Workplane.Origin - Workplane.ZAxis * passDepth, 
+                             Workplane.XAxis, Workplane.YAxis)});
             }
         }
 

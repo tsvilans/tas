@@ -70,10 +70,10 @@
     <Compile Include="Types\Types_PCL.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grasshopper">
+    <PackageReference Include="Grasshopper" ExcludeAssets="runtime" >
       <Version>6.22.20028.13281</Version>
     </PackageReference>
-    <PackageReference Include="RhinoCommon">
+    <PackageReference Include="RhinoCommon" ExcludeAssets="runtime" >
       <Version>6.22.20028.13281</Version>
     </PackageReference>
   </ItemGroup>

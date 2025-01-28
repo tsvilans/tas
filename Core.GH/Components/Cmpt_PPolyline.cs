@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if OBSOLETE
+using System;
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
@@ -99,3 +100,4 @@ namespace tas.Core.GH
         }
     }
 }
+#endif

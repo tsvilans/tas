@@ -118,6 +118,27 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tasMachine_AreaClearance" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_AreaClearance.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_AreaClearance2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_AreaClearance2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_Contour" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_Contour.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_CreateRamp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_CreateRamp.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_Hole" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_Hole.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_Pocket" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_Pocket.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasMachine_SurfaceOffset" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\tasMachine_SurfaceOffset.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="tas_icons_AreaClearance_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\tas_icons_AreaClearance_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

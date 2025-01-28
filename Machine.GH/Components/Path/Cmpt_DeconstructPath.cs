@@ -18,6 +18,10 @@ namespace tas.Machine.GH.Components
         {
         }
 
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_DeconstructPath;
+        public override Guid ComponentGuid => new Guid("36abf236-a2af-46d4-9f24-3985007469b5");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Path", "P", "Paths to deconstruct.", GH_ParamAccess.tree);
@@ -49,9 +53,5 @@ namespace tas.Machine.GH.Components
 
             DA.SetDataTree(0, plane_tree);
         }
-
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_CreateToolpath_24x24;
-
-        public override Guid ComponentGuid => new Guid("36abf236-a2af-46d4-9f24-3985007469b5"); 
     }
 }

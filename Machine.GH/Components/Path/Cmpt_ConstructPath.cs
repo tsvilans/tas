@@ -17,6 +17,9 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.PathSection)
         {
         }
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_CreatePath;
+        public override Guid ComponentGuid => new Guid("8b3cbf53-f05d-4fdd-b582-913330497f72");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -52,9 +55,5 @@ namespace tas.Machine.GH.Components
 
             DA.SetDataTree(0, path_tree);
         }
-
-        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_CreateToolpath_24x24;
-
-        public override Guid ComponentGuid =>  new Guid("8b3cbf53-f05d-4fdd-b582-913330497f72");
     }
 }

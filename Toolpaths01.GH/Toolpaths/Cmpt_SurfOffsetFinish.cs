@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if LEVEL2
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,6 +23,10 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.StrategySection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Toolpaths01.GH.Properties.Resources.tasMachine_SurfaceOffset;
+        public override Guid ComponentGuid => new Guid("{0277865d-a19d-4b16-91f9-a14cff728360}");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
 
         List<GeometryBase> _boundaries;
         GeometryBase _geometry;
@@ -207,18 +212,6 @@ namespace tas.Machine.GH.Components
                 DA.SetDataList("Paths", _paths.Select(x => new GH_tasPath(x)));
             DA.SetData("debug", this._debug);
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Toolpaths01.GH.Properties.Resources.tas_icons_SurfaceOffset_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{0277865d-a19d-4b16-91f9-a14cff728360}"); }
-        }
     }
 }
+#endif

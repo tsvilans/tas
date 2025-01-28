@@ -297,12 +297,19 @@ namespace tas.Machine.Toolpaths
 
             var BoundsSlices = new List<Polyline>();
             if (Bounds != null && Bounds.Count > 0)
-                foreach(Mesh m in Bounds)
+            {
+                foreach (Mesh m in Bounds)
                 {
                     Polyline[] x = Rhino.Geometry.Intersect.Intersection.MeshPlane(m, P);
                     if (x == null) continue;
                     BoundsSlices.AddRange(x);
                 }
+
+                // Check that there are actual bound slices
+                // If the bounds are not hit, then the slice is out of bounds
+                if (BoundsSlices.Count < 1)
+                    return new Tuple<CPaths, CPaths, CPaths>(SolutionMesh, SolutionStock, SolutionPolygon);
+            }
 
             // DO GEO
             List<Polyline> GeoSlices = new List<Polyline>();

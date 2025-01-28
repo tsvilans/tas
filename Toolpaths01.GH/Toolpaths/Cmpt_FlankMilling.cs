@@ -19,6 +19,10 @@ namespace tas.Machine.GH.Components
         {
         }
 
+        protected override System.Drawing.Bitmap Icon => Toolpaths01.GH.Properties.Resources.tasMachine_SurfaceOffset;
+        public override Guid ComponentGuid => new Guid("14441c25-86da-4c29-a3b7-287a3436ed54");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             base.RegisterInputParams(pManager);
@@ -305,17 +309,5 @@ namespace tas.Machine.GH.Components
             DA.SetDataList("Paths", paths.Select(x => new GH_tasPath(x)));
         }
 
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Toolpaths01.GH.Properties.Resources.tas_icons_FlowlineFinish_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("14441c25-86da-4c29-a3b7-287a3436ed54"); }
-        }
     }
 }

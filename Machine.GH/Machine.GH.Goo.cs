@@ -326,7 +326,7 @@ namespace tas.Machine.GH
         }
     }
 
-    public class GH_tasPath : GH_Goo<Path>, IGH_PreviewData
+    public class GH_tasPath : GH_GeometricGoo<Path>, IGH_PreviewData
     {
         public GH_tasPath() { this.Value = null; }
         public GH_tasPath(GH_tasPath goo) { this.Value = new Path(goo.Value); }
@@ -338,10 +338,7 @@ namespace tas.Machine.GH
         public override string ToString() => "Path"; //this.Value.ToString();
         public override object ScriptVariable() => Value;
 
-        public static IEnumerable<GH_tasPath> MakeGoo(List<Path> Paths)
-        {
-            return Paths.Select(x => new GH_tasPath(x));
-        }
+        public static IEnumerable<GH_tasPath> MakeGoo(IEnumerable<Path> Paths) => Paths.Select(x => new GH_tasPath(x));
 
         public override bool Write(GH_IWriter writer)
         {
@@ -457,6 +454,8 @@ namespace tas.Machine.GH
 
         public BoundingBox ClippingBox => Value.PolylineCurve().GetBoundingBox(true);
 
+        public override BoundingBox Boundingbox => ClippingBox;
+
         public void DrawViewportMeshes(GH_PreviewMeshArgs args)
         {
             args.Pipeline.DrawPolyline(new Polyline(Value.Select(x => x.Origin)), args.Material.Diffuse);
@@ -466,16 +465,42 @@ namespace tas.Machine.GH
         {
             args.Pipeline.DrawPolyline(new Polyline(Value.Select(x => x.Origin)), args.Color);
         }
+
+        public override IGH_GeometricGoo DuplicateGeometry()
+        {
+            return new GH_tasPath(Value.Duplicate());
+        }
+
+        public override BoundingBox GetBoundingBox(Transform xform)
+        {
+            var bb = ClippingBox;
+            bb.Transform(xform);
+            return bb;
+        }
+
+        public override IGH_GeometricGoo Transform(Transform xform)
+        {
+            var path = Value.Duplicate();
+            path.Transform(xform);
+
+            return new GH_tasPath(path);
+        }
+
+        public override IGH_GeometricGoo Morph(SpaceMorph xmorph)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ToolpathParameter : GH_PersistentParam<GH_Toolpath>, IGH_PreviewObject
     {
         public ToolpathParameter() : base("Toolpath parameter", "Toolpath", "This is a toolpath.", "tasMachine", UiNames.ToolpathSection) { }
-        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_ToolpathParameter;
+        public override System.Guid ComponentGuid => new Guid("DA2E3425-9FD4-43FD-8BD8-A0619EEC16CD");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
 
         private BoundingBox BoundingBox = BoundingBox.Unset;
-
-        public override System.Guid ComponentGuid => new Guid("DA2E3425-9FD4-43FD-8BD8-A0619EEC16CD");
 
         public bool Hidden { get; set; }
 
@@ -516,12 +541,13 @@ namespace tas.Machine.GH
     public class PathParameter : GH_PersistentParam<GH_tasPath>, IGH_PreviewObject
     {
         public PathParameter() : base("Path parameter", "Path", "This is a polyline with planes.", "tasMachine", UiNames.PathSection) { }
-        public override GH_Exposure Exposure => GH_Exposure.secondary;
         //protected override System.Drawing.Bitmap Icon => Properties.Resources.icon_oriented_polyline_component_24x24;
 
-        private BoundingBox BoundingBox = BoundingBox.Unset;
-
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_PathParameter;
         public override System.Guid ComponentGuid => new Guid("{eba2ae1c-5c0c-4553-9fae-411e0905ce23}");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
+
+        private BoundingBox BoundingBox = BoundingBox.Unset;
 
         public bool Hidden { get; set ; }
 

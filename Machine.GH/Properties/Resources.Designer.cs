@@ -229,5 +229,225 @@ namespace tas.Machine.GH.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_AreaClearance {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_AreaClearance", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_ClipOffsetPath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_ClipOffsetPath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_ClipPath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_ClipPath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_CreatePath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_CreatePath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_CreateRamp {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_CreateRamp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_CreateTool {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_CreateTool", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_CreateToolpath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_CreateToolpath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_DeconstructPath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_DeconstructPath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_Hole {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_Hole", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_JoinPaths {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_JoinPaths", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_JoinToolpaths {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_JoinToolpaths", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_LoadTool {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_LoadTool", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_OrientPath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_OrientPath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_OrientPathToPoint {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_OrientPathToPoint", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_PathParameter {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_PathParameter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_Pocket {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_Pocket", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_Post {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_Post", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_RetractToolpath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_RetractToolpath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_ReversePath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_ReversePath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_SimulateToolpath {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_SimulateToolpath", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_SurfaceOffset {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_SurfaceOffset", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap tasMachine_ToolpathParameter {
+            get {
+                object obj = ResourceManager.GetObject("tasMachine_ToolpathParameter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

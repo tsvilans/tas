@@ -22,10 +22,14 @@ namespace tas.Machine.GH.Components
 
         public Cmpt_Pocket()
           : base("Pocket", "Pocket",
-              "Simple area clearance toolpath strategy.",
+              "Simple pocketing toolpath strategy.",
               "tasMachine", UiNames.StrategySection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Toolpaths01.GH.Properties.Resources.tasMachine_Pocket;
+        public override Guid ComponentGuid => new Guid("{11e998fa-b1c8-4936-9496-d8ad3e36a543}");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
 
         List<Curve> _curves;
 
@@ -82,20 +86,6 @@ namespace tas.Machine.GH.Components
                 if (_paths != null)
                     DA.SetDataList("Paths", GH_tasPath.MakeGoo(this._paths));
             }
-
-        }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Toolpaths01.GH.Properties.Resources.tas_icons_Pocket_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{11e998fa-b1c8-4936-9496-d8ad3e36a543}"); }
         }
     }
 }

@@ -17,6 +17,10 @@ namespace tas.Machine.GH.Components
         {
         }
 
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_LoadTool;
+        public override Guid ComponentGuid => new Guid("68a397ae-a8c4-47ca-8c37-e70c67a57993");
+        public override GH_Exposure Exposure => GH_Exposure.primary;
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddTextParameter("Path", "P", "File path to tool library XML.", GH_ParamAccess.item);
@@ -27,10 +31,6 @@ namespace tas.Machine.GH.Components
             pManager.AddGenericParameter("Tools", "T", "Loaded tools.", GH_ParamAccess.list);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             string path = "";
@@ -65,26 +65,6 @@ namespace tas.Machine.GH.Components
 
             DA.SetDataList(0, tools);
 
-        }
-
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_LoadMachineTools_24x24;
-
-            }
-        }
-
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("68a397ae-a8c4-47ca-8c37-e70c67a57993"); }
         }
     }
 }

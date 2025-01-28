@@ -18,6 +18,10 @@ namespace tas.Machine.GH.Components
         {
         }
 
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tasMachine_JoinPaths;
+        public override Guid ComponentGuid => new Guid("65e38a47-8b71-4c15-bf1d-89935c870e73");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
+
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Paths", "P", "Paths to join.", GH_ParamAccess.tree);
@@ -68,20 +72,6 @@ namespace tas.Machine.GH.Components
             */
 
             DA.SetDataTree(0, path_tree);
-        }
-
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_CreateToolpath_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("65e38a47-8b71-4c15-bf1d-89935c870e73"); }
         }
     }
 }

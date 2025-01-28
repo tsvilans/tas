@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if OBSOLETE
+using System;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
@@ -13,6 +14,10 @@ namespace tas.Machine.GH.Components
               "tasMachine", UiNames.ToolpathSection)
         {
         }
+
+        protected override System.Drawing.Bitmap Icon => Properties.Resources.tas_icons_LeadsLinks_24x24;
+        public override Guid ComponentGuid => new Guid("eef6b3c1-fba6-4cd5-bb14-df106a5aaba6");
+        public override GH_Exposure Exposure => GH_Exposure.secondary;
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -43,18 +48,6 @@ namespace tas.Machine.GH.Components
 
             DA.SetData("Toolpath", new GH_Toolpath(tp2));
         }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Properties.Resources.tas_icons_LeadsLinks_24x24;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("eef6b3c1-fba6-4cd5-bb14-df106a5aaba6"); }
-        }
     }
 }
+#endif

@@ -25,14 +25,14 @@ namespace tas.Machine.GH.Components
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
-            pManager.AddPlaneParameter("Workplane", "WP", "Workplane for toolpath.", GH_ParamAccess.item, Plane.WorldXY);
-            int res = pManager.AddGenericParameter("MachineTool", "MT", "Machine tool to use for this toolpath.", GH_ParamAccess.item);
+            pManager.AddPlaneParameter("Workplane", "WP", "Workplane for this machining strategy.", GH_ParamAccess.item, Plane.WorldXY);
+            int res = pManager.AddGenericParameter("MachineTool", "MT", "Machine tool to use for this strategy.", GH_ParamAccess.item);
             pManager[res].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Paths", "P", "Toolpath as list of PPolyline objects.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Paths", "P", "Paths describing the machining strategy.", GH_ParamAccess.list);
         }
     }
 }
