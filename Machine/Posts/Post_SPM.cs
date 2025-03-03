@@ -639,5 +639,10 @@ namespace tas.Machine.Posts
             else if (pinfo.PropertyType == typeof(int))
                 pinfo.SetValue(this, int.Parse(value), null);
         }
+
+        public void ClearErrors()
+        {
+            ErrorMessage = string.Empty;
+        }
     }
 }

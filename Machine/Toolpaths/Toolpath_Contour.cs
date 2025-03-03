@@ -44,6 +44,7 @@ namespace tas.Machine.Toolpaths
         public List<Curve> DriveCurves;
         public List<Path> Paths = null;
         public PathOffset Offset = 0;
+        public CurveOffsetCornerStyle OffsetStyle = CurveOffsetCornerStyle.Sharp;
 
 
         public Toolpath_Contour(IEnumerable<Curve> drive_curves, PathOffset offset = PathOffset.None, double tolerance=0.01)
@@ -69,7 +70,7 @@ namespace tas.Machine.Toolpaths
 
             if (Offset != PathOffset.None)
             {
-                OffsetDriveCurves = DriveCurves.SelectMany(x => x.Offset(Workplane, Tool.Diameter / 2 * (int)Offset, Tolerance, CurveOffsetCornerStyle.None)).ToList();
+                OffsetDriveCurves = DriveCurves.SelectMany(x => x.Offset(Workplane, Tool.Diameter / 2 * (int)Offset, Tolerance, OffsetStyle)).ToList();
             }
             else
             {

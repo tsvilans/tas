@@ -11,6 +11,7 @@ using Rhino.Geometry;
 
 using tas.Machine.Posts;
 using GH_IO.Serialization;
+using tas.Core.Types;
 
 namespace tas.Machine.GH.Posts
 {
@@ -76,6 +77,8 @@ namespace tas.Machine.GH.Posts
                 CurrentPost = postName;
                 Post = new SpmPost(postPath);
             }
+
+            Post.ClearErrors();
 
             Post.Workplane = workplane;
 
