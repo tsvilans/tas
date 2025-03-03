@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("tasTools (Core)")]
+//[assembly: AssemblyTitle("tasTools (Core)")]
 [assembly: AssemblyDescription("A personal PhD toolkit.")]
 
 [assembly: ComVisible(false)]

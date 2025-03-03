@@ -49,7 +49,7 @@ namespace tas.Core.GH
         get
         {
             //Return a string representing your preferred contact details.
-            return "tsvi@kadk.dk";
+            return "info@tomsvilans.com";
         }
     }
 }

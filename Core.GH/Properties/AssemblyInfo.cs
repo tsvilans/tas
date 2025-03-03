@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Rhino.PlugIns;
 
 
-[assembly: AssemblyTitle("tasTools (Core.GH)")]
+//[assembly: AssemblyTitle("tasTools (Core.GH)")]
 [assembly: AssemblyDescription("A personal PhD toolkit.")]
 
 [assembly: ComVisible(false)]
