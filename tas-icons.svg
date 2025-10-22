@@ -18,6 +18,75 @@
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1">
+    <linearGradient
+       id="swatch52"
+       inkscape:swatch="solid"
+       inkscape:label="LighterBlue">
+      <stop
+         style="stop-color:#80d2ff;stop-opacity:1;"
+         offset="0"
+         id="stop52" />
+    </linearGradient>
+    <linearGradient
+       id="swatch51"
+       inkscape:swatch="solid"
+       inkscape:label="DarkBlue">
+      <stop
+         style="stop-color:#005c94;stop-opacity:1;"
+         offset="0"
+         id="stop51" />
+    </linearGradient>
+    <linearGradient
+       id="swatch50"
+       inkscape:swatch="solid"
+       inkscape:label="LightBlue">
+      <stop
+         style="stop-color:#19aeff;stop-opacity:1;"
+         offset="0"
+         id="stop50" />
+    </linearGradient>
+    <linearGradient
+       id="swatch49"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop49" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect49"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,4.6743557,0,1 @ F,0,0,1,0,4.3721719,0,1 @ F,0,0,1,0,4.5918418,0,1 @ F,0,0,1,0,5.502692,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect47"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,5.0621757,0,1 @ F,0,0,1,0,4.6743557,0,1 @ F,0,0,1,0,4.3721719,0,1 @ F,0,0,1,0,4.5918418,0,1 @ F,0,0,1,0,5.502692,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
     <rect
        x="732.36816"
        y="466.08001"
@@ -6373,6 +6442,43 @@
        apply_with_radius="true"
        only_selected="false"
        hide_knots="false" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch52"
+       id="linearGradient49"
+       x1="491.46033"
+       y1="154.08"
+       x2="531.46033"
+       y2="154.08"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(4.3061136e-6,1.500001)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch50"
+       id="linearGradient50"
+       x1="651.71187"
+       y1="80.298161"
+       x2="696.88188"
+       y2="80.298161"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch51"
+       id="linearGradient51"
+       x1="475.46033"
+       y1="178.08"
+       x2="539.46032"
+       y2="178.08"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#swatch52"
+       id="linearGradient52"
+       x1="626.66816"
+       y1="250.08"
+       x2="660.31816"
+       y2="250.08"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      id="namedview1"
@@ -6383,12 +6489,12 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.54858692"
-     inkscape:cx="715.47458"
-     inkscape:cy="332.67289"
+     inkscape:zoom="4.3886954"
+     inkscape:cx="549.70778"
+     inkscape:cy="176.47614"
      inkscape:window-width="1920"
-     inkscape:window-height="1027"
-     inkscape:window-x="-8"
+     inkscape:window-height="1129"
+     inkscape:window-x="1912"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer-MC0"
@@ -7029,6 +7135,18 @@
        orientation="0,-1"
        id="guide3"
        inkscape:locked="false" />
+    <inkscape:page
+       x="475.46033"
+       y="146.08"
+       width="64"
+       height="64"
+       id="page6"
+       margin="2"
+       bleed="0"
+       inkscape:label="tasMachineIcon"
+       inkscape:export-filename="tasMachineIcon-500.png"
+       inkscape:export-xdpi="750"
+       inkscape:export-ydpi="750" />
   </sodipodi:namedview>
   <g
      id="layer-MC0"
@@ -9999,11 +10117,11 @@
          id="text1188-6"
          style="font-size:37.3333px;line-height:1;font-family:Bahnschrift;-inkscape-font-specification:Bahnschrift;text-align:center;white-space:pre;shape-inside:url(#rect1188-7);display:inline;fill:#546e4d;fill-opacity:1;stroke:#190606;stroke-width:3.6634;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:0, 5.49511;stroke-opacity:1"
          transform="translate(-8.9367992,10.606602)"><tspan
-           x="471.43425"
+           x="472.06907"
            y="183.51365"
-           id="tspan7"><tspan
+           id="tspan3"><tspan
              style="font-style:italic;font-weight:bold;font-family:'Book Antiqua';-inkscape-font-specification:'Book Antiqua Bold Italic';fill:#ffffff;stroke:none"
-             id="tspan6">i</tspan></tspan></text>
+             id="tspan2">i</tspan></tspan></text>
     </g>
     <path
        d="m 0,0 -4.17,-2.87 -1.61,4.59 -2.8,0.4 V 6.16 L 0,5.35 Z"
@@ -10480,7 +10598,7 @@
        d="m 654.36816,247.08 v 13 h 10 v -34 h 8 v 44"
        id="path1297" />
     <path
-       style="fill:none;stroke:#80d2ff;stroke-width:3.4;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#Dot);paint-order:markers stroke fill"
+       style="fill:none;stroke:url(#linearGradient52);stroke-width:3.4;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#Dot);paint-order:markers stroke fill"
        d="m 628.36816,274.08 v -48 h 8 v 48 h 8 v -40 h 10 v 13"
        id="path1296" />
     <rect
@@ -10670,9 +10788,9 @@
        transform="translate(-19.789385,-5.773525)"><tspan
          x="749.59504"
          y="497.85354"
-         id="tspan9"><tspan
+         id="tspan5"><tspan
            style="font-weight:bold;-inkscape-font-specification:'Consolas Bold'"
-           id="tspan8">2</tspan></tspan></text>
+           id="tspan4">2</tspan></tspan></text>
     <rect
        style="fill:#005c94;stroke:none;stroke-width:0.7;stroke-linecap:round;stroke-linejoin:round;paint-order:markers stroke fill"
        id="rect3"
@@ -10695,6 +10813,25 @@
        d="m 712.36816,568.07998 v -22 l 22,-22"
        id="path45"
        sodipodi:nodetypes="ccc" />
+    <rect
+       style="fill:url(#linearGradient51);stroke:none;stroke-width:0.7;stroke-linecap:round;stroke-linejoin:round;paint-order:markers stroke fill"
+       id="rect6"
+       width="63.999992"
+       height="63.999992"
+       x="475.46033"
+       y="146.08" />
+    <path
+       style="fill:none;stroke:url(#linearGradient50);stroke-width:3.01183;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#ColoredDot-2);paint-order:markers stroke fill"
+       d="m 653.47022,59.025108 v 6.057531 a 5.0621757,5.0621757 45 0 0 5.06218,5.062176 h 32.05814 c 2.58158,0 4.77763,2.091318 4.78498,4.67268 0.001,0.380322 3.3e-4,0.747751 -0.002,1.099948 -0.0148,2.412899 -2.06628,4.367668 -4.48096,4.367668 h -32.83067 a 4.5056235,4.5056235 134.45701 0 0 -4.50481,4.591017 l 0.0587,3.095671 a 5.6079899,5.6079899 44.457014 0 0 5.60698,5.501704 h 7.60404 7.60433"
+       id="path46"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:path-effect="#path-effect47"
+       inkscape:original-d="m 653.47022,59.025108 v 11.119707 h 41.79468 c 0.25,5.375 0,10.140296 0,10.140296 h -41.79468 l 0.25,13.188392 h 13.10673 7.60433"
+       transform="matrix(1.1288804,0,0,1.1288804,-253.94399,87.447713)" />
+    <path
+       style="display:none;fill:none;stroke:url(#linearGradient49);stroke-width:3;stroke-dasharray:3, 3;stroke-dashoffset:0"
+       d="m 491.46032,155.58 h 40"
+       id="path49" />
   </g>
   <g
      id="layer-MC1"
